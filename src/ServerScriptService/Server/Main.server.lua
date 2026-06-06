@@ -17,33 +17,41 @@ Remotes.setupServer()
 -- STEP 2: load the server services (they live next to this script).
 local ScoreService = require(script.Parent.ScoreService)
 local RoundService = require(script.Parent.RoundService)
+local TargetService = require(script.Parent.TargetService)
+local ThrowService = require(script.Parent.ThrowService)
 
--- STEP 3: start tracking scores.
+-- STEP 3: start tracking scores, create the target folder, and wire up throwing.
 ScoreService.init()
+TargetService.init()
+ThrowService.init({ score = ScoreService, targets = TargetService })
 
 -- STEP 4: handle throw requests from clients.
--- The client can ASK to throw, but the SERVER decides if it counts. This is the
--- "client requests, server validates" rule. Right now a valid throw during an
--- active round scores a point -- the real ball + targets come next.
---
--- We also rate-limit per player. The client controls how OFTEN it sends the
--- request, so without a cooldown an auto-clicker (or a one-line exploit) could
--- spam points. The server -- not the client -- decides how fast a throw scores.
+-- The client ASKS to throw and says where it aimed; the SERVER decides what
+-- happens. We validate three things before throwing:
+--   1. a round is actually active,
+--   2. the aim is a real Vector3 (never trust client-supplied data), and
+--   3. the player is off cooldown (the client controls how OFTEN it fires, so
+--      the server -- not the mouse -- sets the pace).
+-- The hit test + scoring then happen inside ThrowService via a server raycast
+-- against the server's own targets, so a hit can't be faked.
 local throwRequest = Remotes.get(Remotes.ThrowRequest)
 local lastThrow: { [Player]: number } = {}
 
-throwRequest.OnServerEvent:Connect(function(player: Player)
+throwRequest.OnServerEvent:Connect(function(player: Player, aimPoint: any)
 	if not RoundService.isActive() then
 		return
+	end
+	if typeof(aimPoint) ~= "Vector3" then
+		return -- malformed / spoofed request, ignore
 	end
 
 	local now = os.clock()
 	if now - (lastThrow[player] or 0) < GameConfig.ThrowCooldown then
-		return -- too soon since the last counted throw; ignore (anti-spam)
+		return -- too soon since the last throw; ignore (anti-spam)
 	end
 	lastThrow[player] = now
 
-	ScoreService.addScore(player, GameConfig.PointsPerHit)
+	ThrowService.throwBall(player, aimPoint)
 end)
 
 -- Forget a player's cooldown when they leave so the table never grows forever.
@@ -51,7 +59,15 @@ Players.PlayerRemoving:Connect(function(player: Player)
 	lastThrow[player] = nil
 end)
 
--- STEP 5: start the round heartbeat.
-RoundService.start(ScoreService)
+-- STEP 5: start the round heartbeat. Targets appear when a round goes Active
+-- and are cleared when it ends.
+RoundService.start(ScoreService, {
+	onActiveStart = function()
+		TargetService.spawnTargets()
+	end,
+	onRoundEnd = function()
+		TargetService.clearTargets()
+	end,
+})
 
 print("[QB1 Server] Started. Round loop is running.")

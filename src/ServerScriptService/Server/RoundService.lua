@@ -51,9 +51,17 @@ type ScoreServiceLike = {
 	resetAll: () -> (),
 }
 
--- Start the never-ending round loop. Pass in ScoreService so we can reset
--- scores at the start of each round.
-function RoundService.start(scoreService: ScoreServiceLike)
+-- Optional callbacks for "a round just started" and "a round just ended". We use
+-- them to spawn and clear the targets. Both are optional so RoundService stays
+-- usable on its own.
+export type RoundHooks = {
+	onActiveStart: (() -> ())?,
+	onRoundEnd: (() -> ())?,
+}
+
+-- Start the never-ending round loop. Pass in ScoreService so we can reset scores
+-- each round, plus optional hooks to spawn/clear targets.
+function RoundService.start(scoreService: ScoreServiceLike, hooks: RoundHooks?)
 	roundUpdateEvent = Remotes.get(Remotes.RoundUpdate)
 
 	task.spawn(function()
@@ -66,11 +74,17 @@ function RoundService.start(scoreService: ScoreServiceLike)
 			RoundService.RoundNumber += 1
 			scoreService.resetAll()
 			RoundService.State = "Active"
+			if hooks and hooks.onActiveStart then
+				hooks.onActiveStart() -- spawn the targets
+			end
 			countdown(GameConfig.RoundDuration)
 
 			-- 3) Round over (show results briefly)
 			RoundService.State = "RoundOver"
 			RoundService.TimeLeft = 0
+			if hooks and hooks.onRoundEnd then
+				hooks.onRoundEnd() -- clear the targets
+			end
 			broadcast()
 			task.wait(GameConfig.EndScreenDuration)
 		end

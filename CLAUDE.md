@@ -34,12 +34,15 @@ Local files are synced into Roblox Studio by Rojo. See `default.project.json`.
 
 ## Current Files
 
-- `src/ReplicatedStorage/Shared/GameConfig.lua` - tunable numbers (timers, points)
+- `src/ReplicatedStorage/Shared/GameConfig.lua` - tunable numbers (timers, points, throw/target settings)
 - `src/ReplicatedStorage/Shared/Remotes.lua` - RemoteEvent names + setup/get helpers
 - `src/ServerScriptService/Server/ScoreService.lua` - server-authoritative scores
-- `src/ServerScriptService/Server/RoundService.lua` - the round-loop heartbeat
+- `src/ServerScriptService/Server/RoundService.lua` - the round-loop heartbeat (+ start/end hooks)
+- `src/ServerScriptService/Server/TargetService.lua` - spawns/clears the target ring, handles hits
+- `src/ServerScriptService/Server/ThrowService.lua` - server raycast hit test + cosmetic football
 - `src/ServerScriptService/Server/Main.server.lua` - server entry point (wires it all up)
-- `src/StarterPlayer/StarterPlayerScripts/Main.client.lua` - client entry point (logs + input)
+- `src/StarterPlayer/StarterPlayerScripts/Main.client.lua` - client input (aim + throw request)
+- `src/StarterPlayer/StarterPlayerScripts/Hud.client.lua` - on-screen score/timer/state HUD
 
 ## Tech Rules
 
@@ -77,12 +80,12 @@ Work in small, testable steps. For each feature:
 1. [DONE] Project + Rojo sync + client/server startup
 2. [DONE] Shared GameConfig
 3. [DONE] Round timer (RoundService)
-4. [DONE] Server score system (ScoreService) + click-to-score placeholder
-5. **NEXT:** On-screen UI for score + timer (replace Output prints)
-6. Real throw input + football projectile
-7. Target hit detection
-8. Moving targets
-9. End-of-round screen
+4. [DONE] Server score system (ScoreService)
+5. [DONE] On-screen HUD (score + timer + round state)
+6. [DONE] Throw input + cosmetic football (client aim -> server)
+7. [DONE] Target spawning + server-authoritative hit detection
+8. **NEXT:** Moving targets (make them harder to hit)
+9. End-of-round screen / winner summary
 10. Coins -> data saving -> cosmetic shop -> mobile controls -> sound -> polish
 
 ## How To Test (Studio)

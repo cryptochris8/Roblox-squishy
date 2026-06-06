@@ -70,7 +70,7 @@ hint.Font = Enum.Font.GothamMedium
 hint.TextSize = 16
 hint.TextColor3 = Color3.fromRGB(235, 235, 235)
 hint.TextStrokeTransparency = 0.6
-hint.Text = "Click / tap to throw during a round"
+hint.Text = "Aim at a glowing target and click to throw"
 hint.Parent = screen
 
 -- ---------------------------------------------------------------------------
