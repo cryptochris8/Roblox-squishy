@@ -26,23 +26,34 @@ TargetService.init()
 ThrowService.init({ score = ScoreService, targets = TargetService })
 
 -- STEP 4: handle throw requests from clients.
--- The client ASKS to throw and says where it aimed; the SERVER decides what
--- happens. We validate three things before throwing:
+-- The client ASKS to throw, sending the aim DIRECTION and a POWER (0..1); the
+-- SERVER decides what happens. We validate before doing anything:
 --   1. a round is actually active,
---   2. the aim is a real Vector3 (never trust client-supplied data), and
+--   2. the aim is a real Vector3 and the power a real number -- never trust the
+--      client, so we normalize the direction and clamp the power ourselves, and
 --   3. the player is off cooldown (the client controls how OFTEN it fires, so
 --      the server -- not the mouse -- sets the pace).
--- The hit test + scoring then happen inside ThrowService via a server raycast
--- against the server's own targets, so a hit can't be faked.
+-- ThrowService then simulates the whole arc on the server and detects the hit,
+-- so a hit can't be faked.
 local throwRequest = Remotes.get(Remotes.ThrowRequest)
 local lastThrow: { [Player]: number } = {}
 
-throwRequest.OnServerEvent:Connect(function(player: Player, aimPoint: any)
+throwRequest.OnServerEvent:Connect(function(player: Player, aimDir: any, power: any)
 	if not RoundService.isActive() then
 		return
 	end
-	if typeof(aimPoint) ~= "Vector3" then
-		return -- malformed / spoofed request, ignore
+	if typeof(aimDir) ~= "Vector3" then
+		return -- malformed / spoofed aim, ignore
+	end
+	-- Reject non-finite aim too: a NaN/inf Vector3 sneaks past a plain magnitude
+	-- check because EVERY comparison with NaN is false. (`mag ~= mag` is the
+	-- standard NaN test; `math.huge` is infinity.)
+	local mag = aimDir.Magnitude
+	if mag ~= mag or mag == math.huge or mag < 0.001 then
+		return
+	end
+	if typeof(power) ~= "number" or power ~= power then
+		return -- malformed / spoofed power (incl. NaN), ignore
 	end
 
 	local now = os.clock()
@@ -51,7 +62,7 @@ throwRequest.OnServerEvent:Connect(function(player: Player, aimPoint: any)
 	end
 	lastThrow[player] = now
 
-	ThrowService.throwBall(player, aimPoint)
+	ThrowService.throwBall(player, aimDir, math.clamp(power, 0, 1))
 end)
 
 -- Forget a player's cooldown when they leave so the table never grows forever.

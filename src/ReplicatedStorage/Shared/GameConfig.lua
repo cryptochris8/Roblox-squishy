@@ -14,10 +14,14 @@ GameConfig.EndScreenDuration = 5     -- how long the "round over" state shows
 GameConfig.PointsPerHit = 1    -- points for hitting one target
 GameConfig.ThrowCooldown = 0.3 -- min seconds between throws (server anti-spam)
 
--- Throwing (the football you throw)
-GameConfig.ThrowRange = 500 -- how far a throw can reach, in studs
-GameConfig.ThrowSpeed = 120 -- how fast the visual ball flies, studs/sec
-GameConfig.BallSize = 1.4   -- diameter of the football
+-- Throwing (a real football with a gravity arc and adjustable power)
+GameConfig.MinThrowSpeed = 55  -- launch speed at the lightest tap (studs/sec)
+GameConfig.MaxThrowSpeed = 150 -- launch speed at full charge (studs/sec)
+GameConfig.ThrowGravity = 110  -- downward pull on the ball (studs/sec^2); higher = more arc
+GameConfig.BallLifetime = 5    -- seconds before a thrown ball gives up and despawns
+GameConfig.BallSize = 1.4      -- diameter of the football
+GameConfig.MaxChargeTime = 1.0 -- seconds of holding to reach full power
+GameConfig.MinPowerFrac = 0.15 -- even a quick tap throws with at least this much power
 
 -- Targets (what you throw at)
 GameConfig.TargetCount = 6        -- how many targets are out at once

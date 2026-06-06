@@ -2,8 +2,8 @@
 -- TargetService (SERVER)
 -- Spawns the glowing targets you throw at -- in a ring around the play area so
 -- they're visible whichever way you face -- and handles what happens when one is
--- hit. The server owns the targets, which is what lets ThrowService do an
--- authoritative (un-fakeable) hit test against them.
+-- hit. The server owns the targets, which is what lets ThrowService's hit test
+-- be authoritative (un-fakeable).
 
 local Workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
@@ -37,7 +37,7 @@ local function createTarget(angle: number)
 	target.Color = Color3.fromRGB(255, 170, 40)
 	target.Material = Enum.Material.Neon
 	target.Anchored = true
-	target.CanCollide = false -- players (and balls) pass through; the aim ray still hits it
+	target.CanCollide = false -- players pass through; the ball's path ray still hits it
 	target.Position = positionForAngle(angle)
 	target.Parent = targetsFolder
 	active[target] = true
@@ -48,14 +48,6 @@ function TargetService.init()
 	targetsFolder = Instance.new("Folder")
 	targetsFolder.Name = "Targets"
 	targetsFolder.Parent = Workspace
-end
-
-function TargetService.getFolder(): Folder
-	return targetsFolder
-end
-
-function TargetService.isLiveTarget(part: Instance): boolean
-	return active[part :: BasePart] == true
 end
 
 -- Spawn a fresh ring of targets (called when a round goes Active).
@@ -79,13 +71,15 @@ function TargetService.clearTargets()
 	end
 end
 
--- Handle one target being hit: flash it green, remove it, then -- if the round
--- is still going -- pop a replacement somewhere new so there's always something
--- to aim at.
-function TargetService.handleHit(part: Instance)
+-- Try to "score" a part. Returns true only if it really was a live target; in
+-- that case we flash it green, remove it, and -- if the round is still going --
+-- pop a replacement somewhere new so there's always something to aim at.
+-- Returning a bool lets ThrowService award points and consume the target in one
+-- atomic step, so a target can never be scored twice.
+function TargetService.consumeTarget(part: Instance): boolean
 	local target = part :: BasePart
 	if not active[target] then
-		return -- already hit / not a real target; ignore
+		return false
 	end
 	active[target] = nil
 	target.Color = Color3.fromRGB(120, 255, 120)
@@ -96,6 +90,7 @@ function TargetService.handleHit(part: Instance)
 			createTarget(math.random() * math.pi * 2)
 		end
 	end)
+	return true
 end
 
 return TargetService

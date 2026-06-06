@@ -14,6 +14,13 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- Hide the default Roblox chat so it doesn't cover targets that float up near
+-- the top-left of the screen. This is a focused single-screen arcade game; if
+-- you want chat back later, just delete this block.
+pcall(function()
+	game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false)
+end)
+
 -- ---------------------------------------------------------------------------
 -- Build the HUD (one tidy panel, top-center, so it never overlaps Roblox's own
 -- menu / chat buttons in the corners).
@@ -70,7 +77,7 @@ hint.Font = Enum.Font.GothamMedium
 hint.TextSize = 16
 hint.TextColor3 = Color3.fromRGB(235, 235, 235)
 hint.TextStrokeTransparency = 0.6
-hint.Text = "Aim at a glowing target and click to throw"
+hint.Text = "Hold to charge power, release to throw at a target"
 hint.Parent = screen
 
 -- ---------------------------------------------------------------------------
