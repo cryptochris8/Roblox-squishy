@@ -1,0 +1,3 @@
+# This folder is reserved for on-screen UI (ScreenGuis) added in a later build step.
+# It exists now only so Rojo has a valid path to map. Safe to delete this file
+# once real UI files live here.
