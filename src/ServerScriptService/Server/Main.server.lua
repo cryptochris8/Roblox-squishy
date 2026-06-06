@@ -5,6 +5,7 @@
 -- in the right order and start the round loop.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
@@ -23,12 +24,31 @@ ScoreService.init()
 -- STEP 4: handle throw requests from clients.
 -- The client can ASK to throw, but the SERVER decides if it counts. This is the
 -- "client requests, server validates" rule. Right now a valid throw during an
--- active round simply scores a point -- the real ball + targets come next.
+-- active round scores a point -- the real ball + targets come next.
+--
+-- We also rate-limit per player. The client controls how OFTEN it sends the
+-- request, so without a cooldown an auto-clicker (or a one-line exploit) could
+-- spam points. The server -- not the client -- decides how fast a throw scores.
 local throwRequest = Remotes.get(Remotes.ThrowRequest)
+local lastThrow: { [Player]: number } = {}
+
 throwRequest.OnServerEvent:Connect(function(player: Player)
-	if RoundService.isActive() then
-		ScoreService.addScore(player, GameConfig.PointsPerHit)
+	if not RoundService.isActive() then
+		return
 	end
+
+	local now = os.clock()
+	if now - (lastThrow[player] or 0) < GameConfig.ThrowCooldown then
+		return -- too soon since the last counted throw; ignore (anti-spam)
+	end
+	lastThrow[player] = now
+
+	ScoreService.addScore(player, GameConfig.PointsPerHit)
+end)
+
+-- Forget a player's cooldown when they leave so the table never grows forever.
+Players.PlayerRemoving:Connect(function(player: Player)
+	lastThrow[player] = nil
 end)
 
 -- STEP 5: start the round heartbeat.

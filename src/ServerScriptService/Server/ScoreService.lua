@@ -52,6 +52,7 @@ function ScoreService.addScore(player: Player, amount: number)
 end
 
 -- Read a player's current score (server-side helper).
+-- Not called yet -- it's here for the upcoming leaderboard / end-of-round screen.
 function ScoreService.getScore(player: Player): number
 	return scores[player] or 0
 end

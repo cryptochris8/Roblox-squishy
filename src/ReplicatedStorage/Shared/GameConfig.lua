@@ -11,6 +11,7 @@ GameConfig.RoundDuration = 60        -- how long an active round lasts
 GameConfig.EndScreenDuration = 5     -- how long the "round over" state shows
 
 -- Scoring
-GameConfig.PointsPerHit = 1 -- points for one successful throw (temporary stand-in)
+GameConfig.PointsPerHit = 1   -- points for one successful throw (temporary stand-in)
+GameConfig.ThrowCooldown = 0.3 -- min seconds between throws that score (server anti-spam)
 
 return GameConfig

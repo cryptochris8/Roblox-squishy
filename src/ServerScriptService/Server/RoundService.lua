@@ -13,7 +13,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local RoundService = {}
 
 -- Public, readable state. Other server code (like Main) checks RoundService.isActive().
-RoundService.State = "Waiting" -- "Intermission" | "Active" | "RoundOver"
+RoundService.State = "Waiting" -- "Waiting" | "Intermission" | "Active" | "RoundOver"
 RoundService.TimeLeft = 0
 RoundService.RoundNumber = 0
 
@@ -45,9 +45,15 @@ function RoundService.isActive(): boolean
 	return RoundService.State == "Active"
 end
 
+-- The slice of ScoreService that RoundService actually needs. Declaring it keeps
+-- --!strict happy and documents the dependency without a hard require.
+type ScoreServiceLike = {
+	resetAll: () -> (),
+}
+
 -- Start the never-ending round loop. Pass in ScoreService so we can reset
 -- scores at the start of each round.
-function RoundService.start(scoreService)
+function RoundService.start(scoreService: ScoreServiceLike)
 	roundUpdateEvent = Remotes.get(Remotes.RoundUpdate)
 
 	task.spawn(function()
