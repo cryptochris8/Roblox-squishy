@@ -1,34 +1,39 @@
 --!strict
 -- GameConfig
--- Central place for tunable numbers. Change values HERE instead of hunting
--- through the game code. Both the server and the client can read this module.
+-- All the kid-friendly tunable numbers for the Squishy Smash MVP in one place.
+-- Change values HERE rather than deep in the game code.
 
 local GameConfig = {}
 
--- Round timing (in seconds)
-GameConfig.IntermissionDuration = 10 -- waiting time between rounds
-GameConfig.RoundDuration = 60        -- how long an active round lasts
-GameConfig.EndScreenDuration = 5     -- how long the "round over" state shows
+-- Sparkle Coins
+GameConfig.StartingSparkleCoins = 0
 
--- Scoring
-GameConfig.PointsPerHit = 1    -- points for hitting one target
-GameConfig.ThrowCooldown = 0.3 -- min seconds between throws (server anti-spam)
+-- Squishing a sleepy friend fills its Joy Meter; when it's full the friend
+-- gives a Happy Pop (sparkles + Sparkle Coins) and a new friend wakes up.
+GameConfig.JoyPerSquish = 0.34            -- ~3 gentle squishes to fill the meter
+GameConfig.SquishCooldownSeconds = 0.12   -- gentle anti-spam, per player per friend
+GameConfig.HappyPopRespawnSeconds = 1.2   -- a new sleepy friend wakes up after a pop
 
--- Throwing (a real football with a gravity arc and adjustable power)
-GameConfig.MinThrowSpeed = 55  -- launch speed at the lightest tap (studs/sec)
-GameConfig.MaxThrowSpeed = 150 -- launch speed at full charge (studs/sec)
-GameConfig.ThrowGravity = 110  -- downward pull on the ball (studs/sec^2); higher = more arc
-GameConfig.BallLifetime = 5    -- seconds before a thrown ball gives up and despawns
-GameConfig.BallSize = 1.4      -- diameter of the football
-GameConfig.MaxChargeTime = 1.0 -- seconds of holding to reach full power
-GameConfig.MinPowerFrac = 0.15 -- even a quick tap throws with at least this much power
+-- First tutorial quest: wake up (Happy Pop) this many sleepy friends.
+GameConfig.TutorialPopGoal = 3
+GameConfig.TutorialRewardCoins = 100
 
--- Targets (what you throw at)
-GameConfig.TargetCount = 6        -- how many targets are out at once
-GameConfig.TargetSize = 4         -- diameter of each target
-GameConfig.TargetRespawnDelay = 1 -- seconds before a hit target reappears
-GameConfig.TargetRadius = 26      -- distance of the target ring from the center
-GameConfig.TargetHeightMin = 6    -- lowest a target can float
-GameConfig.TargetHeightMax = 16   -- highest a target can float
+-- The Sparkle Capsule: the very first one is a free gift after the tutorial.
+GameConfig.FirstCapsuleIsFree = true
+
+-- The friends who wander the Pudding Hills starter zone in the MVP.
+GameConfig.PuddingHillsStarters = {
+	"soft_dumpling",
+	"jelly_bun",
+	"peach_mochi",
+	"cream_puff",
+	"pudding_pop",
+	"sparkle_mochi",
+	"galaxy_dumpling",
+}
+GameConfig.PuddingHillsFriendCount = 5 -- how many sleepy friends are out at once
+
+-- A few cozy display constants
+GameConfig.ZoneName = "Pudding Hills"
 
 return GameConfig

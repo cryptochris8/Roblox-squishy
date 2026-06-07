@@ -1,47 +1,40 @@
-# QB1-Roblox
+# Squishy Smash — Roblox
 
-A beginner Roblox arcade football game, built with **Claude Code + Rojo**.
-Claude edits the local files here; **Rojo** syncs them into **Roblox Studio**;
-Studio runs, tests, and publishes the game.
+A wholesome, storybook-safe Roblox collector game (ages ~4–8 friendly). Squish
+sleepy **Squishy Friends** in **Pudding Hills** to fill their **Joy Meter**, watch
+them **Happy Pop** into sparkles, earn **Sparkle Coins**, open a **Sparkle Capsule**,
+and fill your **Squishy Book** with the 48 official launch friends.
 
-## Requirements
+Built with **Claude Code + Rojo**: Claude edits these local files, Rojo syncs them
+into **Roblox Studio**, and Studio runs/tests/publishes the game.
 
-- [Roblox Studio](https://create.roblox.com/docs/studio/setup)
-- [Rojo](https://rojo.space/) (installed via [Rokit](https://github.com/rojo-rbx/rokit))
-- Git
-
-## Quick start
+## Run it
 
 ```powershell
-# 1. Install the toolchain (one time)
-rokit install
-
-# 2. Make sure the Rojo Studio plugin is installed (one time)
-rojo plugin install
-
-# 3. Start syncing
+cd D:\Roblox
 rojo serve
 ```
 
-Then in Roblox Studio: open a Baseplate, open the **Rojo** plugin, click
-**Connect**, and press **Play**. Watch the **Output** window for `[QB1 ...]`
-messages.
+Then in Roblox Studio: open a Baseplate, open the **Rojo** plugin in **Edit mode**,
+click **Connect**, then press **Play**. Walk up to a sleepy friend and click it to
+squish; talk to **Soft Dumpling** and use the **Sparkle Capsule** machine.
 
-## Project layout
+## What's here (Pudding Hills MVP)
 
-```
-default.project.json          Rojo file map (local files -> Studio)
-rokit.toml                    Pinned tool versions (Rojo, etc.)
-CLAUDE.md                     Instructions/context for Claude Code
-src/
-  ReplicatedStorage/Shared/   Shared modules (GameConfig, Remotes)
-  ServerScriptService/Server/ Server logic (Round + Score services, Main)
-  StarterPlayer/.../          Client LocalScript (Main.client)
-  StarterGui/ClientUI/        On-screen UI (added later)
-```
+- Server-authoritative squish → Joy → Happy Pop → Sparkle Coins loop
+- The "wake up 3 sleepy friends" tutorial quest (+100 coins, first capsule free)
+- The Sparkle Capsule (kind, never gambling-flavored) with a Friendship Bonus for duplicates
+- The 48-card **Squishy Book** with locked/unlocked friends, zone/event tabs, and Equip Buddy
+- A cozy placeholder Pudding Hills world
 
-## How it works (the golden rule)
+All character/card data comes from `src/ReplicatedStorage/Shared/SquishyDefinitions.lua`
+(generated from `data/raw/`). Design docs live in `docs/`. See `CLAUDE.md` for the
+full file map, the server↔client contract, and the kid-friendly content rules.
 
-The **server** owns the truth (scores, round state, rewards). The **client**
-only shows things and asks the server to do things. The server always validates.
-See `CLAUDE.md` for the full rules and build order.
+## Kid-safe by design
+
+No combat, weapons, horror, or scary mechanics — only squish, bounce, sparkle,
+discover, collect, and friendship. No monetization in this MVP.
+
+> The earlier QB1 football learning prototype is preserved on git tag
+> `qb1-prototype` and in `archive/qb1/`.

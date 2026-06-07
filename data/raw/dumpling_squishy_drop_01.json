@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "packId": "dumpling_squishy_drop_01",
+  "displayName": "Dumpling Squishy",
+  "themeTag": "dumpling_squishy",
+  "releaseType": "weekly",
+  "releaseWindow": "2026-04-27",
+  "unlockCost": 500,
+  "packProgression": {
+    "baseOdds": {
+      "common": 0.70,
+      "rare": 0.25,
+      "epic": 0.00,
+      "legendary": 0.05
+    },
+    "unlockGates": {
+      "rare": 3,
+      "epic": 999,
+      "legendary": 8
+    },
+    "pity": {
+      "rareSoft": 4,
+      "rareHard": 6,
+      "epicSoft": 999,
+      "epicHard": 999,
+      "legendarySoft": 15,
+      "legendaryHard": 25
+    }
+  },
+  "palette": {
+    "primary": "#FFD1DC",
+    "secondary": "#FFB5A7",
+    "accent": "#F6C089"
+  },
+  "arenaSuggestion": "candy_cloud_kitchen",
+  "featuredAudioSet": "dumpling_squishy_sfx_v1",
+  "objects": [
+    {
+      "id": "steamy",
+      "name": "Steamy",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/steamy.webp",
+      "thumbnail": "assets/images/thumbnails/steamy_thumb.webp",
+      "deformability": 0.86,
+      "elasticity": 0.60,
+      "burstThreshold": 0.80,
+      "gooLevel": 0.75,
+      "impactSounds": [
+        "audio/food/steamy_squish_01.mp3",
+        "audio/food/steamy_squish_02.mp3",
+        "audio/food/steamy_squish_03.mp3"
+      ],
+      "burstSound": "audio/food/steamy_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 8,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": ["dumpling", "squishy", "asmr", "satisfying", "food", "bao"]
+    },
+    {
+      "id": "puffkin",
+      "name": "Puffkin",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/puffkin.webp",
+      "thumbnail": "assets/images/thumbnails/puffkin_thumb.webp",
+      "deformability": 0.90,
+      "elasticity": 0.58,
+      "burstThreshold": 0.82,
+      "gooLevel": 0.68,
+      "impactSounds": [
+        "audio/food/puffkin_squish_01.mp3",
+        "audio/food/puffkin_squish_02.mp3",
+        "audio/food/puffkin_squish_03.mp3"
+      ],
+      "burstSound": "audio/food/puffkin_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 9,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": ["bao", "puff", "squishy", "asmr", "satisfying"]
+    },
+    {
+      "id": "dimpa",
+      "name": "Dimpa",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/dimpa.webp",
+      "thumbnail": "assets/images/thumbnails/dimpa_thumb.webp",
+      "deformability": 0.83,
+      "elasticity": 0.66,
+      "burstThreshold": 0.77,
+      "gooLevel": 0.71,
+      "impactSounds": [
+        "audio/food/dimpa_squish_01.mp3",
+        "audio/food/dimpa_squish_02.mp3",
+        "audio/food/dimpa_squish_03.mp3"
+      ],
+      "burstSound": "audio/food/dimpa_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": ["dim sum", "dumpling", "squishy", "asmr"]
+    },
+    {
+      "id": "boblet",
+      "name": "Boblet",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/boblet.webp",
+      "thumbnail": "assets/images/thumbnails/boblet_thumb.webp",
+      "deformability": 0.93,
+      "elasticity": 0.52,
+      "burstThreshold": 0.71,
+      "gooLevel": 0.88,
+      "impactSounds": [
+        "audio/food/boblet_squish_01.mp3",
+        "audio/food/boblet_squish_02.mp3",
+        "audio/food/boblet_squish_03.mp3"
+      ],
+      "burstSound": "audio/food/boblet_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": ["boba", "blob", "squishy", "satisfying"]
+    },
+    {
+      "id": "moshi",
+      "name": "Moshi",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/moshi.webp",
+      "thumbnail": "assets/images/thumbnails/moshi_thumb.webp",
+      "deformability": 0.89,
+      "elasticity": 0.54,
+      "burstThreshold": 0.84,
+      "gooLevel": 0.65,
+      "impactSounds": [
+        "audio/food/moshi_squish_01.mp3",
+        "audio/food/moshi_squish_02.mp3",
+        "audio/food/moshi_squish_03.mp3"
+      ],
+      "burstSound": "audio/food/moshi_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 11,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": ["mochi", "soft", "squishy", "asmr", "satisfying"]
+    },
+    {
+      "id": "soupy_blob",
+      "name": "Soupy Blob",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/soupy_blob.webp",
+      "thumbnail": "assets/images/thumbnails/soupy_blob_thumb.webp",
+      "deformability": 0.94,
+      "elasticity": 0.48,
+      "burstThreshold": 0.68,
+      "gooLevel": 0.95,
+      "impactSounds": [
+        "audio/food/soupy_squish_01.mp3",
+        "audio/food/soupy_squish_02.mp3",
+        "audio/food/soupy_squish_03.mp3",
+        "audio/food/soupy_squish_04.mp3"
+      ],
+      "burstSound": "audio/food/soupy_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 22,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": ["soup dumpling", "xiaolongbao", "rare", "squishy"]
+    },
+    {
+      "id": "gobble_puff",
+      "name": "Gobble Puff",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/gobble_puff.webp",
+      "thumbnail": "assets/images/thumbnails/gobble_puff_thumb.webp",
+      "deformability": 0.91,
+      "elasticity": 0.55,
+      "burstThreshold": 0.86,
+      "gooLevel": 0.80,
+      "impactSounds": [
+        "audio/food/gobble_squish_01.mp3",
+        "audio/food/gobble_squish_02.mp3",
+        "audio/food/gobble_squish_03.mp3",
+        "audio/food/gobble_squish_04.mp3"
+      ],
+      "burstSound": "audio/food/gobble_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 24,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": ["puff", "bao", "overstuffed", "rare", "squishy"]
+    },
+    {
+      "id": "gold_dumplio",
+      "name": "Gold Dumplio",
+      "category": "squishy_food",
+      "themeTag": "dumpling_squishy",
+      "sprite": "assets/images/objects/gold_dumplio.webp",
+      "thumbnail": "assets/images/thumbnails/gold_dumplio_thumb.webp",
+      "deformability": 0.88,
+      "elasticity": 0.62,
+      "burstThreshold": 0.90,
+      "gooLevel": 0.92,
+      "impactSounds": [
+        "audio/food/gold_dumplio_squish_01.mp3",
+        "audio/food/gold_dumplio_squish_02.mp3",
+        "audio/food/gold_dumplio_squish_03.mp3",
+        "audio/food/gold_dumplio_squish_04.mp3"
+      ],
+      "burstSound": "audio/food/gold_dumplio_burst_01.mp3",
+      "particlePreset": "gold_mythic_burst",
+      "decalPreset": "gold_mythic_splat",
+      "coinReward": 75,
+      "unlockTier": 3,
+      "rarity": "mythic",
+      "searchTags": ["mythic", "gold", "rare", "dumpling", "shiny"]
+    }
+  ]
+}

@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 2,
+  "packId": "creepy_cute_pack_01",
+  "displayName": "Creepy-Cute Creatures",
+  "themeTag": "weird_cute",
+  "releaseType": "launch",
+  "unlockCost": 250,
+  "packProgression": {
+    "unlockGates": {
+      "rare": 3,
+      "epic": 10,
+      "legendary": 20
+    },
+    "pity": {
+      "rareSoft": 5,
+      "rareHard": 7,
+      "epicSoft": 14,
+      "epicHard": 20,
+      "legendarySoft": 25,
+      "legendaryHard": 50
+    }
+  },
+  "palette": {
+    "primary": "#B084F2",
+    "secondary": "#FF8FB8",
+    "accent": "#B6FF5C"
+  },
+  "arenaSuggestion": "creepy_cute_crypt",
+  "featuredAudioSet": "creature_giggle_pack",
+  "objects": [
+    {
+      "id": "round_eared_creature",
+      "name": "Round Eared Creature",
+      "category": "creepy_cute",
+      "themeTag": "blind_box_vibe",
+      "sprite": "assets/images/objects/round_eared_creature.webp",
+      "thumbnail": "assets/images/thumbnails/round_eared_creature_thumb.webp",
+      "deformability": 0.78,
+      "elasticity": 0.66,
+      "burstThreshold": 0.74,
+      "gooLevel": 0.61,
+      "impactSounds": [
+        "audio/creature/round_eared_creature_snicker_01.mp3",
+        "audio/creature/round_eared_creature_snicker_02.mp3",
+        "audio/creature/round_eared_creature_snicker_03.mp3"
+      ],
+      "burstSound": "audio/creature/round_eared_creature_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 18,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "creepy cute",
+        "monster",
+        "blind box",
+        "weird"
+      ],
+      "cardNumber": "040/048"
+    },
+    {
+      "id": "candy_fang_creature",
+      "name": "Candy Fang Creature",
+      "category": "creepy_cute",
+      "themeTag": "snaggletooth",
+      "sprite": "assets/images/objects/candy_fang_creature.webp",
+      "thumbnail": "assets/images/thumbnails/candy_fang_creature_thumb.webp",
+      "deformability": 0.71,
+      "elasticity": 0.59,
+      "burstThreshold": 0.81,
+      "gooLevel": 0.48,
+      "impactSounds": [
+        "audio/creature/candy_fang_creature_squeak_01.mp3",
+        "audio/creature/candy_fang_creature_squeak_02.mp3"
+      ],
+      "burstSound": "audio/creature/candy_fang_creature_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 20,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "fang",
+        "creepy",
+        "cute",
+        "spooky"
+      ],
+      "cardNumber": "044/048"
+    },
+    {
+      "id": "blushy_bun_bunny",
+      "name": "Blushy Bun Bunny",
+      "category": "creepy_cute",
+      "themeTag": "bunny",
+      "sprite": "assets/images/objects/blushy_bun_bunny.webp",
+      "thumbnail": "assets/images/thumbnails/blushy_bun_bunny_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/blushy_bun_bunny_squish_01.mp3",
+        "audio/creature/blushy_bun_bunny_squish_02.mp3",
+        "audio/creature/blushy_bun_bunny_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/blushy_bun_bunny_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 12,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "bunny",
+        "creature"
+      ],
+      "cardNumber": "033/048"
+    },
+    {
+      "id": "squish_bat",
+      "name": "Squish Bat",
+      "category": "creepy_cute",
+      "themeTag": "bat",
+      "sprite": "assets/images/objects/squish_bat.webp",
+      "thumbnail": "assets/images/thumbnails/squish_bat_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/squish_bat_squish_01.mp3",
+        "audio/creature/squish_bat_squish_02.mp3",
+        "audio/creature/squish_bat_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/squish_bat_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 12,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "bat",
+        "creepy_cute"
+      ],
+      "cardNumber": "034/048"
+    },
+    {
+      "id": "puff_ghost",
+      "name": "Puff Ghost",
+      "category": "creepy_cute",
+      "themeTag": "ghost",
+      "sprite": "assets/images/objects/puff_ghost.webp",
+      "thumbnail": "assets/images/thumbnails/puff_ghost_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/puff_ghost_squish_01.mp3",
+        "audio/creature/puff_ghost_squish_02.mp3",
+        "audio/creature/puff_ghost_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/puff_ghost_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 12,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "ghost",
+        "spooky"
+      ],
+      "cardNumber": "035/048"
+    },
+    {
+      "id": "wobble_kitty",
+      "name": "Wobble Kitty",
+      "category": "creepy_cute",
+      "themeTag": "cat",
+      "sprite": "assets/images/objects/wobble_kitty.webp",
+      "thumbnail": "assets/images/thumbnails/wobble_kitty_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/wobble_kitty_squish_01.mp3",
+        "audio/creature/wobble_kitty_squish_02.mp3",
+        "audio/creature/wobble_kitty_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/wobble_kitty_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 13,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "cat",
+        "kitty"
+      ],
+      "cardNumber": "036/048"
+    },
+    {
+      "id": "tiny_blob_monster",
+      "name": "Tiny Blob Monster",
+      "category": "creepy_cute",
+      "themeTag": "blob_monster",
+      "sprite": "assets/images/objects/tiny_blob_monster.webp",
+      "thumbnail": "assets/images/thumbnails/tiny_blob_monster_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/tiny_blob_monster_squish_01.mp3",
+        "audio/creature/tiny_blob_monster_squish_02.mp3",
+        "audio/creature/tiny_blob_monster_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/tiny_blob_monster_burst_01.mp3",
+      "particlePreset": "green_goo_burst",
+      "decalPreset": "green_goo_smear",
+      "coinReward": 12,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "monster",
+        "blob"
+      ],
+      "cardNumber": "037/048"
+    },
+    {
+      "id": "soft_fang_critter",
+      "name": "Soft Fang Critter",
+      "category": "creepy_cute",
+      "themeTag": "fang",
+      "sprite": "assets/images/objects/soft_fang_critter.webp",
+      "thumbnail": "assets/images/thumbnails/soft_fang_critter_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/soft_fang_critter_squish_01.mp3",
+        "audio/creature/soft_fang_critter_squish_02.mp3",
+        "audio/creature/soft_fang_critter_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/soft_fang_critter_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 13,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "fang",
+        "critter"
+      ],
+      "cardNumber": "038/048"
+    },
+    {
+      "id": "sleepy_slime_pet",
+      "name": "Sleepy Slime Pet",
+      "category": "creepy_cute",
+      "themeTag": "slime_pet",
+      "sprite": "assets/images/objects/sleepy_slime_pet.webp",
+      "thumbnail": "assets/images/thumbnails/sleepy_slime_pet_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/sleepy_slime_pet_squish_01.mp3",
+        "audio/creature/sleepy_slime_pet_squish_02.mp3",
+        "audio/creature/sleepy_slime_pet_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/sleepy_slime_pet_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 12,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "slime",
+        "sleepy"
+      ],
+      "cardNumber": "039/048"
+    },
+    {
+      "id": "star_eyed_bunny",
+      "name": "Star-Eyed Bunny",
+      "category": "creepy_cute",
+      "themeTag": "star_bunny",
+      "sprite": "assets/images/objects/star_eyed_bunny.webp",
+      "thumbnail": "assets/images/thumbnails/star_eyed_bunny_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/star_eyed_bunny_squish_01.mp3",
+        "audio/creature/star_eyed_bunny_squish_02.mp3",
+        "audio/creature/star_eyed_bunny_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/star_eyed_bunny_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 22,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "bunny",
+        "star",
+        "rare"
+      ],
+      "cardNumber": "041/048"
+    },
+    {
+      "id": "moon_bat_blob",
+      "name": "Moon Bat Blob",
+      "category": "creepy_cute",
+      "themeTag": "moon_bat",
+      "sprite": "assets/images/objects/moon_bat_blob.webp",
+      "thumbnail": "assets/images/thumbnails/moon_bat_blob_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/moon_bat_blob_squish_01.mp3",
+        "audio/creature/moon_bat_blob_squish_02.mp3",
+        "audio/creature/moon_bat_blob_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/moon_bat_blob_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 22,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "moon",
+        "bat",
+        "rare"
+      ],
+      "cardNumber": "042/048"
+    },
+    {
+      "id": "glow_ghost_puff",
+      "name": "Glow Ghost Puff",
+      "category": "creepy_cute",
+      "themeTag": "glow_ghost",
+      "sprite": "assets/images/objects/glow_ghost_puff.webp",
+      "thumbnail": "assets/images/thumbnails/glow_ghost_puff_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/glow_ghost_puff_squish_01.mp3",
+        "audio/creature/glow_ghost_puff_squish_02.mp3",
+        "audio/creature/glow_ghost_puff_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/glow_ghost_puff_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 24,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "ghost",
+        "glow",
+        "rare"
+      ],
+      "cardNumber": "043/048"
+    },
+    {
+      "id": "dream_eater_squish",
+      "name": "Dream Eater Squish",
+      "category": "creepy_cute",
+      "themeTag": "dream_eater",
+      "sprite": "assets/images/objects/dream_eater_squish.webp",
+      "thumbnail": "assets/images/thumbnails/dream_eater_squish_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/dream_eater_squish_squish_01.mp3",
+        "audio/creature/dream_eater_squish_squish_02.mp3",
+        "audio/creature/dream_eater_squish_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/dream_eater_squish_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 36,
+      "unlockTier": 3,
+      "rarity": "epic",
+      "searchTags": [
+        "dream_eater",
+        "epic"
+      ],
+      "cardNumber": "045/048"
+    },
+    {
+      "id": "arcane_wobble_kitty",
+      "name": "Arcane Wobble Kitty",
+      "category": "creepy_cute",
+      "themeTag": "arcane_kitty",
+      "sprite": "assets/images/objects/arcane_wobble_kitty.webp",
+      "thumbnail": "assets/images/thumbnails/arcane_wobble_kitty_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/arcane_wobble_kitty_squish_01.mp3",
+        "audio/creature/arcane_wobble_kitty_squish_02.mp3",
+        "audio/creature/arcane_wobble_kitty_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/arcane_wobble_kitty_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "gold_mythic_splat",
+      "coinReward": 36,
+      "unlockTier": 3,
+      "rarity": "epic",
+      "searchTags": [
+        "arcane",
+        "cat",
+        "epic"
+      ],
+      "cardNumber": "046/048"
+    },
+    {
+      "id": "mythic_plush_familiar",
+      "name": "Mythic Plush Familiar",
+      "category": "creepy_cute",
+      "themeTag": "legendary_familiar",
+      "sprite": "assets/images/objects/mythic_plush_familiar.webp",
+      "thumbnail": "assets/images/thumbnails/mythic_plush_familiar_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/mythic_plush_familiar_squish_01.mp3",
+        "audio/creature/mythic_plush_familiar_squish_02.mp3",
+        "audio/creature/mythic_plush_familiar_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/mythic_plush_familiar_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "gold_mythic_splat",
+      "coinReward": 140,
+      "unlockTier": 5,
+      "rarity": "mythic",
+      "searchTags": [
+        "legendary",
+        "familiar",
+        "mythic"
+      ],
+      "cardNumber": "048/048"
+    },
+    {
+      "id": "phantom_jelly_beast",
+      "name": "Phantom Jelly Beast",
+      "category": "creepy_cute",
+      "themeTag": "phantom_jelly",
+      "sprite": "assets/images/objects/phantom_jelly_beast.webp",
+      "thumbnail": "assets/images/thumbnails/phantom_jelly_beast_thumb.webp",
+      "behaviorProfile": "creature",
+      "impactSounds": [
+        "audio/creature/phantom_jelly_beast_squish_01.mp3",
+        "audio/creature/phantom_jelly_beast_squish_02.mp3",
+        "audio/creature/phantom_jelly_beast_squish_03.mp3"
+      ],
+      "burstSound": "audio/creature/phantom_jelly_beast_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 36,
+      "unlockTier": 3,
+      "rarity": "epic",
+      "searchTags": [
+        "phantom",
+        "jelly",
+        "epic"
+      ],
+      "cardNumber": "047/048"
+    }
+  ]
+}

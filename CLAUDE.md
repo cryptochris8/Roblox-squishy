@@ -1,98 +1,87 @@
-# Claude Code Instructions for QB1-Roblox
+# Squishy Smash Roblox — Claude Code Master Instructions
 
-You are helping Chris build a Roblox game using **Luau** and **Rojo**. Chris is
-new to Roblox (coming from Hytopia), so favor clear explanations and small,
-testable steps.
+You are helping build **Squishy Smash** as a wholesome Roblox game using Rojo + Roblox Studio + local files.
 
-## Project Goal
+Read these files before coding:
 
-Build a Roblox arcade football game called **QB1-Roblox**.
+1. `docs/00_START_HERE.md`
+2. `docs/01_UNIVERSE_CANON.md`
+3. `docs/02_KID_FRIENDLY_RULES.md`
+4. `docs/03_ROBLOX_GAME_DESIGN_MVP.md`
+5. `docs/04_CHARACTER_DATA_AND_ROSTER.md`
+6. `docs/05_COLLECTION_AND_CAPSULE_SYSTEM.md`
+7. `docs/06_UI_AND_CARD_STYLE_GUIDE.md`
+8. `docs/07_IMPLEMENTATION_TASK_LIST.md`
+9. `docs/08_ASSET_IMPORT_AND_PLACEHOLDER_PLAN.md`
+10. `docs/09_FUTURE_ROADMAP.md`
 
-Long-term core loop:
+Use the JSON data in `data/raw/` as the official character/card source of truth. Use the sample card images in `assets/card_samples/` as the visual reference for card UI. Use `generated_lua/` as a starting point for Roblox ModuleScripts.
+
+## Non-negotiable creative rule
+
+Squishy Smash is kid-friendly and storybook-safe. Build around squish, squeeze, bounce, boop, pop, sparkle, discover, collect, decorate, help, and friendship.
+
+Do **not** build combat, weapons, horror, vulgarity, romance/dating, blood, gore, or mature content.
+
+## First MVP goal
+
+Build a playable local Roblox prototype with Pudding Hills starter zone, simple squishy interaction, Sparkle Coins, Collection Book, capsule reveal, official 48-card launch roster, placeholder Roblox models, card image asset placeholders, no Robux purchases yet, no Open Cloud automation yet, and no automatic publishing.
+
+## Terminology replacements
+
+Use player-facing language like:
+
+- `Joy Meter`, not health
+- `Squish Power`, not attack power
+- `Happy Pop`, not defeat/burst
+- `Squishy Friends`, not enemies
+- `Play Zone`, not arena/battle zone
+- `Discovered`, not won/pulled
+
+Internally, old JSON fields such as `burstSound` or `burstThreshold` may remain for compatibility, but player-facing UI should use the softer terms above.
+
+---
+
+## Current Build (Pudding Hills MVP)
+
+Active Rojo project at the repo root (`default.project.json`, name `SquishySmash`).
+Run `rojo serve` from `D:\Roblox`, connect the Rojo plugin in Studio (Edit mode),
+then Play. The earlier QB1 football prototype is preserved on git branch/tag
+`qb1-prototype` and under `archive/qb1/`.
+
+### File map
 
 ```
-Player spawns -> Round starts -> Targets appear -> Player throws footballs
--> Hits add score -> Timer ends -> Leaderboard updates -> Player earns coins
+src/ReplicatedStorage/Shared/
+  SquishyDefinitions.lua   generated 56-friend data (48 launch + 8 event) — source of truth
+  RarityConfig / PackConfig / CapsuleConfig   generated configs
+  SquishyData.lua          query helpers (getById/getByPack/getByZone/getByRarity/getLaunchRoster)
+  GameConfig.lua           kid-friendly tunables (Joy per squish, tutorial, starters)
+  Remotes.lua              RemoteEvent names + setupServer/get
+src/ServerScriptService/Server/   (server-authoritative)
+  Main.server.lua          entry: setup remotes, init services, build world, wire prompts
+  PlayerDataService.lua    per-player profile (coins, discovered, totals) + leaderstats; DataStore = TODO
+  WorldService.lua         builds Pudding Hills (ground, hills, capsule, guide, pads)
+  SquishService.lua        spawns friends; squish -> Joy -> Happy Pop -> coins -> respawn
+  CapsuleService.lua       Sparkle Capsule: weighted rarity, discover, Friendship Bonus (server RNG)
+  CollectionService.lua    Equip Buddy (validated)
+  TutorialService.lua      "wake up 3 sleepy friends" quest -> 100 coins
+src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
+  ClientController.client.lua   boots UI, routes server messages
+  UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
 ```
 
-## Where Things Live (Rojo file map)
+### Contract (server <-> client)
 
-Local files are synced into Roblox Studio by Rojo. See `default.project.json`.
+- Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`; s->c `StateSync`,
+  `SquishResult`, `CapsuleResult`, `BuddyEquipped`, `Toast`.
+- Input is server-side: `ClickDetector.MouseClick` (squish) and
+  `ProximityPrompt.Triggered` (capsule + guide) fire on the server.
+- Card art uses `def.ImageAssetId` (currently `rbxassetid://REPLACE_ME`); the UI
+  falls back to a coloured placeholder until real image asset ids are pasted into
+  `SquishyDefinitions.lua` (see `docs/08_ASSET_IMPORT_AND_PLACEHOLDER_PLAN.md`).
 
-| Local folder | Roblox location | What goes here |
-|---|---|---|
-| `src/ReplicatedStorage/Shared` | ReplicatedStorage.Shared | ModuleScripts shared by client AND server (config, remote names) |
-| `src/ServerScriptService/Server` | ServerScriptService.Server | Server-only logic (round loop, scoring, data) |
-| `src/StarterPlayer/StarterPlayerScripts` | StarterPlayer.StarterPlayerScripts | Client LocalScripts (input, UI logic) |
-| `src/StarterGui/ClientUI` | StarterGui.ClientUI | On-screen UI (added later) |
+### Not in MVP yet (deliberately)
 
-### Rojo file-name rules (important)
-
-- `Name.lua` -> a **ModuleScript** named `Name`
-- `Name.server.lua` -> a **Script** (runs on the server automatically)
-- `Name.client.lua` -> a **LocalScript** (runs on the player automatically)
-
-## Current Files
-
-- `src/ReplicatedStorage/Shared/GameConfig.lua` - tunable numbers (timers, points, throw/target settings)
-- `src/ReplicatedStorage/Shared/Remotes.lua` - RemoteEvent names + setup/get helpers
-- `src/ServerScriptService/Server/ScoreService.lua` - server-authoritative scores
-- `src/ServerScriptService/Server/RoundService.lua` - the round-loop heartbeat (+ start/end hooks)
-- `src/ServerScriptService/Server/TargetService.lua` - spawns/clears the target ring, handles hits
-- `src/ServerScriptService/Server/ThrowService.lua` - server raycast hit test + cosmetic football
-- `src/ServerScriptService/Server/Main.server.lua` - server entry point (wires it all up)
-- `src/StarterPlayer/StarterPlayerScripts/Main.client.lua` - client input (aim + throw request)
-- `src/StarterPlayer/StarterPlayerScripts/Hud.client.lua` - on-screen score/timer/state HUD
-
-## Tech Rules
-
-- Use Roblox **Luau**. Top of each script file uses `--!strict` where practical.
-- Keep the Rojo-compatible file structure above.
-- Prefer **ModuleScripts** for reusable systems.
-- **Server-authoritative always:** scores, coins, purchases, round state, data
-  saving, and anti-cheat live on the **server**. The client may only ASK; the
-  server VALIDATES and decides.
-- RemoteEvents: define their names once in `Remotes.lua` so client and server
-  never disagree. Validate every `OnServerEvent` on the server.
-- Use `task.wait` / `task.spawn` (not the old `wait` / `spawn`).
-- Keep code beginner-readable and comment the non-obvious parts.
-
-## Development Style
-
-Work in small, testable steps. For each feature:
-
-1. Say which files you will create or edit.
-2. Build the smallest working version first.
-3. Tell Chris exactly how to test it in Roblox Studio (what to press, what to
-   look for in Output).
-4. Then improve it.
-
-## Safety
-
-- Before large changes, summarize the plan first.
-- Before deleting files, ask first.
-- Prefer additive changes over destructive rewrites.
-- Never put scoring/currency logic only on the client.
-- Never hard-code Roblox API keys in source.
-
-## Build Order (current milestone first)
-
-1. [DONE] Project + Rojo sync + client/server startup
-2. [DONE] Shared GameConfig
-3. [DONE] Round timer (RoundService)
-4. [DONE] Server score system (ScoreService)
-5. [DONE] On-screen HUD (score + timer + round state)
-6. [DONE] Throw input + cosmetic football (client aim -> server)
-7. [DONE] Target spawning + server-authoritative hit detection
-8. **NEXT:** Moving targets (make them harder to hit)
-9. End-of-round screen / winner summary
-10. Coins -> data saving -> cosmetic shop -> mobile controls -> sound -> polish
-
-## How To Test (Studio)
-
-1. In the project folder run `rojo serve`.
-2. In Studio open the Rojo plugin and click **Connect**.
-3. Press **Play**. Open the **Output** window (View -> Output).
-4. You should see `[QB1 Server] Started...`, `[QB1 Client] Started...`, then
-   `[QB1 Round]` lines ticking every second, and `[QB1 Score]` when you click.
-5. Paste any red errors from Output back to Claude Code to fix.
+DataStore save/load, Goo Coast + Moonlit Hollow zones, buddy follower models,
+3D character meshes, and any monetization (no Game Passes / Developer Products).

@@ -10,7 +10,11 @@
 sourcemap.json
 /build/
 
-# Wally packages (restored with `wally install`)
+# The source design package (its contents are already copied into docs/ data/ assets/)
+squishy_smash_roblox_claude_code_package.zip
+/_squishy_pkg/
+
+# Wally packages
 /Packages/
 /ServerPackages/
 /DevPackages/

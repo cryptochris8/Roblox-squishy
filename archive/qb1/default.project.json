@@ -1,5 +1,5 @@
 {
-  "name": "SquishySmash",
+  "name": "QB1-Roblox",
   "tree": {
     "$className": "DataModel",
 
@@ -21,9 +21,21 @@
       }
     },
 
+    "StarterGui": {
+      "ClientUI": {
+        "$path": "src/StarterGui/ClientUI"
+      }
+    },
+
     "Workspace": {
       "$properties": {
         "FilteringEnabled": true
+      }
+    },
+
+    "SoundService": {
+      "$properties": {
+        "RespectFilteringEnabled": true
       }
     }
   }

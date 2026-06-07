@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 2,
+  "packId": "goo_fidgets_drop_01",
+  "displayName": "Goo & Fidgets",
+  "themeTag": "antistress_goo",
+  "releaseType": "launch",
+  "unlockCost": 150,
+  "packProgression": {
+    "unlockGates": {
+      "rare": 3,
+      "epic": 10,
+      "legendary": 20
+    },
+    "pity": {
+      "rareSoft": 5,
+      "rareHard": 7,
+      "epicSoft": 14,
+      "epicHard": 20,
+      "legendarySoft": 25,
+      "legendaryHard": 50
+    }
+  },
+  "palette": {
+    "primary": "#B6FF5C",
+    "secondary": "#7FE7FF",
+    "accent": "#FFD36E"
+  },
+  "arenaSuggestion": "goo_laboratory",
+  "featuredAudioSet": "wet_pop_goo_pack",
+  "objects": [
+    {
+      "id": "goo_ball",
+      "name": "Goo Ball",
+      "category": "goo_fidget",
+      "themeTag": "anti_stress",
+      "sprite": "assets/images/objects/goo_ball.webp",
+      "thumbnail": "assets/images/thumbnails/goo_ball_thumb.webp",
+      "deformability": 0.95,
+      "elasticity": 0.78,
+      "burstThreshold": 0.92,
+      "gooLevel": 0.42,
+      "impactSounds": [
+        "audio/goo/goo_ball_squeeze_01.mp3",
+        "audio/goo/goo_ball_squeeze_02.mp3",
+        "audio/goo/goo_ball_squeeze_03.mp3"
+      ],
+      "burstSound": "audio/goo/goo_ball_pop_01.mp3",
+      "particlePreset": "green_goo_burst",
+      "decalPreset": "green_goo_smear",
+      "coinReward": 14,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "stress ball",
+        "antistress",
+        "fidget",
+        "satisfying"
+      ],
+      "cardNumber": "017/048"
+    },
+    {
+      "id": "bubble_blob",
+      "name": "Bubble Blob",
+      "category": "goo_fidget",
+      "themeTag": "bubble",
+      "sprite": "assets/images/objects/bubble_blob.webp",
+      "thumbnail": "assets/images/thumbnails/bubble_blob_thumb.webp",
+      "behaviorProfile": "goo_ball",
+      "impactSounds": [
+        "audio/goo/bubble_blob_squish_01.mp3",
+        "audio/goo/bubble_blob_squish_02.mp3",
+        "audio/goo/bubble_blob_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/bubble_blob_burst_01.mp3",
+      "particlePreset": "green_goo_burst",
+      "decalPreset": "green_goo_smear",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "bubble",
+        "fidget"
+      ],
+      "cardNumber": "018/048"
+    },
+    {
+      "id": "stretch_cube",
+      "name": "Stretch Cube",
+      "category": "goo_fidget",
+      "themeTag": "stretch",
+      "sprite": "assets/images/objects/stretch_cube.webp",
+      "thumbnail": "assets/images/thumbnails/stretch_cube_thumb.webp",
+      "behaviorProfile": "stress_ball",
+      "impactSounds": [
+        "audio/goo/stretch_cube_squish_01.mp3",
+        "audio/goo/stretch_cube_squish_02.mp3",
+        "audio/goo/stretch_cube_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/stretch_cube_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "soft_peach_splat",
+      "coinReward": 11,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "stretch",
+        "cube",
+        "fidget"
+      ],
+      "cardNumber": "019/048"
+    },
+    {
+      "id": "soft_stress_orb",
+      "name": "Soft Stress Orb",
+      "category": "goo_fidget",
+      "themeTag": "stress_ball",
+      "sprite": "assets/images/objects/soft_stress_orb.webp",
+      "thumbnail": "assets/images/thumbnails/soft_stress_orb_thumb.webp",
+      "behaviorProfile": "stress_ball",
+      "impactSounds": [
+        "audio/goo/soft_stress_orb_squish_01.mp3",
+        "audio/goo/soft_stress_orb_squish_02.mp3",
+        "audio/goo/soft_stress_orb_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/soft_stress_orb_burst_01.mp3",
+      "particlePreset": "cream_puff_burst",
+      "decalPreset": "cream_smudge",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "stress",
+        "ball",
+        "fidget"
+      ],
+      "cardNumber": "020/048"
+    },
+    {
+      "id": "jelly_pad",
+      "name": "Jelly Pad",
+      "category": "goo_fidget",
+      "themeTag": "jelly_pad",
+      "sprite": "assets/images/objects/jelly_pad.webp",
+      "thumbnail": "assets/images/thumbnails/jelly_pad_thumb.webp",
+      "behaviorProfile": "jelly_cube",
+      "impactSounds": [
+        "audio/goo/jelly_pad_squish_01.mp3",
+        "audio/goo/jelly_pad_squish_02.mp3",
+        "audio/goo/jelly_pad_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/jelly_pad_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "jelly",
+        "pad"
+      ],
+      "cardNumber": "021/048"
+    },
+    {
+      "id": "sticky_pop_ball",
+      "name": "Sticky Pop Ball",
+      "category": "goo_fidget",
+      "themeTag": "sticky",
+      "sprite": "assets/images/objects/sticky_pop_ball.webp",
+      "thumbnail": "assets/images/thumbnails/sticky_pop_ball_thumb.webp",
+      "behaviorProfile": "goo_ball",
+      "impactSounds": [
+        "audio/goo/sticky_pop_ball_squish_01.mp3",
+        "audio/goo/sticky_pop_ball_squish_02.mp3",
+        "audio/goo/sticky_pop_ball_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/sticky_pop_ball_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 11,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "sticky",
+        "pop",
+        "fidget"
+      ],
+      "cardNumber": "022/048"
+    },
+    {
+      "id": "wobble_drop",
+      "name": "Wobble Drop",
+      "category": "goo_fidget",
+      "themeTag": "wobble",
+      "sprite": "assets/images/objects/wobble_drop.webp",
+      "thumbnail": "assets/images/thumbnails/wobble_drop_thumb.webp",
+      "behaviorProfile": "jelly_cube",
+      "impactSounds": [
+        "audio/goo/wobble_drop_squish_01.mp3",
+        "audio/goo/wobble_drop_squish_02.mp3",
+        "audio/goo/wobble_drop_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/wobble_drop_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "wobble",
+        "drop"
+      ],
+      "cardNumber": "023/048"
+    },
+    {
+      "id": "glitter_goo_ball",
+      "name": "Glitter Goo Ball",
+      "category": "goo_fidget",
+      "themeTag": "glitter_goo",
+      "sprite": "assets/images/objects/glitter_goo_ball.webp",
+      "thumbnail": "assets/images/thumbnails/glitter_goo_ball_thumb.webp",
+      "behaviorProfile": "goo_ball",
+      "impactSounds": [
+        "audio/goo/glitter_goo_ball_squish_01.mp3",
+        "audio/goo/glitter_goo_ball_squish_02.mp3",
+        "audio/goo/glitter_goo_ball_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/glitter_goo_ball_burst_01.mp3",
+      "particlePreset": "green_goo_burst",
+      "decalPreset": "green_goo_smear",
+      "coinReward": 18,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "glitter",
+        "goo",
+        "rare"
+      ],
+      "cardNumber": "025/048"
+    },
+    {
+      "id": "shockwave_blob",
+      "name": "Shockwave Blob",
+      "category": "goo_fidget",
+      "themeTag": "shockwave",
+      "sprite": "assets/images/objects/shockwave_blob.webp",
+      "thumbnail": "assets/images/thumbnails/shockwave_blob_thumb.webp",
+      "behaviorProfile": "goo_ball",
+      "impactSounds": [
+        "audio/goo/shockwave_blob_squish_01.mp3",
+        "audio/goo/shockwave_blob_squish_02.mp3",
+        "audio/goo/shockwave_blob_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/shockwave_blob_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 18,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "shockwave",
+        "electric",
+        "rare"
+      ],
+      "cardNumber": "026/048"
+    },
+    {
+      "id": "frost_gel_cube",
+      "name": "Frost Gel Cube",
+      "category": "goo_fidget",
+      "themeTag": "frost",
+      "sprite": "assets/images/objects/frost_gel_cube.webp",
+      "thumbnail": "assets/images/thumbnails/frost_gel_cube_thumb.webp",
+      "behaviorProfile": "jelly_cube",
+      "impactSounds": [
+        "audio/goo/frost_gel_cube_squish_01.mp3",
+        "audio/goo/frost_gel_cube_squish_02.mp3",
+        "audio/goo/frost_gel_cube_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/frost_gel_cube_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 19,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "frost",
+        "ice",
+        "rare"
+      ],
+      "cardNumber": "027/048"
+    },
+    {
+      "id": "plasma_goo_ball",
+      "name": "Plasma Goo Ball",
+      "category": "goo_fidget",
+      "themeTag": "plasma",
+      "sprite": "assets/images/objects/plasma_goo_ball.webp",
+      "thumbnail": "assets/images/thumbnails/plasma_goo_ball_thumb.webp",
+      "behaviorProfile": "goo_ball",
+      "impactSounds": [
+        "audio/goo/plasma_goo_ball_squish_01.mp3",
+        "audio/goo/plasma_goo_ball_squish_02.mp3",
+        "audio/goo/plasma_goo_ball_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/plasma_goo_ball_burst_01.mp3",
+      "particlePreset": "pink_soup_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 32,
+      "unlockTier": 3,
+      "rarity": "epic",
+      "searchTags": [
+        "plasma",
+        "goo",
+        "epic"
+      ],
+      "cardNumber": "029/048"
+    },
+    {
+      "id": "aurora_stretch_cube",
+      "name": "Aurora Stretch Cube",
+      "category": "goo_fidget",
+      "themeTag": "aurora",
+      "sprite": "assets/images/objects/aurora_stretch_cube.webp",
+      "thumbnail": "assets/images/thumbnails/aurora_stretch_cube_thumb.webp",
+      "behaviorProfile": "stress_ball",
+      "impactSounds": [
+        "audio/goo/aurora_stretch_cube_squish_01.mp3",
+        "audio/goo/aurora_stretch_cube_squish_02.mp3",
+        "audio/goo/aurora_stretch_cube_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/aurora_stretch_cube_burst_01.mp3",
+      "particlePreset": "green_goo_burst",
+      "decalPreset": "green_goo_smear",
+      "coinReward": 32,
+      "unlockTier": 3,
+      "rarity": "epic",
+      "searchTags": [
+        "aurora",
+        "stretch",
+        "epic"
+      ],
+      "cardNumber": "030/048"
+    },
+    {
+      "id": "cosmic_jelly_pad",
+      "name": "Cosmic Jelly Pad",
+      "category": "goo_fidget",
+      "themeTag": "cosmic",
+      "sprite": "assets/images/objects/cosmic_jelly_pad.webp",
+      "thumbnail": "assets/images/thumbnails/cosmic_jelly_pad_thumb.webp",
+      "behaviorProfile": "jelly_cube",
+      "impactSounds": [
+        "audio/goo/cosmic_jelly_pad_squish_01.mp3",
+        "audio/goo/cosmic_jelly_pad_squish_02.mp3",
+        "audio/goo/cosmic_jelly_pad_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/cosmic_jelly_pad_burst_01.mp3",
+      "particlePreset": "purple_monster_burst",
+      "decalPreset": "purple_monster_splat",
+      "coinReward": 34,
+      "unlockTier": 3,
+      "rarity": "epic",
+      "searchTags": [
+        "cosmic",
+        "jelly",
+        "epic"
+      ],
+      "cardNumber": "031/048"
+    },
+    {
+      "id": "singularity_goo_core",
+      "name": "Singularity Goo Core",
+      "category": "goo_fidget",
+      "themeTag": "singularity",
+      "sprite": "assets/images/objects/singularity_goo_core.webp",
+      "thumbnail": "assets/images/thumbnails/singularity_goo_core_thumb.webp",
+      "behaviorProfile": "goo_ball",
+      "impactSounds": [
+        "audio/goo/singularity_goo_core_squish_01.mp3",
+        "audio/goo/singularity_goo_core_squish_02.mp3",
+        "audio/goo/singularity_goo_core_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/singularity_goo_core_burst_01.mp3",
+      "particlePreset": "green_goo_burst",
+      "decalPreset": "gold_mythic_splat",
+      "coinReward": 130,
+      "unlockTier": 5,
+      "rarity": "mythic",
+      "searchTags": [
+        "singularity",
+        "legendary",
+        "mythic"
+      ],
+      "cardNumber": "032/048"
+    },
+    {
+      "id": "squish_capsule",
+      "name": "Squish Capsule",
+      "category": "goo_fidget",
+      "themeTag": "squish_capsule",
+      "sprite": "assets/images/objects/squish_capsule.webp",
+      "thumbnail": "assets/images/thumbnails/squish_capsule_thumb.webp",
+      "behaviorProfile": "jelly_cube",
+      "impactSounds": [
+        "audio/goo/squish_capsule_squish_01.mp3",
+        "audio/goo/squish_capsule_squish_02.mp3",
+        "audio/goo/squish_capsule_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/squish_capsule_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 10,
+      "unlockTier": 1,
+      "rarity": "common",
+      "searchTags": [
+        "capsule",
+        "pill",
+        "fidget"
+      ],
+      "cardNumber": "024/048"
+    },
+    {
+      "id": "prism_stress_orb",
+      "name": "Prism Stress Orb",
+      "category": "goo_fidget",
+      "themeTag": "prism",
+      "sprite": "assets/images/objects/prism_stress_orb.webp",
+      "thumbnail": "assets/images/thumbnails/prism_stress_orb_thumb.webp",
+      "behaviorProfile": "stress_ball",
+      "impactSounds": [
+        "audio/goo/prism_stress_orb_squish_01.mp3",
+        "audio/goo/prism_stress_orb_squish_02.mp3",
+        "audio/goo/prism_stress_orb_squish_03.mp3"
+      ],
+      "burstSound": "audio/goo/prism_stress_orb_burst_01.mp3",
+      "particlePreset": "blue_jelly_burst",
+      "decalPreset": "cool_blue_smear",
+      "coinReward": 19,
+      "unlockTier": 2,
+      "rarity": "rare",
+      "searchTags": [
+        "prism",
+        "rainbow",
+        "rare"
+      ],
+      "cardNumber": "028/048"
+    }
+  ]
+}

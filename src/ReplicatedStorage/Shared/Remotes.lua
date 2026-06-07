@@ -1,52 +1,51 @@
 --!strict
 -- Remotes
--- A single source of truth for the names of our RemoteEvents, plus small
--- helpers so the server and client never disagree on spelling or location.
---
--- HOW IT WORKS:
---   * The SERVER calls Remotes.setupServer() once at startup. That creates a
---     Folder named "Remotes" in ReplicatedStorage and fills it with RemoteEvents.
---   * Roblox automatically replicates (copies) that folder to every client.
---   * Either side calls Remotes.get(name) to grab a RemoteEvent. On the client
---     this waits until the server has created it.
+-- One source of truth for our RemoteEvent names, plus helpers so the server and
+-- client never disagree. The SERVER calls setupServer() once at startup to create
+-- a folder of RemoteEvents in ReplicatedStorage; either side calls get(name).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = {}
 
--- The name of the folder that will hold every RemoteEvent.
-Remotes.FOLDER_NAME = "Remotes"
+Remotes.FOLDER_NAME = "SquishyRemotes"
 
--- Event names. Use these constants everywhere so spelling can never drift.
-Remotes.RoundUpdate = "RoundUpdate"   -- server -> all clients: round state + time
-Remotes.ScoreUpdate = "ScoreUpdate"   -- server -> one client: their score
-Remotes.ThrowRequest = "ThrowRequest" -- client -> server: "I tried to throw"
+-- client -> server
+Remotes.RequestInitialState = "RequestInitialState" -- "I'm ready, send me my state"
+Remotes.EquipBuddyRequest = "EquipBuddyRequest"      -- defId: equip a discovered friend
 
--- Every event name in one list, used by setupServer().
+-- server -> client
+Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
+Remotes.SquishResult = "SquishResult"   -- a friend was squished / Happy Popped (to everyone)
+Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
+Remotes.BuddyEquipped = "BuddyEquipped" -- confirm an equipped buddy
+Remotes.Toast = "Toast"                 -- a small friendly message
+
 local ALL_EVENTS = {
-	Remotes.RoundUpdate,
-	Remotes.ScoreUpdate,
-	Remotes.ThrowRequest,
+	Remotes.RequestInitialState,
+	Remotes.EquipBuddyRequest,
+	Remotes.StateSync,
+	Remotes.SquishResult,
+	Remotes.CapsuleResult,
+	Remotes.BuddyEquipped,
+	Remotes.Toast,
 }
 
--- SERVER ONLY: create the Remotes folder and its RemoteEvents.
--- Build everything first, then parent the folder LAST so clients never see a
--- half-built folder.
+-- SERVER ONLY: build the folder + RemoteEvents, then parent the folder LAST so
+-- clients never see a half-built folder.
 function Remotes.setupServer(): Folder
 	local folder = Instance.new("Folder")
 	folder.Name = Remotes.FOLDER_NAME
-
 	for _, eventName in ipairs(ALL_EVENTS) do
 		local event = Instance.new("RemoteEvent")
 		event.Name = eventName
 		event.Parent = folder
 	end
-
 	folder.Parent = ReplicatedStorage
 	return folder
 end
 
--- EITHER SIDE: get a RemoteEvent by name. Waits if it does not exist yet.
+-- EITHER SIDE: get a RemoteEvent by name (waits until it exists).
 function Remotes.get(eventName: string): RemoteEvent
 	local folder = ReplicatedStorage:WaitForChild(Remotes.FOLDER_NAME)
 	return folder:WaitForChild(eventName) :: RemoteEvent

@@ -1,0 +1,451 @@
+-- CollectionBookUI
+-- The "Squishy Book": a full-screen album of all 48 launch friends (plus an
+-- Events tab). Locked friends show a gentle silhouette; discovered friends show
+-- their card. Tapping a discovered friend opens a detail card with "Equip Buddy".
+
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local SquishyData = require(Shared:WaitForChild("SquishyData"))
+local UiTheme = require(script.Parent.UiTheme)
+
+local CollectionBookUI = {}
+
+local root, grid, progressLabel, detailHolder
+local cells = {} -- defId -> { def, frame, refresh(discovered) }
+local tabButtons = {}
+local currentTab = "All"
+local lastState = nil
+local onEquipCb = nil
+
+local TABS = { "All", "Pudding Hills", "Goo Coast", "Moonlit Hollow", "Events" }
+
+local function isRealImage(id)
+	return type(id) == "string" and id ~= "" and not string.find(id, "REPLACE_ME")
+end
+
+local function loreFor(def)
+	return ("A " .. UiTheme.rarityLabel(def.Rarity) .. " friend from " .. (def.Zone or "the Squishy world")
+		.. ".  Feeling: " .. (def.Feeling or "Cozy") .. ".  Says \"" .. (def.SignatureSound or "Squish") .. "!\"")
+end
+
+-- The art area of a card: real uploaded image if present, else a soft coloured
+-- placeholder with the friend's name (so the book works before art is uploaded).
+local function artInto(holder, def, discovered)
+	for _, c in ipairs(holder:GetChildren()) do
+		if not c:IsA("UICorner") then
+			c:Destroy()
+		end
+	end
+	if not discovered then
+		local q = Instance.new("TextLabel")
+		q.BackgroundTransparency = 1
+		q.Size = UDim2.fromScale(1, 1)
+		q.Font = UiTheme.HeaderFont
+		q.TextSize = 40
+		q.TextColor3 = Color3.fromRGB(255, 255, 255)
+		q.Text = "?"
+		q.Parent = holder
+		return
+	end
+	if isRealImage(def.ImageAssetId) then
+		local img = Instance.new("ImageLabel")
+		img.BackgroundTransparency = 1
+		img.Size = UDim2.fromScale(1, 1)
+		img.ScaleType = Enum.ScaleType.Fit
+		img.Image = def.ImageAssetId
+		img.Parent = holder
+	else
+		local nameLbl = Instance.new("TextLabel")
+		nameLbl.BackgroundTransparency = 1
+		nameLbl.Size = UDim2.fromScale(1, 1)
+		nameLbl.Font = UiTheme.HeaderFont
+		nameLbl.TextSize = 16
+		nameLbl.TextWrapped = true
+		nameLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+		nameLbl.TextStrokeColor3 = UiTheme.Colors.Shade
+		nameLbl.TextStrokeTransparency = 0.5
+		nameLbl.Text = def.DisplayName
+		nameLbl.Parent = holder
+	end
+end
+
+local function makeCell(def)
+	local frame = Instance.new("TextButton")
+	frame.Name = def.Id
+	frame.Size = UDim2.fromOffset(150, 196)
+	frame.BackgroundColor3 = UiTheme.Colors.Panel
+	frame.BorderSizePixel = 0
+	frame.AutoButtonColor = false
+	frame.Text = ""
+	UiTheme.corner(16, frame)
+	local stroke = UiTheme.stroke(UiTheme.rarityColor(def.Rarity), 3, frame)
+
+	-- rarity header
+	local header = Instance.new("Frame")
+	header.Size = UDim2.new(1, 0, 0, 26)
+	header.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
+	header.BorderSizePixel = 0
+	header.Parent = frame
+	UiTheme.corner(16, header)
+	local badge = Instance.new("TextLabel")
+	badge.BackgroundTransparency = 1
+	badge.Size = UDim2.fromScale(1, 1)
+	badge.Font = UiTheme.HeaderFont
+	badge.TextSize = 14
+	badge.TextColor3 = Color3.fromRGB(255, 255, 255)
+	badge.Text = UiTheme.rarityLabel(def.Rarity)
+	badge.Parent = header
+
+	-- art holder
+	local art = Instance.new("Frame")
+	art.Name = "Art"
+	art.Position = UDim2.fromOffset(10, 32)
+	art.Size = UDim2.fromOffset(130, 116)
+	art.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
+	art.BorderSizePixel = 0
+	art.Parent = frame
+	UiTheme.corner(12, art)
+	UiTheme.gradient(Color3.fromRGB(255, 255, 255), UiTheme.rarityColor(def.Rarity), 90, art)
+
+	-- name + number
+	local nameLbl = Instance.new("TextLabel")
+	nameLbl.BackgroundTransparency = 1
+	nameLbl.Position = UDim2.fromOffset(6, 150)
+	nameLbl.Size = UDim2.new(1, -12, 0, 22)
+	nameLbl.Font = UiTheme.HeaderFont
+	nameLbl.TextSize = 14
+	nameLbl.TextColor3 = UiTheme.Colors.Ink
+	nameLbl.TextWrapped = true
+	nameLbl.Parent = frame
+
+	local numLbl = Instance.new("TextLabel")
+	numLbl.BackgroundTransparency = 1
+	numLbl.Position = UDim2.fromOffset(6, 172)
+	numLbl.Size = UDim2.new(1, -12, 0, 18)
+	numLbl.Font = UiTheme.BodyFont
+	numLbl.TextSize = 12
+	numLbl.TextColor3 = UiTheme.Colors.SoftInk
+	numLbl.Text = def.CardNumber or ""
+	numLbl.Parent = frame
+
+	local function refresh(discovered)
+		if discovered then
+			frame.BackgroundColor3 = UiTheme.Colors.Panel
+			stroke.Color = UiTheme.rarityColor(def.Rarity)
+			header.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
+			badge.Text = UiTheme.rarityLabel(def.Rarity)
+			nameLbl.Text = def.DisplayName
+			nameLbl.TextColor3 = UiTheme.Colors.Ink
+			art.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
+		else
+			frame.BackgroundColor3 = UiTheme.Colors.Panel
+			stroke.Color = UiTheme.Colors.Locked
+			header.BackgroundColor3 = UiTheme.PackColor[def.Zone] or UiTheme.Colors.Locked
+			badge.Text = "?"
+			nameLbl.Text = "? ? ?"
+			nameLbl.TextColor3 = UiTheme.Colors.SoftInk
+			art.BackgroundColor3 = UiTheme.Colors.Locked
+		end
+		artInto(art, def, discovered)
+	end
+
+	frame.Activated:Connect(function()
+		local discovered = lastState and lastState.discovered and lastState.discovered[def.Id]
+		if discovered then
+			CollectionBookUI.openDetail(def)
+		end
+	end)
+
+	refresh(false)
+	return { def = def, frame = frame, refresh = refresh }
+end
+
+function CollectionBookUI.openDetail(def)
+	detailHolder:ClearAllChildren()
+
+	local dim = Instance.new("TextButton")
+	dim.Size = UDim2.fromScale(1, 1)
+	dim.BackgroundColor3 = UiTheme.Colors.Shade
+	dim.BackgroundTransparency = 0.4
+	dim.Text = ""
+	dim.AutoButtonColor = false
+	dim.Parent = detailHolder
+	dim.Activated:Connect(function()
+		detailHolder:ClearAllChildren()
+	end)
+
+	local card = UiTheme.panel({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(320, 440),
+		radius = 22,
+	})
+	card.Parent = detailHolder
+	UiTheme.stroke(UiTheme.rarityColor(def.Rarity), 4, card)
+
+	local art = Instance.new("Frame")
+	art.Position = UDim2.fromOffset(20, 20)
+	art.Size = UDim2.fromOffset(280, 220)
+	art.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
+	art.BorderSizePixel = 0
+	art.Parent = card
+	UiTheme.corner(16, art)
+	UiTheme.gradient(Color3.fromRGB(255, 255, 255), UiTheme.rarityColor(def.Rarity), 90, art)
+	artInto(art, def, true)
+
+	local name = Instance.new("TextLabel")
+	name.BackgroundTransparency = 1
+	name.Position = UDim2.fromOffset(16, 250)
+	name.Size = UDim2.new(1, -32, 0, 30)
+	name.Font = UiTheme.HeaderFont
+	name.TextSize = 24
+	name.TextColor3 = UiTheme.Colors.Ink
+	name.Text = def.DisplayName .. "  " .. (def.CardNumber or "")
+	name.Parent = card
+
+	local sub = Instance.new("TextLabel")
+	sub.BackgroundTransparency = 1
+	sub.Position = UDim2.fromOffset(16, 282)
+	sub.Size = UDim2.new(1, -32, 0, 22)
+	sub.Font = UiTheme.BodyFont
+	sub.TextSize = 15
+	sub.TextColor3 = UiTheme.Colors.AccentDeep
+	sub.Text = UiTheme.rarityLabel(def.Rarity) .. "  •  " .. (def.PackName or "") .. "  •  " .. (def.Zone or "")
+	sub.Parent = card
+
+	local lore = Instance.new("TextLabel")
+	lore.BackgroundTransparency = 1
+	lore.Position = UDim2.fromOffset(16, 308)
+	lore.Size = UDim2.new(1, -32, 0, 60)
+	lore.Font = UiTheme.BodyFont
+	lore.TextSize = 14
+	lore.TextWrapped = true
+	lore.TextColor3 = UiTheme.Colors.SoftInk
+	lore.Text = loreFor(def)
+	lore.Parent = card
+
+	local equip = Instance.new("TextButton")
+	equip.AnchorPoint = Vector2.new(0.5, 1)
+	equip.Position = UDim2.new(0.5, 0, 1, -16)
+	equip.Size = UDim2.fromOffset(220, 48)
+	equip.BackgroundColor3 = UiTheme.Colors.AccentDeep
+	equip.BorderSizePixel = 0
+	equip.Font = UiTheme.HeaderFont
+	equip.TextSize = 20
+	equip.TextColor3 = Color3.fromRGB(255, 255, 255)
+	local isBuddy = lastState and lastState.equippedBuddyId == def.Id
+	equip.Text = isBuddy and "★ Your Buddy" or "Equip Buddy"
+	equip.Parent = card
+	UiTheme.corner(24, equip)
+	equip.Activated:Connect(function()
+		if onEquipCb then
+			onEquipCb(def.Id)
+		end
+		equip.Text = "★ Your Buddy"
+	end)
+end
+
+local function buildTabs(parent)
+	local row = Instance.new("Frame")
+	row.BackgroundTransparency = 1
+	row.Position = UDim2.fromOffset(20, 70)
+	row.Size = UDim2.new(1, -40, 0, 38)
+	row.Parent = parent
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.Padding = UDim.new(0, 8)
+	layout.Parent = row
+
+	for _, tabName in ipairs(TABS) do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.fromOffset(132, 38)
+		btn.BackgroundColor3 = UiTheme.Colors.Panel
+		btn.BorderSizePixel = 0
+		btn.Font = UiTheme.HeaderFont
+		btn.TextSize = 15
+		btn.TextColor3 = UiTheme.Colors.SoftInk
+		btn.Text = tabName
+		btn.Parent = row
+		UiTheme.corner(18, btn)
+		UiTheme.stroke(UiTheme.Colors.Accent, 2, btn)
+		tabButtons[tabName] = btn
+		btn.Activated:Connect(function()
+			currentTab = tabName
+			CollectionBookUI.refresh()
+		end)
+	end
+end
+
+local function cellMatchesTab(def)
+	if currentTab == "All" then
+		return def.ReleaseType == "launch"
+	elseif currentTab == "Events" then
+		return def.ReleaseType ~= "launch"
+	else
+		return def.ReleaseType == "launch" and def.Zone == currentTab
+	end
+end
+
+function CollectionBookUI.refresh()
+	-- tab highlight
+	for name, btn in pairs(tabButtons) do
+		local active = (name == currentTab)
+		btn.BackgroundColor3 = active and UiTheme.Colors.AccentDeep or UiTheme.Colors.Panel
+		btn.TextColor3 = active and Color3.fromRGB(255, 255, 255) or UiTheme.Colors.SoftInk
+	end
+
+	local discoveredSet = (lastState and lastState.discovered) or {}
+	for _, entry in pairs(cells) do
+		local visible = cellMatchesTab(entry.def)
+		entry.frame.Visible = visible
+		if visible then
+			entry.refresh(discoveredSet[entry.def.Id] == true)
+		end
+	end
+
+	if progressLabel and lastState then
+		progressLabel.Text = (lastState.discoveredCount or 0) .. " / 48 Discovered"
+	end
+end
+
+function CollectionBookUI.update(state)
+	lastState = state
+	if root and root.Visible then
+		CollectionBookUI.refresh()
+	elseif progressLabel and state then
+		progressLabel.Text = (state.discoveredCount or 0) .. " / 48 Discovered"
+	end
+end
+
+function CollectionBookUI.show()
+	if not root then
+		return
+	end
+	root.Visible = true
+	CollectionBookUI.refresh()
+	root.BackgroundTransparency = 1
+	TweenService:Create(root, TweenInfo.new(0.2), { BackgroundTransparency = 0.15 }):Play()
+end
+
+function CollectionBookUI.hide()
+	if root then
+		detailHolder:ClearAllChildren()
+		root.Visible = false
+	end
+end
+
+function CollectionBookUI.mount(playerGui, onEquip)
+	onEquipCb = onEquip
+
+	local screen = Instance.new("ScreenGui")
+	screen.Name = "SquishyBook"
+	screen.ResetOnSpawn = false
+	screen.IgnoreGuiInset = false
+	screen.DisplayOrder = 20
+	screen.Enabled = true
+	screen.Parent = playerGui
+
+	root = Instance.new("Frame")
+	root.Name = "Root"
+	root.Size = UDim2.fromScale(1, 1)
+	root.BackgroundColor3 = UiTheme.Colors.Shade
+	root.BackgroundTransparency = 0.15
+	root.BorderSizePixel = 0
+	root.Visible = false
+	root.Parent = screen
+
+	local panel = UiTheme.panel({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(720, 560),
+		BackgroundColor3 = UiTheme.Colors.Cream,
+		radius = 26,
+	})
+	panel.Parent = root
+	UiTheme.stroke(UiTheme.Colors.Accent, 3, panel)
+
+	local title = Instance.new("TextLabel")
+	title.BackgroundTransparency = 1
+	title.Position = UDim2.fromOffset(24, 16)
+	title.Size = UDim2.fromOffset(360, 40)
+	title.Font = UiTheme.HeaderFont
+	title.TextSize = 32
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextColor3 = UiTheme.Colors.AccentDeep
+	title.Text = "Squishy Book"
+	title.Parent = panel
+
+	progressLabel = Instance.new("TextLabel")
+	progressLabel.BackgroundTransparency = 1
+	progressLabel.Position = UDim2.new(1, -260, 0, 24)
+	progressLabel.Size = UDim2.fromOffset(220, 28)
+	progressLabel.Font = UiTheme.HeaderFont
+	progressLabel.TextSize = 20
+	progressLabel.TextXAlignment = Enum.TextXAlignment.Right
+	progressLabel.TextColor3 = UiTheme.Colors.Ink
+	progressLabel.Text = "0 / 48 Discovered"
+	progressLabel.Parent = panel
+
+	local close = Instance.new("TextButton")
+	close.AnchorPoint = Vector2.new(1, 0)
+	close.Position = UDim2.new(1, -16, 0, 16)
+	close.Size = UDim2.fromOffset(40, 40)
+	close.BackgroundColor3 = UiTheme.Colors.Accent
+	close.BorderSizePixel = 0
+	close.Font = UiTheme.HeaderFont
+	close.TextSize = 24
+	close.TextColor3 = Color3.fromRGB(255, 255, 255)
+	close.Text = "X"
+	close.Parent = panel
+	UiTheme.corner(20, close)
+	close.Activated:Connect(function()
+		CollectionBookUI.hide()
+	end)
+
+	buildTabs(panel)
+
+	grid = Instance.new("ScrollingFrame")
+	grid.Position = UDim2.fromOffset(20, 116)
+	grid.Size = UDim2.new(1, -40, 1, -132)
+	grid.BackgroundTransparency = 1
+	grid.BorderSizePixel = 0
+	grid.ScrollBarThickness = 8
+	grid.CanvasSize = UDim2.new()
+	grid.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	grid.Parent = panel
+	local gl = Instance.new("UIGridLayout")
+	gl.CellSize = UDim2.fromOffset(150, 196)
+	gl.CellPadding = UDim2.fromOffset(14, 14)
+	gl.SortOrder = Enum.SortOrder.LayoutOrder
+	gl.Parent = grid
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, 4)
+	pad.PaddingLeft = UDim.new(0, 4)
+	pad.Parent = grid
+
+	-- detail modal layer (on top of the grid)
+	detailHolder = Instance.new("Frame")
+	detailHolder.Size = UDim2.fromScale(1, 1)
+	detailHolder.BackgroundTransparency = 1
+	detailHolder.Parent = root
+
+	-- build all cells: 48 launch (sorted) then the event friends
+	local order = 0
+	local function addCells(list)
+		for _, def in ipairs(list) do
+			order += 1
+			local cell = makeCell(def)
+			cell.frame.LayoutOrder = order
+			cell.frame.Parent = grid
+			cells[def.Id] = cell
+		end
+	end
+	addCells(SquishyData.getLaunchRoster())
+	addCells(SquishyData.getEventRoster())
+
+	CollectionBookUI.refresh()
+end
+
+return CollectionBookUI
