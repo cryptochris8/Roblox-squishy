@@ -66,24 +66,21 @@ end
 function CapsuleService.tryOpen(player: Player)
 	local cfg = CapsuleConfig.StarterCapsule
 
+	-- Make sure we can actually give a friend BEFORE charging coins or using the
+	-- free gift, so the player is never left empty-handed.
+	local byRarity = buildRarityPool(cfg.AllowedPackIds)
+	local rarity = pickRarity(cfg.RarityWeights, byRarity)
+	if not rarity then
+		toastEvent:FireClient(player, "The Sparkle Capsule is recharging - try again in a moment!")
+		return
+	end
+
 	-- The very first capsule is a free welcome gift; after that it costs coins.
 	local isFree = GameConfig.FirstCapsuleIsFree and not PlayerDataService.isFirstCapsuleClaimed(player)
 	if isFree then
 		PlayerDataService.markFirstCapsuleClaimed(player)
 	elseif not PlayerDataService.spendCoins(player, cfg.Cost) then
 		toastEvent:FireClient(player, "You need " .. cfg.Cost .. " Sparkle Coins to open a Sparkle Capsule!")
-		return
-	end
-
-	local byRarity = buildRarityPool(cfg.AllowedPackIds)
-	local rarity = pickRarity(cfg.RarityWeights, byRarity)
-	if not rarity then
-		-- Safety net: should never happen, but never leave the player empty-handed.
-		if isFree then
-			PlayerDataService.markFirstCapsuleClaimed(player)
-		else
-			PlayerDataService.addCoins(player, cfg.Cost) -- refund
-		end
 		return
 	end
 

@@ -13,6 +13,7 @@ GameConfig.StartingSparkleCoins = 0
 GameConfig.JoyPerSquish = 0.34            -- ~3 gentle squishes to fill the meter
 GameConfig.SquishCooldownSeconds = 0.12   -- gentle anti-spam, per player per friend
 GameConfig.HappyPopRespawnSeconds = 1.2   -- a new sleepy friend wakes up after a pop
+GameConfig.HappyPopHoldSeconds = 1.1      -- keep a popped friend briefly so its Happy Pop plays out
 
 -- First tutorial quest: wake up (Happy Pop) this many sleepy friends.
 GameConfig.TutorialPopGoal = 3

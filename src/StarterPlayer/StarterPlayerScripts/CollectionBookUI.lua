@@ -18,6 +18,8 @@ local tabButtons = {}
 local currentTab = "All"
 local lastState = nil
 local onEquipCb = nil
+local openDetailDef = nil -- the friend whose detail card is currently open
+local openEquipBtn = nil  -- its Equip Buddy button (reconciled from server state)
 
 local TABS = { "All", "Pudding Hills", "Goo Coast", "Moonlit Hollow", "Events" }
 
@@ -174,6 +176,8 @@ function CollectionBookUI.openDetail(def)
 	dim.Parent = detailHolder
 	dim.Activated:Connect(function()
 		detailHolder:ClearAllChildren()
+		openDetailDef = nil
+		openEquipBtn = nil
 	end)
 
 	local card = UiTheme.panel({
@@ -239,11 +243,14 @@ function CollectionBookUI.openDetail(def)
 	equip.Text = isBuddy and "★ Your Buddy" or "Equip Buddy"
 	equip.Parent = card
 	UiTheme.corner(24, equip)
+	openDetailDef = def
+	openEquipBtn = equip
 	equip.Activated:Connect(function()
 		if onEquipCb then
 			onEquipCb(def.Id)
 		end
-		equip.Text = "★ Your Buddy"
+		-- The button text updates from the server's next StateSync (authoritative),
+		-- so it can never falsely claim "Your Buddy" if the equip is declined.
 	end)
 end
 
@@ -312,6 +319,10 @@ end
 
 function CollectionBookUI.update(state)
 	lastState = state
+	-- Keep an open detail card's Equip button honest with the authoritative state.
+	if openEquipBtn and openDetailDef then
+		openEquipBtn.Text = (state and state.equippedBuddyId == openDetailDef.Id) and "★ Your Buddy" or "Equip Buddy"
+	end
 	if root and root.Visible then
 		CollectionBookUI.refresh()
 	elseif progressLabel and state then
@@ -332,6 +343,8 @@ end
 function CollectionBookUI.hide()
 	if root then
 		detailHolder:ClearAllChildren()
+		openDetailDef = nil
+		openEquipBtn = nil
 		root.Visible = false
 	end
 end

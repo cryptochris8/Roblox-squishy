@@ -5,7 +5,6 @@
 -- All Joy and coins are server-authoritative.
 
 local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -24,7 +23,6 @@ local squishiesFolder: Folder
 local squishResultEvent: RemoteEvent
 local pads: { CFrame } = {}
 local activeByPad: { [number]: Model } = {} -- pad index -> the squishy currently there
-local lastSquish: { [number]: { [string]: number } } = {} -- userId -> objectId -> os.clock()
 local objectCounter = 0
 local rng = Random.new()
 
@@ -119,17 +117,15 @@ function SquishService.handleSquish(player: Player, model: Model)
 		return
 	end
 
-	-- Gentle per-player, per-friend cooldown (anti-spam, never punishing).
-	local userBucket = lastSquish[player.UserId]
-	if not userBucket then
-		userBucket = {}
-		lastSquish[player.UserId] = userBucket
-	end
+	-- Gentle per-player, per-friend cooldown (anti-spam, never punishing). We store
+	-- it on the friend itself, so it's cleaned up automatically when the friend pops
+	-- (no growing table to prune).
+	local cooldownKey = "LastSquish_" .. player.UserId
 	local now = os.clock()
-	if now - (userBucket[objectId] or 0) < GameConfig.SquishCooldownSeconds then
+	if now - (model:GetAttribute(cooldownKey) or 0) < GameConfig.SquishCooldownSeconds then
 		return
 	end
-	userBucket[objectId] = now
+	model:SetAttribute(cooldownKey, now)
 
 	local def = SquishyData.getById(defId)
 	if not def then
@@ -168,7 +164,7 @@ function SquishService.handleSquish(player: Player, model: Model)
 		if clicker then
 			clicker.MaxActivationDistance = 0
 		end
-		task.delay(0.4, function()
+		task.delay(GameConfig.HappyPopHoldSeconds, function()
 			if model and model.Parent then
 				model:Destroy()
 			end
@@ -202,10 +198,6 @@ function SquishService.init(spawnPads: { CFrame })
 	for i = 1, count do
 		SquishService.spawnAtPad(i)
 	end
-
-	Players.PlayerRemoving:Connect(function(player)
-		lastSquish[player.UserId] = nil
-	end)
 end
 
 return SquishService

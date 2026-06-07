@@ -54,13 +54,32 @@ function CapsuleRevealUI.play(result, onClose)
 	busy = true
 	layer:ClearAllChildren()
 
-	-- dim background
-	local dim = Instance.new("Frame")
+	-- One safe way to close this reveal (tap "Yay!", tap outside, error, or a
+	-- watchdog). Guarded so it only ever runs once per reveal.
+	local closed = false
+	local function dismiss()
+		if closed then
+			return
+		end
+		closed = true
+		busy = false
+		if layer then
+			layer:ClearAllChildren()
+		end
+		if onClose then
+			onClose()
+		end
+	end
+	-- dim background (tap it to close)
+	local dim = Instance.new("TextButton")
 	dim.Size = UDim2.fromScale(1, 1)
 	dim.BackgroundColor3 = UiTheme.Colors.Shade
 	dim.BackgroundTransparency = 1
 	dim.BorderSizePixel = 0
+	dim.Text = ""
+	dim.AutoButtonColor = false
 	dim.Parent = layer
+	dim.Activated:Connect(dismiss)
 	TweenService:Create(dim, TweenInfo.new(0.25), { BackgroundTransparency = 0.45 }):Play()
 
 	-- the capsule
@@ -75,88 +94,88 @@ function CapsuleRevealUI.play(result, onClose)
 	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 4, capsule)
 	UiTheme.gradient(Color3.fromRGB(255, 255, 255), UiTheme.rarityColor(result.rarity), 90, capsule)
 
-	-- wobble a few times
+	-- wobble, then reveal the card. Wrapped so any hiccup can't strand the reveal.
 	task.spawn(function()
-		for i = 1, 3 do
-			TweenService:Create(capsule, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = 12 }):Play()
-			task.wait(0.12)
-			TweenService:Create(capsule, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = -12 }):Play()
-			task.wait(0.12)
-		end
-		TweenService:Create(capsule, TweenInfo.new(0.1), { Rotation = 0 }):Play()
-		task.wait(0.12)
-
-		-- pop the capsule away, bring the card in
-		TweenService:Create(capsule, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-			Size = UDim2.fromOffset(0, 0),
-		}):Play()
-		task.wait(0.18)
-		capsule:Destroy()
-
-		local card = UiTheme.panel({
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.fromOffset(0, 380),
-			BackgroundColor3 = UiTheme.Colors.Cream,
-			radius = 22,
-		})
-		card.Parent = layer
-		UiTheme.stroke(UiTheme.rarityColor(result.rarity), 4, card)
-
-		-- flip-in (grow width)
-		TweenService:Create(card, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(300, 380),
-		}):Play()
-		task.wait(0.3)
-
-		cardArt(card, result)
-
-		local headline = Instance.new("TextLabel")
-		headline.BackgroundTransparency = 1
-		headline.Position = UDim2.fromOffset(12, 224)
-		headline.Size = UDim2.new(1, -24, 0, 30)
-		headline.Font = UiTheme.HeaderFont
-		headline.TextSize = 24
-		headline.TextColor3 = UiTheme.Colors.AccentDeep
-		headline.Text = result.isNew and "New Friend Discovered!" or "Friendship Bonus!"
-		headline.Parent = card
-
-		local sub = Instance.new("TextLabel")
-		sub.BackgroundTransparency = 1
-		sub.Position = UDim2.fromOffset(12, 256)
-		sub.Size = UDim2.new(1, -24, 0, 44)
-		sub.Font = UiTheme.BodyFont
-		sub.TextSize = 16
-		sub.TextWrapped = true
-		sub.TextColor3 = UiTheme.Colors.Ink
-		if result.isNew then
-			sub.Text = result.displayName .. " (" .. (result.cardNumber or "")
-				.. ") joined your Squishy Book!"
-		else
-			sub.Text = "You already know " .. result.displayName .. "!  +"
-				.. (result.bonusCoins or 0) .. " Sparkle Coins"
-		end
-		sub.Parent = card
-
-		local yay = Instance.new("TextButton")
-		yay.AnchorPoint = Vector2.new(0.5, 1)
-		yay.Position = UDim2.new(0.5, 0, 1, -16)
-		yay.Size = UDim2.fromOffset(200, 48)
-		yay.BackgroundColor3 = UiTheme.Colors.AccentDeep
-		yay.BorderSizePixel = 0
-		yay.Font = UiTheme.HeaderFont
-		yay.TextSize = 22
-		yay.TextColor3 = Color3.fromRGB(255, 255, 255)
-		yay.Text = "Yay!"
-		yay.Parent = card
-		UiTheme.corner(24, yay)
-		yay.Activated:Connect(function()
-			busy = false
-			layer:ClearAllChildren()
-			if onClose then
-				onClose()
+		local ok, err = pcall(function()
+			for i = 1, 3 do
+				TweenService:Create(capsule, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = 12 }):Play()
+				task.wait(0.12)
+				TweenService:Create(capsule, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = -12 }):Play()
+				task.wait(0.12)
 			end
+			TweenService:Create(capsule, TweenInfo.new(0.1), { Rotation = 0 }):Play()
+			task.wait(0.12)
+
+			-- pop the capsule away, bring the card in
+			TweenService:Create(capsule, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+				Size = UDim2.fromOffset(0, 0),
+			}):Play()
+			task.wait(0.18)
+			capsule:Destroy()
+
+			local card = UiTheme.panel({
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromOffset(0, 380),
+				BackgroundColor3 = UiTheme.Colors.Cream,
+				radius = 22,
+			})
+			card.Parent = layer
+			UiTheme.stroke(UiTheme.rarityColor(result.rarity), 4, card)
+
+			-- flip-in (grow width)
+			TweenService:Create(card, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(300, 380),
+			}):Play()
+			task.wait(0.3)
+
+			cardArt(card, result)
+
+			local headline = Instance.new("TextLabel")
+			headline.BackgroundTransparency = 1
+			headline.Position = UDim2.fromOffset(12, 224)
+			headline.Size = UDim2.new(1, -24, 0, 30)
+			headline.Font = UiTheme.HeaderFont
+			headline.TextSize = 24
+			headline.TextColor3 = UiTheme.Colors.AccentDeep
+			headline.Text = result.isNew and "New Friend Discovered!" or "Friendship Bonus!"
+			headline.Parent = card
+
+			local sub = Instance.new("TextLabel")
+			sub.BackgroundTransparency = 1
+			sub.Position = UDim2.fromOffset(12, 256)
+			sub.Size = UDim2.new(1, -24, 0, 44)
+			sub.Font = UiTheme.BodyFont
+			sub.TextSize = 16
+			sub.TextWrapped = true
+			sub.TextColor3 = UiTheme.Colors.Ink
+			if result.isNew then
+				sub.Text = result.displayName .. " (" .. (result.cardNumber or "")
+					.. ") joined your Squishy Book!"
+			else
+				sub.Text = "You already know " .. result.displayName .. "!  +"
+					.. (result.bonusCoins or 0) .. " Sparkle Coins"
+			end
+			sub.Parent = card
+
+			local yay = Instance.new("TextButton")
+			yay.AnchorPoint = Vector2.new(0.5, 1)
+			yay.Position = UDim2.new(0.5, 0, 1, -16)
+			yay.Size = UDim2.fromOffset(200, 48)
+			yay.BackgroundColor3 = UiTheme.Colors.AccentDeep
+			yay.BorderSizePixel = 0
+			yay.Font = UiTheme.HeaderFont
+			yay.TextSize = 22
+			yay.TextColor3 = Color3.fromRGB(255, 255, 255)
+			yay.Text = "Yay!"
+			yay.Parent = card
+			UiTheme.corner(24, yay)
+			yay.Activated:Connect(dismiss)
 		end)
+		if not ok then
+			warn("[CapsuleRevealUI] reveal failed: " .. tostring(err))
+			dismiss()
+		end
 	end)
 end
 
