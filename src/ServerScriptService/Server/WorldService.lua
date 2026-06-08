@@ -43,12 +43,62 @@ local function floatingLabel(text: string, color: Color3, parent: BasePart, heig
 end
 
 function WorldService.build()
-	-- Cozy daytime lighting.
-	Lighting.Brightness = 2
-	Lighting.ClockTime = 14
-	Lighting.Ambient = Color3.fromRGB(180, 170, 190)
-	Lighting.OutdoorAmbient = Color3.fromRGB(205, 195, 215)
-	Lighting.FogEnd = 1200
+	-- Cozy storybook lighting + soft post-processing (all free + built-in). Wrapped
+	-- in pcall so a cosmetic hiccup can NEVER stop the world from building.
+	-- (Lighting.Technology can't be assigned from a script at runtime — set it to
+	-- Future in Studio's Lighting properties if you want nicer shadows.)
+	pcall(function()
+		Lighting.Brightness = 2.5
+		Lighting.ClockTime = 14.5
+		Lighting.GeographicLatitude = 25
+		Lighting.Ambient = Color3.fromRGB(178, 168, 190)
+		Lighting.OutdoorAmbient = Color3.fromRGB(208, 196, 216)
+		Lighting.ExposureCompensation = 0.15
+		Lighting.EnvironmentDiffuseScale = 1
+		Lighting.EnvironmentSpecularScale = 1
+		Lighting.FogEnd = 1400
+
+		-- Create-or-update a lighting child so this is safe to run more than once.
+		local function ensure(parent: Instance, className: string, name: string, props)
+			local inst = parent:FindFirstChild(name)
+			if not inst then
+				inst = Instance.new(className)
+				inst.Name = name
+				inst.Parent = parent
+			end
+			for key, value in pairs(props) do
+				(inst :: any)[key] = value
+			end
+			return inst
+		end
+
+		-- Soft hazy air for depth and dreaminess.
+		ensure(Lighting, "Atmosphere", "Atmosphere", {
+			Density = 0.32, Offset = 0.1,
+			Color = Color3.fromRGB(235, 222, 236),
+			Decay = Color3.fromRGB(150, 170, 210),
+			Glare = 0.1, Haze = 1.2,
+		})
+		-- Pastel sky with a big, gentle sun.
+		ensure(Lighting, "Sky", "Sky", { SunAngularSize = 16, MoonAngularSize = 11 })
+		-- Warm, lightly saturated storybook grade.
+		ensure(Lighting, "ColorCorrectionEffect", "Grade", {
+			Brightness = 0, Contrast = 0.06, Saturation = 0.08,
+			TintColor = Color3.fromRGB(255, 246, 240),
+		})
+		-- Soft glow on the brightest spots (suits the "sparkle" theme).
+		ensure(Lighting, "BloomEffect", "Bloom", { Intensity = 0.6, Size = 24, Threshold = 1.25 })
+		-- Gentle sun halo.
+		ensure(Lighting, "SunRaysEffect", "SunRays", { Intensity = 0.08, Spread = 0.85 })
+		-- Dreamy fluffy clouds (Clouds live under Terrain, not Lighting).
+		local terrain = Workspace:FindFirstChildOfClass("Terrain")
+		if terrain then
+			ensure(terrain, "Clouds", "Clouds", {
+				Cover = 0.55, Density = 0.5,
+				Color = Color3.fromRGB(255, 250, 248),
+			})
+		end
+	end)
 
 	local folder = Instance.new("Folder")
 	folder.Name = "PuddingHills"

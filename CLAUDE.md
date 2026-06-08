@@ -45,7 +45,7 @@ Internally, old JSON fields such as `burstSound` or `burstThreshold` may remain 
 ## Current Build (Pudding Hills MVP)
 
 Active Rojo project at the repo root (`default.project.json`, name `SquishySmash`).
-Run `rojo serve` from `D:\Roblox`, connect the Rojo plugin in Studio (Edit mode),
+Run `rojo serve` from `C:\Users\chris\Roblox-squishy`, connect the Rojo plugin in Studio (Edit mode),
 then Play. The earlier QB1 football prototype is preserved on git branch/tag
 `qb1-prototype` and under `archive/qb1/`.
 
@@ -60,12 +60,13 @@ src/ReplicatedStorage/Shared/
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts
-  PlayerDataService.lua    per-player profile (coins, discovered, totals) + leaderstats; DataStore = TODO
+  PlayerDataService.lua    per-player profile (coins, discovered, totals) + leaderstats; DataStore load/save/autosave + BindToClose flush
   WorldService.lua         builds Pudding Hills (ground, hills, capsule, guide, pads)
   SquishService.lua        spawns friends; squish -> Joy -> Happy Pop -> coins -> respawn
   CapsuleService.lua       Sparkle Capsule: weighted rarity, discover, Friendship Bonus (server RNG)
-  CollectionService.lua    Equip Buddy (validated)
+  CollectionService.lua    Equip Buddy (validated, toggles on/off)
   TutorialService.lua      "wake up 3 sleepy friends" quest -> 100 coins
+  BuddyService.lua         spawns the equipped friend as a floating companion that follows you
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
   UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
@@ -83,5 +84,6 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
 
 ### Not in MVP yet (deliberately)
 
-DataStore save/load, Goo Coast + Moonlit Hollow zones, buddy follower models,
-3D character meshes, and any monetization (no Game Passes / Developer Products).
+Goo Coast + Moonlit Hollow zones, real 3D character meshes (buddies and world
+friends use placeholder squishy balls with faces for now), and any monetization
+(no Game Passes / Developer Products).

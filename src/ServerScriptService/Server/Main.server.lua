@@ -17,12 +17,14 @@ local SquishService = require(script.Parent.SquishService)
 local CapsuleService = require(script.Parent.CapsuleService)
 local CollectionService = require(script.Parent.CollectionService)
 local TutorialService = require(script.Parent.TutorialService)
+local BuddyService = require(script.Parent.BuddyService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
 CapsuleService.init()
 CollectionService.init()
 TutorialService.init()
+BuddyService.init()
 
 -- 4) Build the cozy Pudding Hills world, then spawn the sleepy friends on it.
 local world = WorldService.build()
@@ -32,6 +34,11 @@ SquishService.init(world.pads)
 -- A Happy Pop nudges the tutorial along.
 SquishService.onHappyPop = function(player, def)
 	TutorialService.notePop(player, def)
+end
+
+-- Equipping/unequipping a buddy spawns or removes the floating companion.
+CollectionService.onBuddyChanged = function(player, defId)
+	BuddyService.setBuddy(player, defId)
 end
 
 -- The Sparkle Capsule machine opens a capsule for whoever uses it.

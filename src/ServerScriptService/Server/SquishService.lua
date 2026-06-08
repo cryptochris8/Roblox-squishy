@@ -54,10 +54,13 @@ local function buildSquishy(def, cf: CFrame): Model
 	local model = Instance.new("Model")
 	model.Name = def.DisplayName
 
+	-- A little size variety so a cluster of friends feels hand-placed, not cloned.
+	local scale = rng:NextNumber(0.92, 1.12)
+
 	local body = Instance.new("Part")
 	body.Name = "Body"
 	body.Shape = Enum.PartType.Ball
-	body.Size = Vector3.new(4, 4, 4)
+	body.Size = Vector3.new(4 * scale, 4 * scale, 4 * scale)
 	body.Anchored = true
 	body.CanCollide = false
 	body.Material = Enum.Material.SmoothPlastic

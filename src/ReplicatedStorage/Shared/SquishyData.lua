@@ -8,6 +8,18 @@
 local Shared = script.Parent
 local Definitions = require(Shared:WaitForChild("SquishyDefinitions"))
 
+-- Apply any uploaded card-art ids over the generated "REPLACE_ME" placeholders,
+-- so every consumer (Squishy Book, Capsule reveal, and the server) sees the real
+-- image automatically. Friends without an id keep their coloured placeholder.
+local CardImageAssets = require(Shared:WaitForChild("CardImageAssets"))
+for id, assetId in pairs(CardImageAssets) do
+	local def = Definitions[id]
+	if def and type(assetId) == "number" and assetId > 0 then
+		-- %d so big 15-digit ids never turn into scientific notation.
+		def.ImageAssetId = string.format("rbxassetid://%d", assetId)
+	end
+end
+
 local SquishyData = {}
 
 -- "001/048" -> 1 (used to sort the album in card-number order).

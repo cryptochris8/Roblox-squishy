@@ -14,8 +14,11 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local CollectionService = {}
 
-local buddyEquippedEvent: RemoteEvent
 local toastEvent: RemoteEvent
+
+-- Set by Main: notified with (player, defId | nil) whenever the equipped buddy
+-- changes, so BuddyService can spawn / replace / remove the companion model.
+CollectionService.onBuddyChanged = nil :: ((Player, string?) -> ())?
 
 function CollectionService.equipBuddy(player: Player, defId: any)
 	if type(defId) ~= "string" then
@@ -29,14 +32,24 @@ function CollectionService.equipBuddy(player: Player, defId: any)
 		toastEvent:FireClient(player, "Discover " .. def.DisplayName .. " first to make them your buddy!")
 		return
 	end
-	PlayerDataService.setBuddy(player, defId)
-	buddyEquippedEvent:FireClient(player, defId)
-	toastEvent:FireClient(player, def.DisplayName .. " is now your buddy!")
+	-- Tapping the friend who's already your buddy puts them away again (toggle).
+	local profile = PlayerDataService.get(player)
+	local alreadyBuddy = profile ~= nil and profile.EquippedBuddyId == defId
+	local newId: string? = if alreadyBuddy then nil else (defId :: string)
+
+	PlayerDataService.setBuddy(player, newId)
+	if newId then
+		toastEvent:FireClient(player, def.DisplayName .. " is now your buddy!")
+	else
+		toastEvent:FireClient(player, def.DisplayName .. " is having a little rest now.")
+	end
+	if CollectionService.onBuddyChanged then
+		CollectionService.onBuddyChanged(player, newId)
+	end
 	PlayerDataService.sync(player)
 end
 
 function CollectionService.init()
-	buddyEquippedEvent = Remotes.get(Remotes.BuddyEquipped)
 	toastEvent = Remotes.get(Remotes.Toast)
 
 	local equipRequest = Remotes.get(Remotes.EquipBuddyRequest)

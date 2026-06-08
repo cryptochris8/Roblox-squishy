@@ -2,14 +2,41 @@
 -- PlayerDataService (SERVER)
 -- The single owner of each player's progress: Sparkle Coins, discovered friends,
 -- totals, equipped buddy, and tutorial state. Everything is server-side and
--- validated. (MVP keeps this in memory; DataStore save/load drops in later.)
+-- validated. Progress is persisted with DataStores: load on join, save on leave,
+-- a periodic autosave, and a flush on server shutdown.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+
+-- Bump the version suffix only if the saved shape changes incompatibly.
+local DATASTORE_NAME = "SquishyPlayerData_v1"
+local DATA_VERSION = 1
+local MAX_RETRIES = 4
+local AUTOSAVE_INTERVAL = 90 -- seconds between background saves of active players
+
+-- GetDataStore THROWS in an unpublished place ("You must publish this place to
+-- the web to access DataStore"), which would take down the whole server on load.
+-- Guard it: if it fails, we fall back to an in-memory session and the game still
+-- runs — it just won't persist until the place is published + API access is on.
+local playerStore: DataStore? = nil
+local dataStoreEnabled = false
+do
+	local ok, result = pcall(function()
+		return DataStoreService:GetDataStore(DATASTORE_NAME)
+	end)
+	if ok then
+		playerStore = result
+		dataStoreEnabled = true
+	else
+		warn("[Squishy Smash] DataStore unavailable — progress will NOT persist this session. "
+			.. "Publish the place and turn on Studio Access to API Services to save. (" .. tostring(result) .. ")")
+	end
+end
 
 local PlayerDataService = {}
 
@@ -25,6 +52,10 @@ export type Profile = {
 }
 
 local profiles: { [Player]: Profile } = {}
+-- loadedOk[player] == false means the load *errored* (DataStore unreachable), so
+-- we must NOT save over what might be good saved data. nil/true means safe to save.
+local loadedOk: { [Player]: boolean } = {}
+local ready: { [Player]: boolean } = {}
 local stateSyncEvent: RemoteEvent
 
 local function newProfile(): Profile
@@ -38,6 +69,107 @@ local function newProfile(): Profile
 		TutorialDone = false,
 		FirstCapsuleClaimed = false,
 	}
+end
+
+-- Turn a live Profile into a plain, DataStore-safe table.
+local function serialize(p: Profile)
+	return {
+		version = DATA_VERSION,
+		SparkleCoins = p.SparkleCoins,
+		TotalSquishes = p.TotalSquishes,
+		TotalHappyPops = p.TotalHappyPops,
+		Discovered = p.Discovered,
+		EquippedBuddyId = p.EquippedBuddyId,
+		TutorialDone = p.TutorialDone,
+		FirstCapsuleClaimed = p.FirstCapsuleClaimed,
+	}
+end
+
+-- Rebuild a Profile from saved data, filling any missing fields with fresh
+-- defaults so older saves stay forward-compatible.
+local function deserialize(data: any): Profile
+	local p = newProfile()
+	if type(data) ~= "table" then
+		return p
+	end
+	p.SparkleCoins = tonumber(data.SparkleCoins) or p.SparkleCoins
+	p.TotalSquishes = tonumber(data.TotalSquishes) or p.TotalSquishes
+	p.TotalHappyPops = tonumber(data.TotalHappyPops) or p.TotalHappyPops
+	p.TutorialDone = data.TutorialDone == true
+	p.FirstCapsuleClaimed = data.FirstCapsuleClaimed == true
+	if type(data.EquippedBuddyId) == "string" then
+		p.EquippedBuddyId = data.EquippedBuddyId
+	end
+	if type(data.Discovered) == "table" then
+		local discovered = {}
+		local count = 0
+		for id, owned in pairs(data.Discovered) do
+			if type(id) == "string" and owned == true then
+				discovered[id] = true
+				count += 1
+			end
+		end
+		p.Discovered = discovered
+		p.DiscoveredCount = count -- recomputed from the set, never trusted blindly
+	end
+	return p
+end
+
+local function keyFor(player: Player): string
+	return "Player_" .. tostring(player.UserId)
+end
+
+-- Reads saved data with retries. Returns (ok, data): ok=false means the read
+-- errored (so the caller must not overwrite); data=nil with ok=true is a brand
+-- new player with nothing saved yet.
+local function loadData(player: Player): (boolean, any)
+	local store = playerStore
+	if not (dataStoreEnabled and store) then
+		return false, nil -- in-memory session: behave like a brand-new, unsavable profile
+	end
+	local key = keyFor(player)
+	for attempt = 1, MAX_RETRIES do
+		local ok, result = pcall(function()
+			return store:GetAsync(key)
+		end)
+		if ok then
+			return true, result
+		end
+		warn(string.format("[Squishy Smash] DataStore load failed for %s (attempt %d/%d): %s", player.Name, attempt, MAX_RETRIES, tostring(result)))
+		task.wait(attempt * 1.5)
+	end
+	return false, nil
+end
+
+-- Atomically saves a player's current profile (skipped if their load errored).
+local function saveData(player: Player): boolean
+	local p = profiles[player]
+	if not p then
+		return false
+	end
+	local store = playerStore
+	if not (dataStoreEnabled and store) then
+		return false -- in-memory session: nothing to persist
+	end
+	if loadedOk[player] == false then
+		warn(string.format("[Squishy Smash] Skipping save for %s — earlier load failed, refusing to overwrite saved data.", player.Name))
+		return false
+	end
+	local key = keyFor(player)
+	local payload = serialize(p)
+	for attempt = 1, MAX_RETRIES do
+		local ok, err = pcall(function()
+			store:UpdateAsync(key, function()
+				return payload
+			end)
+		end)
+		if ok then
+			return true
+		end
+		warn(string.format("[Squishy Smash] DataStore save failed for %s (attempt %d/%d): %s", player.Name, attempt, MAX_RETRIES, tostring(err)))
+		task.wait(attempt * 1.5)
+	end
+	return false
 end
 
 -- A friendly leaderboard so kids see their Sparkle Coins, friends, and pops.
@@ -159,7 +291,7 @@ function PlayerDataService.hasDiscovered(player: Player, defId: string): boolean
 	return (p ~= nil) and (p.Discovered[defId] == true)
 end
 
-function PlayerDataService.setBuddy(player: Player, defId: string)
+function PlayerDataService.setBuddy(player: Player, defId: string?)
 	local p = profiles[player]
 	if not p then return end
 	p.EquippedBuddyId = defId
@@ -182,21 +314,73 @@ function PlayerDataService.markFirstCapsuleClaimed(player: Player)
 	p.FirstCapsuleClaimed = true
 end
 
+-- True once a player's profile has finished loading and is safe to read/sync.
+function PlayerDataService.isReady(player: Player): boolean
+	return ready[player] == true
+end
+
 function PlayerDataService.init()
 	stateSyncEvent = Remotes.get(Remotes.StateSync)
 
 	local function onAdded(player: Player)
-		local profile = newProfile()
+		local ok, data = loadData(player)
+		-- If the player left while we were loading, drop it.
+		if player.Parent == nil then
+			return
+		end
+		loadedOk[player] = ok
+		local profile = ok and deserialize(data) or newProfile()
 		profiles[player] = profile
 		setupLeaderstats(player, profile)
+		ready[player] = true
+		if not ok then
+			warn(string.format("[Squishy Smash] %s is playing on a temporary profile — progress will NOT be saved this session.", player.Name))
+		end
+		-- Push state now in case the client's RequestInitialState arrived before
+		-- the profile finished loading.
+		PlayerDataService.sync(player)
 	end
 
 	Players.PlayerAdded:Connect(onAdded)
 	for _, player in ipairs(Players:GetPlayers()) do
-		onAdded(player)
+		task.spawn(onAdded, player)
 	end
+
 	Players.PlayerRemoving:Connect(function(player)
+		saveData(player)
 		profiles[player] = nil
+		loadedOk[player] = nil
+		ready[player] = nil
+	end)
+
+	-- Background autosave so progress survives crashes between join and leave.
+	task.spawn(function()
+		while true do
+			task.wait(AUTOSAVE_INTERVAL)
+			for _, player in ipairs(Players:GetPlayers()) do
+				task.spawn(saveData, player)
+			end
+		end
+	end)
+
+	-- Flush everyone on shutdown. BindToClose blocks the server from closing
+	-- (up to ~30s) so these saves have time to land.
+	game:BindToClose(function()
+		local players = Players:GetPlayers()
+		if #players == 0 then
+			return
+		end
+		local remaining = #players
+		for _, player in ipairs(players) do
+			task.spawn(function()
+				saveData(player)
+				remaining -= 1
+			end)
+		end
+		local deadline = os.clock() + 25
+		while remaining > 0 and os.clock() < deadline do
+			task.wait(0.2)
+		end
 	end)
 end
 

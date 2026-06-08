@@ -132,18 +132,37 @@ local function makeCell(def)
 	numLbl.Text = def.CardNumber or ""
 	numLbl.Parent = frame
 
+	-- Full uploaded card render: shown (covering the chrome) for discovered
+	-- friends that have real art, since the image already has name/stats/number.
+	local fullImg = Instance.new("ImageLabel")
+	fullImg.Name = "FullCard"
+	fullImg.Size = UDim2.fromScale(1, 1)
+	fullImg.BackgroundColor3 = UiTheme.Colors.Cream
+	fullImg.BorderSizePixel = 0
+	fullImg.ScaleType = Enum.ScaleType.Fit
+	fullImg.Visible = false
+	fullImg.Parent = frame
+	UiTheme.corner(16, fullImg)
+
 	local function refresh(discovered)
+		local hasArt = discovered and isRealImage(def.ImageAssetId)
+		fullImg.Visible = hasArt
+		fullImg.Image = hasArt and def.ImageAssetId or ""
+		header.Visible = not hasArt
+		art.Visible = not hasArt
+		nameLbl.Visible = not hasArt
+		numLbl.Visible = not hasArt
+		stroke.Color = discovered and UiTheme.rarityColor(def.Rarity) or UiTheme.Colors.Locked
+		if hasArt then
+			return
+		end
 		if discovered then
-			frame.BackgroundColor3 = UiTheme.Colors.Panel
-			stroke.Color = UiTheme.rarityColor(def.Rarity)
 			header.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
 			badge.Text = UiTheme.rarityLabel(def.Rarity)
 			nameLbl.Text = def.DisplayName
 			nameLbl.TextColor3 = UiTheme.Colors.Ink
 			art.BackgroundColor3 = UiTheme.rarityColor(def.Rarity)
 		else
-			frame.BackgroundColor3 = UiTheme.Colors.Panel
-			stroke.Color = UiTheme.Colors.Locked
 			header.BackgroundColor3 = UiTheme.PackColor[def.Zone] or UiTheme.Colors.Locked
 			badge.Text = "?"
 			nameLbl.Text = "? ? ?"
@@ -179,6 +198,56 @@ function CollectionBookUI.openDetail(def)
 		openDetailDef = nil
 		openEquipBtn = nil
 	end)
+
+	openDetailDef = def
+
+	-- Equip Buddy button, shared by both layouts. Its text is reconciled from the
+	-- server's authoritative StateSync in update(), so it can never falsely claim
+	-- "Your Buddy" if the equip is declined.
+	local function makeEquip(parent, position)
+		local equip = Instance.new("TextButton")
+		equip.AnchorPoint = Vector2.new(0.5, 1)
+		equip.Position = position
+		equip.Size = UDim2.fromOffset(220, 48)
+		equip.BackgroundColor3 = UiTheme.Colors.AccentDeep
+		equip.BorderSizePixel = 0
+		equip.Font = UiTheme.HeaderFont
+		equip.TextSize = 20
+		equip.TextColor3 = Color3.fromRGB(255, 255, 255)
+		local isBuddy = lastState and lastState.equippedBuddyId == def.Id
+		equip.Text = isBuddy and "★ Your Buddy" or "Equip Buddy"
+		equip.Parent = parent
+		UiTheme.corner(24, equip)
+		openEquipBtn = equip
+		equip.Activated:Connect(function()
+			if onEquipCb then
+				onEquipCb(def.Id)
+			end
+		end)
+	end
+
+	if isRealImage(def.ImageAssetId) then
+		-- The full uploaded card render is the star (it already has the name,
+		-- rarity, stats, lore, and number baked in), so we just frame it + Equip.
+		local holder = Instance.new("Frame")
+		holder.AnchorPoint = Vector2.new(0.5, 0.5)
+		holder.Position = UDim2.fromScale(0.5, 0.5)
+		holder.Size = UDim2.fromOffset(372, 548)
+		holder.BackgroundTransparency = 1
+		holder.Parent = detailHolder
+
+		local img = Instance.new("ImageLabel")
+		img.AnchorPoint = Vector2.new(0.5, 0)
+		img.Position = UDim2.fromScale(0.5, 0)
+		img.Size = UDim2.fromOffset(360, 480)
+		img.BackgroundTransparency = 1
+		img.ScaleType = Enum.ScaleType.Fit
+		img.Image = def.ImageAssetId
+		img.Parent = holder
+
+		makeEquip(holder, UDim2.new(0.5, 0, 1, 0))
+		return
+	end
 
 	local card = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -230,28 +299,7 @@ function CollectionBookUI.openDetail(def)
 	lore.Text = loreFor(def)
 	lore.Parent = card
 
-	local equip = Instance.new("TextButton")
-	equip.AnchorPoint = Vector2.new(0.5, 1)
-	equip.Position = UDim2.new(0.5, 0, 1, -16)
-	equip.Size = UDim2.fromOffset(220, 48)
-	equip.BackgroundColor3 = UiTheme.Colors.AccentDeep
-	equip.BorderSizePixel = 0
-	equip.Font = UiTheme.HeaderFont
-	equip.TextSize = 20
-	equip.TextColor3 = Color3.fromRGB(255, 255, 255)
-	local isBuddy = lastState and lastState.equippedBuddyId == def.Id
-	equip.Text = isBuddy and "★ Your Buddy" or "Equip Buddy"
-	equip.Parent = card
-	UiTheme.corner(24, equip)
-	openDetailDef = def
-	openEquipBtn = equip
-	equip.Activated:Connect(function()
-		if onEquipCb then
-			onEquipCb(def.Id)
-		end
-		-- The button text updates from the server's next StateSync (authoritative),
-		-- so it can never falsely claim "Your Buddy" if the equip is declined.
-	end)
+	makeEquip(card, UDim2.new(0.5, 0, 1, -16))
 end
 
 local function buildTabs(parent)

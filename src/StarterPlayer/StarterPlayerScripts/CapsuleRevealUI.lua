@@ -4,12 +4,16 @@
 -- are framed as a happy "Friendship Bonus".
 
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local UiTheme = require(script.Parent.UiTheme)
 
 local CapsuleRevealUI = {}
 
 local screen, layer
 local busy = false
+
+-- Safety net: even if a click is somehow swallowed, the reveal closes itself.
+local AUTO_CLOSE_SECONDS = 12
 
 local function isRealImage(id)
 	return type(id) == "string" and id ~= "" and not string.find(id, "REPLACE_ME")
@@ -54,15 +58,24 @@ function CapsuleRevealUI.play(result, onClose)
 	busy = true
 	layer:ClearAllChildren()
 
-	-- One safe way to close this reveal (tap "Yay!", tap outside, error, or a
-	-- watchdog). Guarded so it only ever runs once per reveal.
+	-- One safe way to close this reveal (tap "Yay!", tap outside, press Esc, an
+	-- error, or the watchdog). Guarded so it only ever runs once per reveal.
 	local closed = false
-	local function dismiss()
-		if closed then
+	-- The reveal can only be dismissed once the card + "Yay!" are actually shown, so
+	-- the very tap/click/keypress that opened the capsule can't instantly close it.
+	-- The watchdog and the error handler pass force=true so they can always clean up.
+	local canDismiss = false
+	local escConn: RBXScriptConnection? = nil
+	local function dismiss(force: boolean?)
+		if closed or (not force and not canDismiss) then
 			return
 		end
 		closed = true
 		busy = false
+		if escConn then
+			escConn:Disconnect()
+			escConn = nil
+		end
 		if layer then
 			layer:ClearAllChildren()
 		end
@@ -70,16 +83,33 @@ function CapsuleRevealUI.play(result, onClose)
 			onClose()
 		end
 	end
-	-- dim background (tap it to close)
+
+	-- Watchdog: guarantees the reveal can never get permanently stuck on screen.
+	task.delay(AUTO_CLOSE_SECONDS, function()
+		dismiss(true)
+	end)
+
+	-- Keyboard fallback: Esc closes the reveal too.
+	escConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if input.KeyCode == Enum.KeyCode.Escape and not gameProcessed then
+			dismiss()
+		end
+	end)
+
+	-- dim background (tap it to close). High ZIndex so it always sits on top of
+	-- any other HUD and reliably receives the click.
 	local dim = Instance.new("TextButton")
 	dim.Size = UDim2.fromScale(1, 1)
 	dim.BackgroundColor3 = UiTheme.Colors.Shade
 	dim.BackgroundTransparency = 1
 	dim.BorderSizePixel = 0
 	dim.Text = ""
+	dim.ZIndex = 1
 	dim.AutoButtonColor = false
+	dim.Active = true
 	dim.Parent = layer
-	dim.Activated:Connect(dismiss)
+	dim.Activated:Connect(function() dismiss() end)
+	dim.MouseButton1Click:Connect(function() dismiss() end)
 	TweenService:Create(dim, TweenInfo.new(0.25), { BackgroundTransparency = 0.45 }):Play()
 
 	-- the capsule
@@ -98,20 +128,79 @@ function CapsuleRevealUI.play(result, onClose)
 	task.spawn(function()
 		local ok, err = pcall(function()
 			for i = 1, 3 do
+				if closed then return end
 				TweenService:Create(capsule, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = 12 }):Play()
 				task.wait(0.12)
 				TweenService:Create(capsule, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = -12 }):Play()
 				task.wait(0.12)
 			end
+			if closed then return end
 			TweenService:Create(capsule, TweenInfo.new(0.1), { Rotation = 0 }):Play()
 			task.wait(0.12)
 
 			-- pop the capsule away, bring the card in
+			if closed then return end
 			TweenService:Create(capsule, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
 				Size = UDim2.fromOffset(0, 0),
 			}):Play()
 			task.wait(0.18)
+			if closed then return end
 			capsule:Destroy()
+
+			if isRealImage(result.imageAssetId) then
+				-- The full uploaded card render IS the reveal (it already has the
+				-- name, rarity, stats, and number), so show it big with a headline.
+				local bigHeadline = Instance.new("TextLabel")
+				bigHeadline.AnchorPoint = Vector2.new(0.5, 0.5)
+				bigHeadline.Position = UDim2.new(0.5, 0, 0.5, -250)
+				bigHeadline.Size = UDim2.fromOffset(540, 40)
+				bigHeadline.BackgroundTransparency = 1
+				bigHeadline.Font = UiTheme.HeaderFont
+				bigHeadline.TextSize = 28
+				bigHeadline.TextColor3 = Color3.fromRGB(255, 255, 255)
+				bigHeadline.TextStrokeColor3 = UiTheme.Colors.AccentDeep
+				bigHeadline.TextStrokeTransparency = 0.15
+				if result.isNew then
+					bigHeadline.Text = "New Friend Discovered!"
+				elseif (result.bonusCoins or 0) > 0 then
+					bigHeadline.Text = "Friendship Bonus!  +" .. result.bonusCoins .. " Sparkle Coins"
+				else
+					bigHeadline.Text = "Friendship Bonus!"
+				end
+				bigHeadline.Parent = layer
+
+				local img = Instance.new("ImageLabel")
+				img.AnchorPoint = Vector2.new(0.5, 0.5)
+				img.Position = UDim2.fromScale(0.5, 0.5)
+				img.Size = UDim2.fromOffset(0, 430)
+				img.BackgroundTransparency = 1
+				img.ScaleType = Enum.ScaleType.Fit
+				img.Image = result.imageAssetId
+				img.Parent = layer
+				TweenService:Create(img, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+					Size = UDim2.fromOffset(322, 430),
+				}):Play()
+				task.wait(0.32)
+
+				local bigYay = Instance.new("TextButton")
+				bigYay.AnchorPoint = Vector2.new(0.5, 0.5)
+				bigYay.Position = UDim2.new(0.5, 0, 0.5, 252)
+				bigYay.Size = UDim2.fromOffset(200, 48)
+				bigYay.BackgroundColor3 = UiTheme.Colors.AccentDeep
+				bigYay.BorderSizePixel = 0
+				bigYay.Font = UiTheme.HeaderFont
+				bigYay.TextSize = 22
+				bigYay.TextColor3 = Color3.fromRGB(255, 255, 255)
+				bigYay.Text = "Yay!"
+				bigYay.ZIndex = 5
+				bigYay.Active = true
+				bigYay.Parent = layer
+				UiTheme.corner(24, bigYay)
+				bigYay.Activated:Connect(function() dismiss() end)
+				bigYay.MouseButton1Click:Connect(function() dismiss() end)
+				canDismiss = true
+				return
+			end
 
 			local card = UiTheme.panel({
 				AnchorPoint = Vector2.new(0.5, 0.5),
@@ -168,13 +257,17 @@ function CapsuleRevealUI.play(result, onClose)
 			yay.TextSize = 22
 			yay.TextColor3 = Color3.fromRGB(255, 255, 255)
 			yay.Text = "Yay!"
+			yay.ZIndex = 5
+			yay.Active = true
 			yay.Parent = card
 			UiTheme.corner(24, yay)
-			yay.Activated:Connect(dismiss)
+			yay.Activated:Connect(function() dismiss() end)
+			yay.MouseButton1Click:Connect(function() dismiss() end)
+			canDismiss = true
 		end)
 		if not ok then
 			warn("[CapsuleRevealUI] reveal failed: " .. tostring(err))
-			dismiss()
+			dismiss(true)
 		end
 	end)
 end
@@ -184,7 +277,7 @@ function CapsuleRevealUI.mount(playerGui)
 	screen.Name = "CapsuleReveal"
 	screen.ResetOnSpawn = false
 	screen.IgnoreGuiInset = false
-	screen.DisplayOrder = 40
+	screen.DisplayOrder = 60 -- above the HUD (0), Book (20) and Toast (50)
 	screen.Parent = playerGui
 
 	layer = Instance.new("Frame")

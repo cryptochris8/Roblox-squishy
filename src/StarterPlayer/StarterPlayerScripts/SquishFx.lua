@@ -70,6 +70,95 @@ local function buildBillboard(body, def)
 	return fill, zzz
 end
 
+-- A cute always-facing-camera face that sits on the friend: bead eyes with a
+-- shine, rosy cheeks, and a little mouth. It can switch between a sleepy
+-- (closed-eyes) look and an awake (open-eyes, bigger smile) look.
+local EYE_COLOR = Color3.fromRGB(64, 48, 64)
+
+local function buildFace(body)
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "Face"
+	gui.Size = UDim2.fromOffset(84, 72)
+	gui.StudsOffset = Vector3.new(0, 0.15, 0)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 60
+	gui.Parent = body
+
+	local function eye(px: number)
+		local open = Instance.new("Frame")
+		open.AnchorPoint = Vector2.new(0.5, 0.5)
+		open.Position = UDim2.fromScale(px, 0.42)
+		open.Size = UDim2.fromOffset(15, 17)
+		open.BackgroundColor3 = EYE_COLOR
+		open.BorderSizePixel = 0
+		open.Parent = gui
+		UiTheme.corner(8, open)
+		local shine = Instance.new("Frame")
+		shine.AnchorPoint = Vector2.new(0.5, 0.5)
+		shine.Position = UDim2.fromScale(0.36, 0.3)
+		shine.Size = UDim2.fromOffset(5, 5)
+		shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		shine.BorderSizePixel = 0
+		shine.Parent = open
+		UiTheme.corner(3, shine)
+
+		local closed = Instance.new("Frame")
+		closed.AnchorPoint = Vector2.new(0.5, 0.5)
+		closed.Position = UDim2.fromScale(px, 0.44)
+		closed.Size = UDim2.fromOffset(16, 5)
+		closed.BackgroundColor3 = EYE_COLOR
+		closed.BorderSizePixel = 0
+		closed.Parent = gui
+		UiTheme.corner(3, closed)
+		return open, closed
+	end
+
+	local leftOpen, leftClosed = eye(0.3)
+	local rightOpen, rightClosed = eye(0.7)
+
+	local function cheek(px: number)
+		local c = Instance.new("Frame")
+		c.AnchorPoint = Vector2.new(0.5, 0.5)
+		c.Position = UDim2.fromScale(px, 0.56)
+		c.Size = UDim2.fromOffset(13, 9)
+		c.BackgroundColor3 = Color3.fromRGB(255, 150, 175)
+		c.BackgroundTransparency = 0.35
+		c.BorderSizePixel = 0
+		c.Parent = gui
+		UiTheme.corner(6, c)
+	end
+	cheek(0.14)
+	cheek(0.86)
+
+	local mouth = Instance.new("Frame")
+	mouth.AnchorPoint = Vector2.new(0.5, 0.5)
+	mouth.Position = UDim2.fromScale(0.5, 0.64)
+	mouth.Size = UDim2.fromOffset(9, 6)
+	mouth.BackgroundColor3 = EYE_COLOR
+	mouth.BorderSizePixel = 0
+	mouth.Parent = gui
+	UiTheme.corner(4, mouth)
+
+	local face = {}
+	function face.setSleepy()
+		leftOpen.Visible = false
+		rightOpen.Visible = false
+		leftClosed.Visible = true
+		rightClosed.Visible = true
+		mouth.Size = UDim2.fromOffset(8, 5)
+	end
+	function face.setAwake()
+		leftOpen.Visible = true
+		rightOpen.Visible = true
+		leftClosed.Visible = false
+		rightClosed.Visible = false
+		TweenService:Create(mouth, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.fromOffset(18, 10),
+		}):Play()
+	end
+	return face
+end
+
 local function register(model)
 	if not model:IsA("Model") then
 		return
@@ -84,20 +173,30 @@ local function register(model)
 	end
 	local def = SquishyData.getById(model:GetAttribute("DefId"))
 	local fill, zzz = buildBillboard(body, def)
-	entries[objectId] = { body = body, fill = fill, zzz = zzz }
+	local face = buildFace(body)
+	face.setSleepy()
+
+	-- Gentle idle "breathing" float so sleepy friends feel alive. Tweens CFrame
+	-- only (the squash tween uses Size), so the two never fight.
+	TweenService:Create(body, TweenInfo.new(1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+		CFrame = body.CFrame * CFrame.new(0, 0.4, 0),
+	}):Play()
+
+	entries[objectId] = { body = body, fill = fill, zzz = zzz, face = face, baseSize = body.Size }
 end
 
-local function squash(body)
+local function squash(body, baseSize)
 	if not body or not body.Parent then
 		return
 	end
+	local squished = Vector3.new(baseSize.X * 1.22, baseSize.Y * 0.72, baseSize.Z * 1.22)
 	local t1 = TweenService:Create(body, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = Vector3.new(4.9, 2.9, 4.9),
+		Size = squished,
 	})
 	t1.Completed:Connect(function()
 		if body and body.Parent then
 			TweenService:Create(body, TweenInfo.new(0.28, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-				Size = BASE_SIZE,
+				Size = baseSize,
 			}):Play()
 		end
 	end)
@@ -123,12 +222,12 @@ local function sparkle(body, count, color)
 	Debris:AddItem(emitter, 1)
 end
 
-local function pop(body)
+local function pop(body, baseSize)
 	if not body or not body.Parent then
 		return
 	end
 	TweenService:Create(body, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = Vector3.new(6.5, 6.5, 6.5),
+		Size = baseSize * 1.6,
 		Transparency = 1,
 	}):Play()
 end
@@ -168,14 +267,17 @@ function SquishFx.handle(result)
 	if entry.zzz then
 		entry.zzz.Visible = false
 	end
+	if entry.face then
+		entry.face.setAwake()
+	end
 
-	squash(body)
+	squash(body, entry.baseSize)
 
 	if result.popped then
 		local def = SquishyData.getById(result.defId)
 		local color = def and UiTheme.rarityColor(def.Rarity) or nil
 		sparkle(body, 26, color)
-		pop(body)
+		pop(body, entry.baseSize)
 		if result.byUserId == localPlayer.UserId and result.coins then
 			floatingCoins(body, result.coins)
 		end

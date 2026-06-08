@@ -18,7 +18,6 @@ Remotes.EquipBuddyRequest = "EquipBuddyRequest"      -- defId: equip a discovere
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
 Remotes.SquishResult = "SquishResult"   -- a friend was squished / Happy Popped (to everyone)
 Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
-Remotes.BuddyEquipped = "BuddyEquipped" -- confirm an equipped buddy
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -27,7 +26,6 @@ local ALL_EVENTS = {
 	Remotes.StateSync,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
-	Remotes.BuddyEquipped,
 	Remotes.Toast,
 }
 
