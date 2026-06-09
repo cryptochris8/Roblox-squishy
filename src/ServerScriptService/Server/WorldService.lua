@@ -101,6 +101,14 @@ function WorldService.build()
 		end
 	end)
 
+	-- Remove Studio's default Baseplate so our pastel ground is the only floor. Its
+	-- grid texture sits at the same height (y=0) and was z-fighting through / showing
+	-- its checkerboard past the edges of our ground.
+	local oldBaseplate = Workspace:FindFirstChild("Baseplate")
+	if oldBaseplate then
+		oldBaseplate:Destroy()
+	end
+
 	local folder = Instance.new("Folder")
 	folder.Name = "PuddingHills"
 	folder.Parent = Workspace
