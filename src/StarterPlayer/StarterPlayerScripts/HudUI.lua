@@ -75,7 +75,7 @@ local function questBanner(parent)
 		Name = "QuestBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, 16),
-		Size = UDim2.fromOffset(420, 44),
+		Size = UDim2.fromOffset(480, 44),
 		BackgroundColor3 = UiTheme.Colors.Accent,
 		radius = 22,
 	})
@@ -136,12 +136,26 @@ function HudUI.update(state)
 	coinLabel.Text = tostring(state.coins or 0)
 	friendsLabel.Text = "Friends " .. (state.discoveredCount or 0) .. "/48"
 
-	local tutorial = state.tutorial
-	if tutorial and not tutorial.done then
+	-- The Lost Shard quest is the main objective; it subsumes the tutorial (waking
+	-- friends serves both). Falls back to the tutorial only if no quest data yet.
+	local quest = state.quest
+	if quest and not quest.shardCollected then
 		questFrame.Visible = true
-		questLabel.Text = "Wake up sleepy friends:  " .. (tutorial.popped or 0) .. " / " .. (tutorial.goal or 3)
-	else
+		if quest.shardRevealed then
+			questLabel.Text = "✨ Recover the Lost Shard at the orchard!"
+		else
+			questLabel.Text = "Find the Lost Shard  —  wake " .. (quest.shardProgress or 0) .. " / " .. (quest.shardGoal or 8) .. " sleepy friends"
+		end
+	elseif quest then
 		questFrame.Visible = false
+	else
+		local tutorial = state.tutorial
+		if tutorial and not tutorial.done then
+			questFrame.Visible = true
+			questLabel.Text = "Wake up sleepy friends:  " .. (tutorial.popped or 0) .. " / " .. (tutorial.goal or 3)
+		else
+			questFrame.Visible = false
+		end
 	end
 end
 
