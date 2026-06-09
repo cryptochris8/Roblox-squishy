@@ -22,6 +22,7 @@ Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discover
 Remotes.SquishResult = "SquishResult"   -- a friend was squished / Happy Popped (to everyone)
 Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
 Remotes.SparkleBitCollected = "SparkleBitCollected" -- a hidden Sparkle Bit was found (to finder)
+Remotes.SparkleRestored = "SparkleRestored" -- all 3 shards recovered — the finale celebration
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -34,6 +35,7 @@ local ALL_EVENTS = {
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,
+	Remotes.SparkleRestored,
 	Remotes.Toast,
 }
 

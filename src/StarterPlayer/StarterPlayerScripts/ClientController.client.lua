@@ -19,6 +19,7 @@ local CapsuleRevealUI = require(here:WaitForChild("CapsuleRevealUI"))
 local SquishFx = require(here:WaitForChild("SquishFx"))
 local SparkleBits = require(here:WaitForChild("SparkleBits"))
 local DailyUI = require(here:WaitForChild("DailyUI"))
+local FinaleUI = require(here:WaitForChild("FinaleUI"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -35,6 +36,7 @@ CollectionBookUI.mount(playerGui, function(defId)
 	equipBuddyRequest:FireServer(defId)
 end)
 DailyUI.mount(playerGui)
+FinaleUI.mount(playerGui)
 HudUI.mount(playerGui, function()
 	CollectionBookUI.show()
 end, function()
@@ -68,6 +70,10 @@ end)
 
 Remotes.get(Remotes.Toast).OnClientEvent:Connect(function(text)
 	ToastUI.show(text)
+end)
+
+Remotes.get(Remotes.SparkleRestored).OnClientEvent:Connect(function(info)
+	FinaleUI.play(info)
 end)
 
 print("[Squishy Smash] Client ready for " .. localPlayer.Name)

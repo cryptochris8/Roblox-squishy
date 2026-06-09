@@ -22,6 +22,7 @@ local QuestService = require(script.Parent.QuestService)
 local SparkleBitService = require(script.Parent.SparkleBitService)
 local DailyService = require(script.Parent.DailyService)
 local TravelService = require(script.Parent.TravelService)
+local FinaleService = require(script.Parent.FinaleService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -32,6 +33,7 @@ BuddyService.init()
 SparkleBitService.init()
 DailyService.init()
 TravelService.init()
+FinaleService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -65,6 +67,11 @@ CapsuleService.onOpened = function(player, isNew)
 end
 SparkleBitService.onCollected = function(player)
 	DailyService.noteEvent(player, "bit")
+end
+
+-- Recovering all three Sparkle shards restores the Sparkle (the finale).
+QuestService.onAllShardsRecovered = function(player)
+	FinaleService.celebrate(player)
 end
 
 -- Each land's Sparkle Capsule (draws from that land's pack) + guide (gives that

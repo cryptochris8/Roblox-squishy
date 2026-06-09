@@ -58,6 +58,7 @@ export type Profile = {
 	StreakDays: number,
 	LastPlayDay: number,
 	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean } },
+	SparkleRestored: boolean,
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -93,6 +94,7 @@ local function newProfile(): Profile
 		StreakDays = 0,
 		LastPlayDay = 0,
 		DailyQuests = { day = 0, progress = {}, claimed = {} },
+		SparkleRestored = false,
 	}
 end
 
@@ -128,6 +130,7 @@ local function serialize(p: Profile)
 		StreakDays = p.StreakDays,
 		LastPlayDay = p.LastPlayDay,
 		DailyQuests = p.DailyQuests,
+		SparkleRestored = p.SparkleRestored,
 	}
 end
 
@@ -191,6 +194,7 @@ local function deserialize(data: any): Profile
 	p.LastDailyCapsuleDay = tonumber(data.LastDailyCapsuleDay) or 0
 	p.StreakDays = tonumber(data.StreakDays) or 0
 	p.LastPlayDay = tonumber(data.LastPlayDay) or 0
+	p.SparkleRestored = data.SparkleRestored == true
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
 		if type(data.DailyQuests.progress) == "table" then
@@ -341,6 +345,7 @@ function PlayerDataService.snapshot(player: Player)
 			progress = p.DailyQuests.progress,
 			claimed = p.DailyQuests.claimed,
 		},
+		sparkleRestored = p.SparkleRestored,
 	}
 end
 
@@ -454,6 +459,18 @@ function PlayerDataService.markDailyCapsuleClaimed(player: Player)
 		return
 	end
 	p.LastDailyCapsuleDay = todayIndex()
+end
+
+function PlayerDataService.isSparkleRestored(player: Player): boolean
+	local p = profiles[player]
+	return (p ~= nil) and (p.SparkleRestored == true)
+end
+
+function PlayerDataService.markSparkleRestored(player: Player)
+	local p = profiles[player]
+	if p then
+		p.SparkleRestored = true
+	end
 end
 
 -- OWNER-ONLY playtest tool: wipe a player's profile back to a brand-new start.

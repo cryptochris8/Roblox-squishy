@@ -37,6 +37,9 @@ GameConfig.StreakBaseBonus = 20
 GameConfig.StreakPerDay = 10
 GameConfig.StreakMaxForBonus = 7 -- the bonus stops growing after a week
 
+-- The finale: recovering all 3 Sparkle shards restores the Sparkle to the world.
+GameConfig.FinaleRewardCoins = 1000
+
 -- The Sparkle Capsule: the very first one is a free gift after the tutorial.
 GameConfig.FirstCapsuleIsFree = true
 
