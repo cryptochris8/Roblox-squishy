@@ -160,22 +160,28 @@ local function buildFace(body)
 	return face
 end
 
-local function register(model)
-	if not model:IsA("Model") then
+-- Dress a friend's Body with its face, name label, and Joy bar. Safe to call
+-- again when a body streams back in — it only rebuilds if this body is new.
+local function attachFx(model, objectId, body)
+	if not body or not body.Parent then
 		return
 	end
-	local objectId = model:GetAttribute("ObjectId")
-	if type(objectId) ~= "string" then
-		return
-	end
-	local body = model:FindFirstChild("Body") or model.PrimaryPart
-	if not body then
-		return
+	local existing = entries[objectId]
+	if existing and existing.body == body then
+		return -- this body is already dressed
 	end
 	local def = SquishyData.getById(model:GetAttribute("DefId"))
 	local fill, zzz = buildBillboard(body, def)
 	local face = buildFace(body)
-	face.setSleepy()
+	-- A re-streamed friend may already be mid-meter; show what the server knows.
+	local joy = math.clamp(model:GetAttribute("Joy") or 0, 0, 1)
+	fill.Size = UDim2.new(joy, 0, 1, 0)
+	if joy > 0 then
+		face.setAwake()
+		zzz.Visible = false
+	else
+		face.setSleepy()
+	end
 
 	-- Gentle idle "breathing" float so sleepy friends feel alive. Tweens CFrame
 	-- only (the squash tween uses Size), so the two never fight.
@@ -184,6 +190,34 @@ local function register(model)
 	}):Play()
 
 	entries[objectId] = { body = body, fill = fill, zzz = zzz, face = face, baseSize = body.Size }
+end
+
+local function register(model)
+	if not model:IsA("Model") then
+		return
+	end
+	task.spawn(function()
+		-- With StreamingEnabled the Model container reaches the client right away,
+		-- but its attributes can lag by a beat — wait briefly for the id.
+		local deadline = os.clock() + 6
+		local objectId = model:GetAttribute("ObjectId")
+		while type(objectId) ~= "string" and os.clock() < deadline and model.Parent do
+			task.wait(0.1)
+			objectId = model:GetAttribute("ObjectId")
+		end
+		if type(objectId) ~= "string" then
+			return
+		end
+		-- The Body part only streams in when the player comes near (and is removed
+		-- when they leave, taking our client-built face with it) — so dress the
+		-- friend now if the body is here, and again every time it streams back in.
+		model.ChildAdded:Connect(function(child)
+			if child.Name == "Body" and child:IsA("BasePart") then
+				task.defer(attachFx, model, objectId, child)
+			end
+		end)
+		attachFx(model, objectId, model:FindFirstChild("Body") or model.PrimaryPart)
+	end)
 end
 
 local function squash(body, baseSize)
@@ -310,9 +344,7 @@ function SquishFx.init()
 	for _, model in ipairs(folder:GetChildren()) do
 		register(model)
 	end
-	folder.ChildAdded:Connect(function(model)
-		task.defer(register, model)
-	end)
+	folder.ChildAdded:Connect(register)
 	folder.ChildRemoved:Connect(function(model)
 		local id = model:GetAttribute("ObjectId")
 		if type(id) == "string" then
