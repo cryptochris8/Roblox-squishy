@@ -17,6 +17,7 @@ local HudUI = require(here:WaitForChild("HudUI"))
 local CollectionBookUI = require(here:WaitForChild("CollectionBookUI"))
 local CapsuleRevealUI = require(here:WaitForChild("CapsuleRevealUI"))
 local SquishFx = require(here:WaitForChild("SquishFx"))
+local SparkleBits = require(here:WaitForChild("SparkleBits"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -35,11 +36,15 @@ HudUI.mount(playerGui, function()
 end)
 CapsuleRevealUI.mount(playerGui)
 SquishFx.init()
+SparkleBits.init(function(msg)
+	ToastUI.show(msg)
+end)
 
 -- Server -> client routing
 Remotes.get(Remotes.StateSync).OnClientEvent:Connect(function(state)
 	HudUI.update(state)
 	CollectionBookUI.update(state)
+	SparkleBits.syncCollected(state.sparkleBits)
 end)
 
 Remotes.get(Remotes.SquishResult).OnClientEvent:Connect(function(result)

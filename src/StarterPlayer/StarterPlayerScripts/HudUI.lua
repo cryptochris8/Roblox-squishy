@@ -2,11 +2,13 @@
 -- The always-on screen furniture: Sparkle Coins, friends-discovered count, the
 -- current cozy quest, and a big round "Squishy Book" button.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UiTheme = require(script.Parent.UiTheme)
+local SparkleBitConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SparkleBitConfig"))
 
 local HudUI = {}
 
-local coinLabel, friendsLabel, questFrame, questLabel
+local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
 
 local function coinPill(parent)
 	local pill = UiTheme.panel({
@@ -70,6 +72,28 @@ local function friendsPill(parent)
 	friendsLabel.Parent = pill
 end
 
+local function bitsPill(parent)
+	local pill = UiTheme.panel({
+		Name = "BitsPill",
+		Position = UDim2.fromOffset(16, 120),
+		Size = UDim2.fromOffset(176, 40),
+		radius = 20,
+	})
+	pill.Parent = parent
+	UiTheme.stroke(UiTheme.Colors.Coin, 2, pill)
+
+	bitsLabel = Instance.new("TextLabel")
+	bitsLabel.BackgroundTransparency = 1
+	bitsLabel.Size = UDim2.new(1, -20, 1, 0)
+	bitsLabel.Position = UDim2.fromOffset(14, 0)
+	bitsLabel.Font = UiTheme.HeaderFont
+	bitsLabel.TextSize = 18
+	bitsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	bitsLabel.TextColor3 = UiTheme.Colors.CoinDeep
+	bitsLabel.Text = "✨ Bits 0/" .. SparkleBitConfig.count()
+	bitsLabel.Parent = pill
+end
+
 local function questBanner(parent)
 	questFrame = UiTheme.panel({
 		Name = "QuestBanner",
@@ -125,6 +149,7 @@ function HudUI.mount(playerGui, onOpenBook)
 
 	coinPill(screen)
 	friendsPill(screen)
+	bitsPill(screen)
 	questBanner(screen)
 	bookButton(screen, onOpenBook)
 end
@@ -135,6 +160,16 @@ function HudUI.update(state)
 	end
 	coinLabel.Text = tostring(state.coins or 0)
 	friendsLabel.Text = "Friends " .. (state.discoveredCount or 0) .. "/48"
+
+	if bitsLabel then
+		local found = 0
+		if type(state.sparkleBits) == "table" then
+			for _ in pairs(state.sparkleBits) do
+				found += 1
+			end
+		end
+		bitsLabel.Text = "✨ Bits " .. found .. "/" .. SparkleBitConfig.count()
+	end
 
 	-- The Lost Shard quest is the main objective; it subsumes the tutorial (waking
 	-- friends serves both). Falls back to the tutorial only if no quest data yet.

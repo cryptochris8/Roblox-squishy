@@ -13,19 +13,23 @@ Remotes.FOLDER_NAME = "SquishyRemotes"
 -- client -> server
 Remotes.RequestInitialState = "RequestInitialState" -- "I'm ready, send me my state"
 Remotes.EquipBuddyRequest = "EquipBuddyRequest"      -- defId: equip a discovered friend
+Remotes.CollectSparkleBit = "CollectSparkleBit"      -- id: I walked up to a hidden Sparkle Bit
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
 Remotes.SquishResult = "SquishResult"   -- a friend was squished / Happy Popped (to everyone)
 Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
+Remotes.SparkleBitCollected = "SparkleBitCollected" -- a hidden Sparkle Bit was found (to finder)
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
 	Remotes.RequestInitialState,
 	Remotes.EquipBuddyRequest,
+	Remotes.CollectSparkleBit,
 	Remotes.StateSync,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
+	Remotes.SparkleBitCollected,
 	Remotes.Toast,
 }
 

@@ -51,6 +51,7 @@ export type Profile = {
 	FirstCapsuleClaimed: boolean,
 	FirstShardProgress: number,
 	FirstShardCollected: boolean,
+	SparkleBits: { [string]: boolean },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -72,7 +73,17 @@ local function newProfile(): Profile
 		FirstCapsuleClaimed = false,
 		FirstShardProgress = 0,
 		FirstShardCollected = false,
+		SparkleBits = {},
 	}
+end
+
+-- Count the keys in a small set table.
+local function countKeys(t: { [string]: boolean }): number
+	local n = 0
+	for _ in pairs(t) do
+		n += 1
+	end
+	return n
 end
 
 -- Turn a live Profile into a plain, DataStore-safe table.
@@ -88,6 +99,7 @@ local function serialize(p: Profile)
 		FirstCapsuleClaimed = p.FirstCapsuleClaimed,
 		FirstShardProgress = p.FirstShardProgress,
 		FirstShardCollected = p.FirstShardCollected,
+		SparkleBits = p.SparkleBits,
 	}
 end
 
@@ -119,6 +131,15 @@ local function deserialize(data: any): Profile
 		end
 		p.Discovered = discovered
 		p.DiscoveredCount = count -- recomputed from the set, never trusted blindly
+	end
+	if type(data.SparkleBits) == "table" then
+		local bits = {}
+		for id, got in pairs(data.SparkleBits) do
+			if type(id) == "string" and got == true then
+				bits[id] = true
+			end
+		end
+		p.SparkleBits = bits
 	end
 	return p
 end
@@ -242,6 +263,9 @@ function PlayerDataService.snapshot(player: Player)
 			shardRevealed = p.FirstShardProgress >= GameConfig.FirstShardWakeGoal,
 			shardCollected = p.FirstShardCollected,
 		},
+		-- the set of hidden Sparkle Bits this player has already found (so the
+		-- client never re-renders one they've collected)
+		sparkleBits = p.SparkleBits,
 	}
 end
 
@@ -303,6 +327,24 @@ end
 function PlayerDataService.hasDiscovered(player: Player, defId: string): boolean
 	local p = profiles[player]
 	return (p ~= nil) and (p.Discovered[defId] == true)
+end
+
+function PlayerDataService.hasSparkleBit(player: Player, id: string): boolean
+	local p = profiles[player]
+	return (p ~= nil) and (p.SparkleBits[id] == true)
+end
+
+-- Marks a hidden Sparkle Bit as found. Returns (newlyCollected, totalFound).
+function PlayerDataService.collectSparkleBit(player: Player, id: string): (boolean, number)
+	local p = profiles[player]
+	if not p then
+		return false, 0
+	end
+	if p.SparkleBits[id] then
+		return false, countKeys(p.SparkleBits)
+	end
+	p.SparkleBits[id] = true
+	return true, countKeys(p.SparkleBits)
 end
 
 function PlayerDataService.setBuddy(player: Player, defId: string?)
