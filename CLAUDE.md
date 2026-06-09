@@ -69,6 +69,7 @@ src/ReplicatedStorage/Shared/
   VariantConfig.lua        duplicate→variant tiers (Sparkly/Rainbow): names, colours, bonus coins
   DailyQuestConfig.lua     rotating daily-quest templates + forDay(dayIndex)
   ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain
+  SocialConfig.lua         Phase C tunables: Sparkle Surge meter, Everybody Squish event, leaderboards
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
@@ -83,19 +84,25 @@ src/ServerScriptService/Server/   (server-authoritative)
   SparkleBitService.lua    validates + awards hidden Sparkle Bit pickups (range-checked); onCollected hook
   DailyService.lua         free daily capsule; rotating daily quests (noteEvent) + gentle login streak (onJoin); refreshes Sparkle Bits each day
   TravelService.lua        teleports between lands via Travel Pads, gated by shard progress
-  FinaleService.lua        all 3 shards -> Restore the Sparkle (one-time +coins, brightens the world Sparkle orb)
+  FinaleService.lua        all 3 shards -> Restore the Sparkle (one-time +coins, brightens the world Sparkle orb); announces it server-wide
+  SurgeService.lua         server-wide Sparkle Surge meter: every Happy Pop fills it (goal scales w/ player count) -> 60s of x2 coins for everyone
+  GroupEventService.lua    "Everybody Squish!": every ~7min golden friends appear at the busiest land; shared goal -> +coins for all online
+  LeaderboardService.lua   OrderedDataStore boards ("Top Friend Finders" / "Joy Champions") on physical signs at the Pudding Hills travel hub
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
   UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
   SparkleBits.lua          renders + detects the player's uncollected Sparkle Bits (server-validated pickup)
   DailyUI.lua              "Today's Quests" panel: gentle streak + 3 daily quests with progress bars
   FinaleUI.lua             the "Restore the Sparkle" celebration (shown when all 3 shards are recovered)
+  SocialUI.lua             shared-world HUD: Surge meter pill (left column) + "Everybody Squish" banner with countdowns
 ```
 
 ### Contract (server <-> client)
 
 - Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
-  `ClaimDailyCapsule`, `ResetProgress` (owner-only); s->c `StateSync`,
+  `ClaimDailyCapsule`, `ResetProgress` (owner-only), `OwnerDebug` (owner-only:
+  "startEvent"/"startSurge" demo triggers, with HUD buttons next to Reset); s->c
+  `StateSync`, `SocialSync` (surge meter + event slices, with seconds-remaining),
   `SquishResult`, `CapsuleResult`, `SparkleBitCollected`, `SparkleRestored`, `Toast`.
 - The `StateSync` snapshot carries: coins, discovered (+count), variants,
   sparkleBits, shards (per-land {progress, collected}), tutorial, dailyCapsuleReady,
@@ -113,20 +120,24 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
 ### Not in MVP yet (deliberately)
 
 Real 3D character meshes (buddies + world friends use placeholder squishy balls
-with faces for now); co-op / social (Phase C — needs a multiplayer playtest); and
-any monetization (Phase D — no Game Passes / Developer Products; **Sparkle Capsules
-stay FREE by design**, to avoid the Paid Random Items policy that restricts our 6–9
-audience). *(The earlier card-art gap is closed — all 48 friends now have real
-trading-card art.)*
+with faces for now); gifting/trading (needs a ProfileStore session-lock migration
+first); and any monetization (Phase D — no Game Passes / Developer Products;
+**Sparkle Capsules stay FREE by design**, to avoid the Paid Random Items policy
+that restricts our 6–9 audience). *(The earlier card-art gap is closed — all 48
+friends have real trading-card art; Phase C co-op/social shipped 2026-06-09.)*
 
 ### Build status
 
-Phases A (quest + exploration), B (collection depth + daily loop), and E (all
-three lands + travel + the Restore-the-Sparkle finale) are implemented, playtested
-in Studio, and pushed to GitHub. The game is **solo-completable end to end**: three
-distinct lands, a Sparkle shard per land, 48 friends across three free capsules,
-and the finale. Next: Phase C (co-op/social — needs a multiplayer playtest) and
-Phase D (monetization). See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap and
-`docs/12_PLAYTEST_CHECKLIST.md` for what to watch with the girls. **Changes are
-synced to Studio + git but go live in the published game only after File → Publish
-(Alt+P), a creator-only action.**
+Phases A (quest + exploration), B (collection depth + daily loop), E (all three
+lands + travel + the Restore-the-Sparkle finale), and C (shared & social) are
+implemented, playtested in Studio, and pushed to GitHub. The game is
+**solo-completable end to end** and now has a shared-world layer that scales with
+player count: the server-wide Sparkle Surge meter (x2 coins when the server fills
+it), the "Everybody Squish!" golden-friend co-op event, cross-server leaderboards
+at the Pudding Hills hub, show-off buddy tags (owner name + ✨/🌈 variant badge +
+aura), and server-wide shout-outs for discoveries/shards/the finale. Phase C is
+solo-verified; the four-player family playtest is its real multiplayer validation
+(see `docs/12_PLAYTEST_CHECKLIST.md`). Next: Phase D (monetization — needs
+pricing/business calls). See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap.
+**Changes are synced to Studio + git but go live in the published game only after
+File → Publish (Alt+P), a creator-only action.**

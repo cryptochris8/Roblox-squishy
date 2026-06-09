@@ -37,6 +37,13 @@ where they get stuck or light up matters more than what they say.*
 - [ ] Do duplicates → **✨Sparkly / 🌈Rainbow** feel exciting (not "a miss")?
 - [ ] Do **daily quests** + the **🔥 streak** make them want to return tomorrow?
 
+## Together moments (Phase C — THIS is the multiplayer validation)
+- [ ] **Sparkle Surge:** do they notice the ✨ meter (left column) filling from *everyone's* pops? Does "x2 COINS!" cause a happy frenzy?
+- [ ] **🌟 Everybody Squish!** (use your owner **🌟 Event** button to demo one on cue): do they understand "wake N golden friends *together*"? Do they split up or cluster? Does the everyone-gets-coins finish feel like a team win?
+- [ ] **Leaderboards** at the travel hub: do they find themselves/sisters on the boards? Is it friendly rivalry or tears? (Watch the 6-year-old — if it stings, we soften it.)
+- [ ] **Show-off buddies:** do they notice each other's name tags + ✨/🌈 auras? Does anyone change their buddy to show off?
+- [ ] **Shout-outs:** when one discovers a new friend / recovers a shard, do the others react to the toast?
+
 ## Boredom / difficulty read (the 8-year-olds)
 - [ ] Where does interest dip? (Note the exact moment.)
 - [ ] Too easy anywhere? Too grindy (waking N friends per shard)?
@@ -44,10 +51,11 @@ where they get stuck or light up matters more than what they say.*
 
 ## Known limitations — expected, don't treat as bugs
 - ✅ **All 48 cards now have real trading-card art** (this earlier gap is closed).
+- ✅ **Co-op events + leaderboards are IN** (Phase C) — see "Together moments" above.
 - Friends + buddies are **placeholder squishy balls with faces** (no 3D meshes yet).
-- **No co-op events / leaderboards yet** (Phase C).
 - **No purchases** (by design — capsules are free).
 - Distant lands take a second to **stream in** after you travel (normal).
+- The first natural **Everybody Squish** fires ~3 minutes into a server (then ~every 7); use the owner 🌟 Event button if you don't want to wait.
 
 ## Questions to ask each girl afterward
 - What was your favorite land, and why?

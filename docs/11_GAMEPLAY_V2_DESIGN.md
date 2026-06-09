@@ -34,10 +34,22 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 ## Phased build plan
 - **✅ Phase A — "The First Shard" (Pudding Hills) — DONE (2026-06-09):** spread world + hidden friends/secrets; the First Shard clue-quest (wake friends → shard appears at the orchard → recover → Goo Coast gate opens); quest HUD tracker; hidden Sparkle Bits exploration collectibles.
 - **✅ Phase B — Depth & return — DONE (2026-06-09):** Collection Book hub (silhouettes + completion % + per-zone counts); duplicate→variant (Sparkly/Rainbow) tier; free daily capsule; rotating daily quests + a gentle login streak; hidden Sparkle Bits refresh daily.
-- **Phase C — Shared & social — NEXT (needs multiplayer playtest):** co-op "Everybody Squish" shard events; server-wide Restore-the-Sparkle meter; leaderboards; show-off buddies. (Migrate `PlayerDataService` → ProfileStore session-locking before trading.) *Hard to validate solo — best built/tested with 2+ players.*
+- **✅ Phase C — Shared & social — DONE (2026-06-09, solo-verified):** the server-wide **Sparkle Surge** meter (every Happy Pop fills it; full = 60s of x2 coins for everyone); the **"Everybody Squish!"** golden-friend co-op event (~7min cadence at the busiest land, shared goal scaled by player count, everyone-online reward); cross-server **leaderboards** ("Top Friend Finders" / "Joy Champions") at the Pudding Hills hub; **show-off buddies** (owner-name tag + ✨/🌈 variant badge + particle aura) and server-wide discovery/shard/finale shout-outs. Everything scales 1→N players, so it was verifiable solo — *the 4-player family playtest is the real multiplayer validation.* (ProfileStore session-locking still pending before any gifting/trading.)
 - **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
 
 ### Build log
+- **2026-06-09 (Phase C — shared & social):** Sparkle Surge meter (SurgeService +
+  a HUD pill in the left column), "Everybody Squish!" golden-friend event
+  (GroupEventService: busiest-land pick, goal scaled by player count, success =
+  +150 coins for everyone online, gentle timeout), OrderedDataStore leaderboards
+  on physical boards flanking the Pudding Hills travel hub, buddy show-off tags
+  ("🌈 Emily's Celestial Dumpling Core") with variant auras, and server-wide
+  shout-outs (new discovery / shard recovered / Sparkle restored). Owner-only
+  🌟 Event / ✨ Surge demo buttons beside Reset for demoing to the kids on cue.
+  Also fixed a StreamingEnabled bug: friends' faces/labels now attach whenever a
+  Body streams in (they used to vanish for streamed-in lands). All verified in
+  Studio play (surge x2 math exact, event full arc + fail path, boards showing
+  real names/values, buddy tag + aura live).
 - **2026-06-09 (card art — all 48 friends):** Uploaded the finished `final_48`
   trading cards to Roblox and wired all 48 into `CardImageAssets.lua` (Open Cloud
   upload → resolve Decal→Image id in Studio → merge over the defs). The Squishy Book
