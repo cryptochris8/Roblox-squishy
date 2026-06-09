@@ -49,6 +49,8 @@ export type Profile = {
 	EquippedBuddyId: string?,
 	TutorialDone: boolean,
 	FirstCapsuleClaimed: boolean,
+	FirstShardProgress: number,
+	FirstShardCollected: boolean,
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -68,6 +70,8 @@ local function newProfile(): Profile
 		EquippedBuddyId = nil,
 		TutorialDone = false,
 		FirstCapsuleClaimed = false,
+		FirstShardProgress = 0,
+		FirstShardCollected = false,
 	}
 end
 
@@ -82,6 +86,8 @@ local function serialize(p: Profile)
 		EquippedBuddyId = p.EquippedBuddyId,
 		TutorialDone = p.TutorialDone,
 		FirstCapsuleClaimed = p.FirstCapsuleClaimed,
+		FirstShardProgress = p.FirstShardProgress,
+		FirstShardCollected = p.FirstShardCollected,
 	}
 end
 
@@ -97,6 +103,8 @@ local function deserialize(data: any): Profile
 	p.TotalHappyPops = tonumber(data.TotalHappyPops) or p.TotalHappyPops
 	p.TutorialDone = data.TutorialDone == true
 	p.FirstCapsuleClaimed = data.FirstCapsuleClaimed == true
+	p.FirstShardProgress = tonumber(data.FirstShardProgress) or 0
+	p.FirstShardCollected = data.FirstShardCollected == true
 	if type(data.EquippedBuddyId) == "string" then
 		p.EquippedBuddyId = data.EquippedBuddyId
 	end
@@ -227,6 +235,12 @@ function PlayerDataService.snapshot(player: Player)
 			goal = GameConfig.TutorialPopGoal,
 			done = p.TutorialDone,
 			firstCapsuleClaimed = p.FirstCapsuleClaimed,
+		},
+		quest = {
+			shardProgress = math.min(p.FirstShardProgress, GameConfig.FirstShardWakeGoal),
+			shardGoal = GameConfig.FirstShardWakeGoal,
+			shardRevealed = p.FirstShardProgress >= GameConfig.FirstShardWakeGoal,
+			shardCollected = p.FirstShardCollected,
 		},
 	}
 end

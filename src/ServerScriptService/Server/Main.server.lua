@@ -18,6 +18,7 @@ local CapsuleService = require(script.Parent.CapsuleService)
 local CollectionService = require(script.Parent.CollectionService)
 local TutorialService = require(script.Parent.TutorialService)
 local BuddyService = require(script.Parent.BuddyService)
+local QuestService = require(script.Parent.QuestService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -29,11 +30,13 @@ BuddyService.init()
 -- 4) Build the cozy Pudding Hills world, then spawn the sleepy friends on it.
 local world = WorldService.build()
 SquishService.init(world.pads)
+QuestService.init(world)
 
 -- 5) Wire the world up.
 -- A Happy Pop nudges the tutorial along.
 SquishService.onHappyPop = function(player, def)
 	TutorialService.notePop(player, def)
+	QuestService.notePop(player, def)
 end
 
 -- Equipping/unequipping a buddy spawns or removes the floating companion.
@@ -46,9 +49,9 @@ world.capsulePrompt.Triggered:Connect(function(player)
 	CapsuleService.tryOpen(player)
 end)
 
--- Soft Dumpling re-explains the quest when talked to.
+-- Soft Dumpling gives the Lost Shard clue when talked to.
 world.guidePrompt.Triggered:Connect(function(player)
-	TutorialService.welcome(player)
+	QuestService.giveClue(player)
 end)
 
 -- 6) When a client says it's ready, send its state + a warm welcome.
@@ -56,6 +59,7 @@ local requestState = Remotes.get(Remotes.RequestInitialState)
 requestState.OnServerEvent:Connect(function(player)
 	PlayerDataService.sync(player)
 	TutorialService.welcome(player)
+	QuestService.checkReveal(player)
 end)
 
 print("[Squishy Smash] Server ready — welcome to Pudding Hills!")
