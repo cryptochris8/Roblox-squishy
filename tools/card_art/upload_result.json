@@ -1,0 +1,322 @@
+﻿[
+    {
+        "file":  "003_Peach_Mochi",
+        "friendId":  "peach_mochi",
+        "displayName":  "Peach Mochi",
+        "decalId":  "78485349787050",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "004_Syrup_Cube",
+        "friendId":  "syrup_cube",
+        "displayName":  "Syrup Cube",
+        "decalId":  "80438400186786",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "005_Cream_Puff",
+        "friendId":  "cream_puff",
+        "displayName":  "Cream Puff",
+        "decalId":  "94590325825771",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "006_Rice_Ball_Squish",
+        "friendId":  "rice_ball_squish",
+        "displayName":  "Rice Ball Squish",
+        "decalId":  "106505434390565",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "007_Marshmallow_Puff",
+        "friendId":  "marshmallow_puff",
+        "displayName":  "Marshmallow Puff",
+        "decalId":  "88536283461541",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "008_Pudding_Pop",
+        "friendId":  "pudding_pop",
+        "displayName":  "Pudding Pop",
+        "decalId":  "112849838816530",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "009_Strawberry_Dumpling",
+        "friendId":  "strawberry_dumpling",
+        "displayName":  "Strawberry Dumpling",
+        "decalId":  "71271075330838",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "010_Rainbow_Jelly_Bun",
+        "friendId":  "rainbow_jelly_bun",
+        "displayName":  "Rainbow Jelly Bun",
+        "decalId":  "117458756992433",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "011_Sparkle_Mochi",
+        "friendId":  "sparkle_mochi",
+        "displayName":  "Sparkle Mochi",
+        "decalId":  "114141538149843",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "012_Golden_Syrup_Cube",
+        "friendId":  "golden_syrup_cube",
+        "displayName":  "Golden Syrup Cube",
+        "decalId":  "72802028743224",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "014_Crystal_Mochi",
+        "friendId":  "crystal_mochi",
+        "displayName":  "Crystal Mochi",
+        "decalId":  "97592680004671",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "015_Neon_Dessert_Blob",
+        "friendId":  "neon_dessert_blob",
+        "displayName":  "Neon Dessert Blob",
+        "decalId":  "134289708402921",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "016_Celestial_Dumpling_Core",
+        "friendId":  "celestial_dumpling_core",
+        "displayName":  "Celestial Dumpling Core",
+        "decalId":  "105802097182421",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "017_Goo_Ball",
+        "friendId":  "goo_ball",
+        "displayName":  "Goo Ball",
+        "decalId":  "137477851105178",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "018_Bubble_Blob",
+        "friendId":  "bubble_blob",
+        "displayName":  "Bubble Blob",
+        "decalId":  "83541752390144",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "019_Stretch_Cube",
+        "friendId":  "stretch_cube",
+        "displayName":  "Stretch Cube",
+        "decalId":  "101396337664718",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "020_Soft_Stress_Orb",
+        "friendId":  "soft_stress_orb",
+        "displayName":  "Soft Stress Orb",
+        "decalId":  "104763998496818",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "021_Jelly_Pad",
+        "friendId":  "jelly_pad",
+        "displayName":  "Jelly Pad",
+        "decalId":  "116522128975884",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "022_Sticky_Pop_Ball",
+        "friendId":  "sticky_pop_ball",
+        "displayName":  "Sticky Pop Ball",
+        "decalId":  "100858651419197",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "023_Wobble_Drop",
+        "friendId":  "wobble_drop",
+        "displayName":  "Wobble Drop",
+        "decalId":  "118043850994741",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "024_Squish_Capsule",
+        "friendId":  "squish_capsule",
+        "displayName":  "Squish Capsule",
+        "decalId":  "89639296482852",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "025_Glitter_Goo_Ball",
+        "friendId":  "glitter_goo_ball",
+        "displayName":  "Glitter Goo Ball",
+        "decalId":  "88665020343747",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "026_Shockwave_Blob",
+        "friendId":  "shockwave_blob",
+        "displayName":  "Shockwave Blob",
+        "decalId":  "112007540229369",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "027_Frost_Gel_Cube",
+        "friendId":  "frost_gel_cube",
+        "displayName":  "Frost Gel Cube",
+        "decalId":  "126548795125580",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "028_Prism_Stress_Orb",
+        "friendId":  "prism_stress_orb",
+        "displayName":  "Prism Stress Orb",
+        "decalId":  "137831316211894",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "029_Plasma_Goo_Ball",
+        "friendId":  "plasma_goo_ball",
+        "displayName":  "Plasma Goo Ball",
+        "decalId":  "97094574714433",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "030_Aurora_Stretch_Cube",
+        "friendId":  "aurora_stretch_cube",
+        "displayName":  "Aurora Stretch Cube",
+        "decalId":  "70578060473961",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "031_Cosmic_Jelly_Pad",
+        "friendId":  "cosmic_jelly_pad",
+        "displayName":  "Cosmic Jelly Pad",
+        "decalId":  "79398190451166",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "033_Blushy_Bun_Bunny",
+        "friendId":  "blushy_bun_bunny",
+        "displayName":  "Blushy Bun Bunny",
+        "decalId":  "118746844382891",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "034_Squish_Bat",
+        "friendId":  "squish_bat",
+        "displayName":  "Squish Bat",
+        "decalId":  "122325721288609",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "035_Puff_Ghost",
+        "friendId":  "puff_ghost",
+        "displayName":  "Puff Ghost",
+        "decalId":  "102624351928171",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "036_Wobble_Kitty",
+        "friendId":  "wobble_kitty",
+        "displayName":  "Wobble Kitty",
+        "decalId":  "71198686519966",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "037_Tiny_Blob_Monster",
+        "friendId":  "tiny_blob_monster",
+        "displayName":  "Tiny Blob Monster",
+        "decalId":  "114618832041738",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "038_Soft_Fang_Critter",
+        "friendId":  "soft_fang_critter",
+        "displayName":  "Soft Fang Critter",
+        "decalId":  "80198967267913",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "039_Sleepy_Slime_Pet",
+        "friendId":  "sleepy_slime_pet",
+        "displayName":  "Sleepy Slime Pet",
+        "decalId":  "75995970600789",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "040_Round_Eared_Creature",
+        "friendId":  "round_eared_creature",
+        "displayName":  "Round Eared Creature",
+        "decalId":  "139713217330132",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "042_Moon_Bat_Blob",
+        "friendId":  "moon_bat_blob",
+        "displayName":  "Moon Bat Blob",
+        "decalId":  "87964366765524",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "044_Candy_Fang_Creature",
+        "friendId":  "candy_fang_creature",
+        "displayName":  "Candy Fang Creature",
+        "decalId":  "129146982719661",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "045_Dream_Eater_Squish",
+        "friendId":  "dream_eater_squish",
+        "displayName":  "Dream Eater Squish",
+        "decalId":  "136617807489477",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "047_Phantom_Jelly_Beast",
+        "friendId":  "phantom_jelly_beast",
+        "displayName":  "Phantom Jelly Beast",
+        "decalId":  "71081567911178",
+        "ok":  true,
+        "error":  null
+    }
+]

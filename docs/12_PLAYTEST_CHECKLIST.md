@@ -43,7 +43,7 @@ where they get stuck or light up matters more than what they say.*
 - [ ] What did they want to do that they couldn't? (Wishlist for Phase C/social.)
 
 ## Known limitations — expected, don't treat as bugs
-- **40 of 48 cards show a colored placeholder** (only 8 have real art yet).
+- ✅ **All 48 cards now have real trading-card art** (this earlier gap is closed).
 - Friends + buddies are **placeholder squishy balls with faces** (no 3D meshes yet).
 - **No co-op events / leaderboards yet** (Phase C).
 - **No purchases** (by design — capsules are free).

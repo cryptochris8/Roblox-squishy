@@ -104,19 +104,20 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   `ProximityPrompt.Triggered` (capsule + guide) fire on the server. Hidden Sparkle
   Bits are client-rendered per-player, but the pickup award is server-validated
   (range-checked).
-- Card art uses `def.ImageAssetId` (currently `rbxassetid://REPLACE_ME`); the UI
-  falls back to a coloured placeholder until real image asset ids are pasted into
-  `SquishyDefinitions.lua` (see `docs/08_ASSET_IMPORT_AND_PLACEHOLDER_PLAN.md`).
+- Card art lives in `CardImageAssets.lua` (friend Id → uploaded Image id), merged
+  over the `REPLACE_ME` defaults by `SquishyData`. **All 48 launch friends now have
+  real card art** (the `final_48` trading cards, uploaded 2026-06-09); a friend with
+  no id still falls back to a coloured placeholder. Upload pipeline + decal→image-id
+  provenance: `tools/card_art/`.
 
 ### Not in MVP yet (deliberately)
 
 Real 3D character meshes (buddies + world friends use placeholder squishy balls
-with faces for now); real **card art for 40 of the 48 friends** (8 have uploaded
-art, the rest show a coloured placeholder card — see
-`docs/08_ASSET_IMPORT_AND_PLACEHOLDER_PLAN.md`); co-op / social (Phase C — needs
-a multiplayer playtest); and any monetization (Phase D — no Game Passes /
-Developer Products; **Sparkle Capsules stay FREE by design**, to avoid the Paid
-Random Items policy that restricts our 6–9 audience).
+with faces for now); co-op / social (Phase C — needs a multiplayer playtest); and
+any monetization (Phase D — no Game Passes / Developer Products; **Sparkle Capsules
+stay FREE by design**, to avoid the Paid Random Items policy that restricts our 6–9
+audience). *(The earlier card-art gap is closed — all 48 friends now have real
+trading-card art.)*
 
 ### Build status
 

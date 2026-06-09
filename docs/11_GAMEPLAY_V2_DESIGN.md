@@ -38,6 +38,11 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
 
 ### Build log
+- **2026-06-09 (card art — all 48 friends):** Uploaded the finished `final_48`
+  trading cards to Roblox and wired all 48 into `CardImageAssets.lua` (Open Cloud
+  upload → resolve Decal→Image id in Studio → merge over the defs). The Squishy Book
+  and capsule reveals now show real card art for every friend. The reusable pipeline
+  (convert WebP→PNG, upload, the decal→image map) lives in `tools/card_art/`.
 - **2026-06-09 (Phase E — the full world):** All three lands built and made
   *distinct* — Pudding Hills (cozy golden valley), Goo Coast (goo sea + wooden
   pier + tide-pools + sandcastle), Moonlit Hollow (reflective moonpool + giant
@@ -45,8 +50,7 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
   Sparkle Capsule, guide, and shard quest. Travel Pads link the lands (gated by
   shard progress). All 48 friends are obtainable across the three capsules. The
   three-shard chain culminates in the **Restore the Sparkle** finale. The game is
-  solo-completable end to end. (8 of 48 friends have real card art; 40 are
-  placeholders. Co-op/social and monetization are still Phases C/D.)
+  solo-completable end to end. (Co-op/social and monetization are still Phases C/D.)
 - **2026-06-09 (overnight autonomous build):** Phases A + B fully implemented, playtested in Studio, committed, and pushed to GitHub. All systems server-authoritative + DataStore-persisted. Capsules remain FREE (earned coins only). The game is solo-completable and now has daily reasons to return. **To play the new version in the live Roblox game, publish from Studio (File → Publish, Alt+P) — a creator-only action.**
 
 ## Honest constraints
