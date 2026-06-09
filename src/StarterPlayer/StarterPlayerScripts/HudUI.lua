@@ -183,7 +183,7 @@ local function resetButton(parent, onReset)
 	btn.Font = UiTheme.BodyFont
 	btn.TextSize = 14
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = "⟳ Reset My Progress"
+	btn.Text = "🔄 Reset My Progress"
 	btn.Parent = parent
 	UiTheme.corner(16, btn)
 
