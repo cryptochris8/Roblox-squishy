@@ -74,6 +74,9 @@ function DailyService.onJoin(player: Player)
 		profile.StreakDays = 1
 	end
 	profile.LastPlayDay = today
+	-- Fresh Sparkle Bits scattered for the new day, so the hunt (and the daily
+	-- "find Sparkle Bits" quest) renews. The friends Book is the lasting collection.
+	profile.SparkleBits = {}
 	local steps = math.min(profile.StreakDays, GameConfig.StreakMaxForBonus) - 1
 	local bonus = GameConfig.StreakBaseBonus + GameConfig.StreakPerDay * steps
 	PlayerDataService.addCoins(player, bonus)
