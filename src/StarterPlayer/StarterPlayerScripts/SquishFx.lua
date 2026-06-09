@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
+local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 local UiTheme = require(script.Parent.UiTheme)
 
 local SquishFx = {}
@@ -232,6 +233,21 @@ local function pop(body, baseSize)
 	}):Play()
 end
 
+-- A short positional sound on the friend (3D, so it plays where the squish happens).
+local function playSound(body, id, volume, pitch)
+	if not body or not body.Parent or not id or id == "" then
+		return
+	end
+	local s = Instance.new("Sound")
+	s.SoundId = id
+	s.Volume = volume or 0.5
+	s.PlaybackSpeed = pitch or 1
+	s.RollOffMaxDistance = 80
+	s.Parent = body
+	s:Play()
+	Debris:AddItem(s, 3)
+end
+
 local function floatingCoins(body, coins)
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(130, 40)
@@ -278,12 +294,14 @@ function SquishFx.handle(result)
 		local color = def and UiTheme.rarityColor(def.Rarity) or nil
 		sparkle(body, 26, color)
 		pop(body, entry.baseSize)
+		playSound(body, SoundConfig.HappyPop, 0.6, 1.1)
 		if result.byUserId == localPlayer.UserId and result.coins then
 			floatingCoins(body, result.coins)
 		end
 		entries[result.objectId] = nil
 	else
 		sparkle(body, 6, Color3.fromRGB(255, 240, 205))
+		playSound(body, SoundConfig.Squish, 0.5, 1.2)
 	end
 end
 
