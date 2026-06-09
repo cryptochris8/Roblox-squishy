@@ -79,4 +79,17 @@ requestState.OnServerEvent:Connect(function(player)
 	QuestService.checkReveal(player)
 end)
 
+-- Owner-only "Reset My Progress" playtest tool. Double-gated to the place owner so
+-- the kids can NEVER wipe their own progress; resets the profile (the fresh save
+-- lands on the rejoin kick) and sends them back for a clean first-time run.
+local resetProgress = Remotes.get(Remotes.ResetProgress)
+resetProgress.OnServerEvent:Connect(function(player)
+	if game.CreatorType ~= Enum.CreatorType.User or player.UserId ~= game.CreatorId then
+		return
+	end
+	PlayerDataService.resetProfile(player)
+	task.wait(0.15)
+	player:Kick("✨ Progress reset — rejoin to start fresh from the beginning!")
+end)
+
 print("[Squishy Smash] Server ready — welcome to Pudding Hills!")

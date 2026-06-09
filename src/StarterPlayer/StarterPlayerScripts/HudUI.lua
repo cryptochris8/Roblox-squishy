@@ -4,6 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
 local UiTheme = require(script.Parent.UiTheme)
 local SparkleBitConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SparkleBitConfig"))
 
@@ -169,6 +170,88 @@ local function dailyQuestsButton(parent, onOpenDaily)
 	end)
 end
 
+-- Owner-only playtest tool: a small "Reset My Progress" button with a confirm step.
+local function resetButton(parent, onReset)
+	local btn = Instance.new("TextButton")
+	btn.Name = "ResetButton"
+	btn.AnchorPoint = Vector2.new(0.5, 1)
+	btn.Position = UDim2.new(0.5, 0, 1, -16)
+	btn.Size = UDim2.fromOffset(184, 32)
+	btn.BackgroundColor3 = Color3.fromRGB(150, 120, 140)
+	btn.BackgroundTransparency = 0.2
+	btn.BorderSizePixel = 0
+	btn.Font = UiTheme.BodyFont
+	btn.TextSize = 14
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Text = "⟳ Reset My Progress"
+	btn.Parent = parent
+	UiTheme.corner(16, btn)
+
+	local overlay = Instance.new("TextButton")
+	overlay.Name = "ResetConfirm"
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.BackgroundColor3 = UiTheme.Colors.Shade
+	overlay.BackgroundTransparency = 0.4
+	overlay.AutoButtonColor = false
+	overlay.Text = ""
+	overlay.Visible = false
+	overlay.ZIndex = 40
+	overlay.Parent = parent
+
+	local box = UiTheme.panel({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(400, 196),
+		BackgroundColor3 = UiTheme.Colors.Cream,
+		radius = 20,
+	})
+	box.Active = true -- consume clicks so tapping the box doesn't count as "outside"
+	box.ZIndex = 41
+	box.Parent = overlay
+	UiTheme.stroke(UiTheme.Colors.AccentDeep, 3, box)
+
+	local msg = Instance.new("TextLabel")
+	msg.BackgroundTransparency = 1
+	msg.Position = UDim2.fromOffset(22, 24)
+	msg.Size = UDim2.fromOffset(356, 84)
+	msg.Font = UiTheme.HeaderFont
+	msg.TextSize = 20
+	msg.TextWrapped = true
+	msg.TextColor3 = UiTheme.Colors.Ink
+	msg.Text = "Reset ALL your progress and start over from the very beginning?"
+	msg.ZIndex = 42
+	msg.Parent = box
+
+	local function actionBtn(text, x, color)
+		local b = Instance.new("TextButton")
+		b.AnchorPoint = Vector2.new(0.5, 1)
+		b.Position = UDim2.new(x, 0, 1, -18)
+		b.Size = UDim2.fromOffset(162, 46)
+		b.BackgroundColor3 = color
+		b.BorderSizePixel = 0
+		b.Font = UiTheme.HeaderFont
+		b.TextSize = 19
+		b.TextColor3 = Color3.fromRGB(255, 255, 255)
+		b.Text = text
+		b.ZIndex = 42
+		b.Parent = box
+		UiTheme.corner(22, b)
+		return b
+	end
+	local cancel = actionBtn("Cancel", 0.29, UiTheme.Colors.Accent)
+	local confirm = actionBtn("Reset", 0.71, Color3.fromRGB(214, 122, 150))
+
+	btn.Activated:Connect(function() overlay.Visible = true end)
+	cancel.Activated:Connect(function() overlay.Visible = false end)
+	overlay.Activated:Connect(function() overlay.Visible = false end) -- tap outside = cancel
+	confirm.Activated:Connect(function()
+		overlay.Visible = false
+		if onReset then
+			onReset()
+		end
+	end)
+end
+
 local function bookButton(parent, onOpenBook)
 	local btn = Instance.new("TextButton")
 	btn.Name = "BookButton"
@@ -192,7 +275,7 @@ local function bookButton(parent, onOpenBook)
 	end)
 end
 
-function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily)
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
@@ -206,6 +289,11 @@ function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily)
 	bookButton(screen, onOpenBook)
 	dailyButton(screen, onClaimDaily)
 	dailyQuestsButton(screen, onOpenDaily)
+
+	-- The Reset tool only ever appears for the place owner (you) — never the kids.
+	if game.CreatorType == Enum.CreatorType.User and Players.LocalPlayer.UserId == game.CreatorId then
+		resetButton(screen, onResetProgress)
+	end
 end
 
 function HudUI.update(state)

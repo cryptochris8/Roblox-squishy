@@ -15,6 +15,7 @@ Remotes.RequestInitialState = "RequestInitialState" -- "I'm ready, send me my st
 Remotes.EquipBuddyRequest = "EquipBuddyRequest"      -- defId: equip a discovered friend
 Remotes.CollectSparkleBit = "CollectSparkleBit"      -- id: I walked up to a hidden Sparkle Bit
 Remotes.ClaimDailyCapsule = "ClaimDailyCapsule"      -- claim today's free Sparkle Capsule
+Remotes.ResetProgress = "ResetProgress"              -- OWNER ONLY: wipe my profile + rejoin fresh
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -28,6 +29,7 @@ local ALL_EVENTS = {
 	Remotes.EquipBuddyRequest,
 	Remotes.CollectSparkleBit,
 	Remotes.ClaimDailyCapsule,
+	Remotes.ResetProgress,
 	Remotes.StateSync,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,

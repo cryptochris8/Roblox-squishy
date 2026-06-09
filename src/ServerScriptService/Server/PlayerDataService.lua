@@ -445,6 +445,19 @@ function PlayerDataService.markDailyCapsuleClaimed(player: Player)
 	p.LastDailyCapsuleDay = todayIndex()
 end
 
+-- OWNER-ONLY playtest tool: wipe a player's profile back to a brand-new start.
+-- The fresh profile persists on the next save (the rejoin kick triggers one).
+-- The caller MUST gate this to the place owner.
+function PlayerDataService.resetProfile(player: Player)
+	if not profiles[player] then
+		return
+	end
+	local fresh = newProfile()
+	profiles[player] = fresh
+	refreshLeaderstats(player, fresh)
+	PlayerDataService.sync(player)
+end
+
 function PlayerDataService.setBuddy(player: Player, defId: string?)
 	local p = profiles[player]
 	if not p then return end
