@@ -381,6 +381,56 @@ function WorldService.build()
 	cottage.Parent = folder
 
 	-- ── Phase 3: life & polish ──────────────────────────────────────────────
+	-- Dessert treats scattered through the valley (native candy props, walk-through).
+	local treats = Instance.new("Folder")
+	treats.Name = "Treats"
+	treats.Parent = folder
+	local candy = {
+		Color3.fromRGB(255, 170, 190), Color3.fromRGB(180, 224, 200),
+		Color3.fromRGB(190, 200, 255), Color3.fromRGB(255, 214, 160),
+		Color3.fromRGB(214, 190, 240),
+	}
+	local function vcyl(name, size, pos, color, refl)
+		local p = part({ Name = name, Shape = Enum.PartType.Cylinder, Size = size, Color = color, CanCollide = false })
+		if refl then p.Reflectance = refl end
+		p.CFrame = CFrame.new(pos) * CFrame.Angles(0, 0, math.rad(90))
+		p.Parent = treats
+		return p
+	end
+	local function ballAt(name, size, pos, color, refl)
+		local p = part({ Name = name, Shape = Enum.PartType.Ball, Size = size, Position = pos, Color = color, CanCollide = false })
+		if refl then p.Reflectance = refl end
+		p.Parent = treats
+		return p
+	end
+	local function gumdrop(pos, c)
+		ballAt("Gumdrop", Vector3.new(4.6, 5.6, 4.6), pos + Vector3.new(0, 1.9, 0), c, 0.08)
+	end
+	local function lollipop(pos, c)
+		vcyl("Stick", Vector3.new(8, 0.7, 0.7), pos + Vector3.new(0, 4, 0), Color3.fromRGB(255, 250, 240))
+		ballAt("Candy", Vector3.new(4.4, 4.4, 1.3), pos + Vector3.new(0, 8.4, 0), c, 0.06)
+	end
+	local function cupcake(pos, c)
+		vcyl("Wrapper", Vector3.new(3.4, 4.2, 4.2), pos + Vector3.new(0, 1.7, 0), Color3.fromRGB(255, 224, 196))
+		ballAt("Frosting", Vector3.new(5, 5, 5), pos + Vector3.new(0, 4.8, 0), c)
+		ballAt("Cherry", Vector3.new(1.4, 1.4, 1.4), pos + Vector3.new(0, 7.4, 0), Color3.fromRGB(255, 120, 140))
+	end
+	local function macaron(pos, c)
+		vcyl("Shell", Vector3.new(1.4, 5.4, 5.4), pos + Vector3.new(0, 1.2, 0), c)
+		vcyl("Cream", Vector3.new(0.9, 4.4, 4.4), pos + Vector3.new(0, 2.1, 0), Color3.fromRGB(255, 244, 224))
+		vcyl("Shell", Vector3.new(1.4, 5.4, 5.4), pos + Vector3.new(0, 3.0, 0), c)
+	end
+	local treatSpots = {
+		{ Vector3.new(-30, 0, -24), gumdrop }, { Vector3.new(28, 0, 8), lollipop },
+		{ Vector3.new(-36, 0, -6), cupcake }, { Vector3.new(22, 0, -32), macaron },
+		{ Vector3.new(-26, 0, 46), gumdrop }, { Vector3.new(36, 0, 46), lollipop },
+		{ Vector3.new(-56, 0, 2), macaron }, { Vector3.new(52, 0, -6), cupcake },
+		{ Vector3.new(-42, 0, -40), gumdrop }, { Vector3.new(14, 0, 48), lollipop },
+	}
+	for i, ts in ipairs(treatSpots) do
+		ts[2](ts[1], candy[((i - 1) % #candy) + 1])
+	end
+
 	-- Ambient drifting sparkle motes across the whole valley — gentle floating magic.
 	local sparkleField = part({
 		Name = "ValleySparkles",
