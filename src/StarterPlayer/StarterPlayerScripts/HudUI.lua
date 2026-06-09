@@ -146,6 +146,29 @@ local function dailyButton(parent, onClaimDaily)
 	end)
 end
 
+local function dailyQuestsButton(parent, onOpenDaily)
+	local btn = Instance.new("TextButton")
+	btn.Name = "DailyQuestsButton"
+	btn.AnchorPoint = Vector2.new(0, 1)
+	btn.Position = UDim2.new(0, 18, 1, -78)
+	btn.Size = UDim2.fromOffset(214, 46)
+	btn.BackgroundColor3 = UiTheme.Colors.AccentDeep
+	btn.BorderSizePixel = 0
+	btn.Font = UiTheme.HeaderFont
+	btn.TextSize = 18
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Text = "📋 Daily Quests"
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	UiTheme.corner(22, btn)
+	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
+	btn.Activated:Connect(function()
+		if onOpenDaily then
+			onOpenDaily()
+		end
+	end)
+end
+
 local function bookButton(parent, onOpenBook)
 	local btn = Instance.new("TextButton")
 	btn.Name = "BookButton"
@@ -169,7 +192,7 @@ local function bookButton(parent, onOpenBook)
 	end)
 end
 
-function HudUI.mount(playerGui, onOpenBook, onClaimDaily)
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
@@ -182,6 +205,7 @@ function HudUI.mount(playerGui, onOpenBook, onClaimDaily)
 	questBanner(screen)
 	bookButton(screen, onOpenBook)
 	dailyButton(screen, onClaimDaily)
+	dailyQuestsButton(screen, onOpenDaily)
 end
 
 function HudUI.update(state)

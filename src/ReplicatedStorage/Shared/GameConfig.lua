@@ -31,6 +31,12 @@ GameConfig.SparkleBitAllBonus = 200    -- bonus for finding every hidden bit
 GameConfig.SparkleBitPickupRadius = 7  -- how close (studs) you walk to collect one
 GameConfig.SparkleBitClaimRange = 18   -- server-side sanity range for a valid pickup
 
+-- Gentle login streak: a daily bonus that grows with consecutive days and resets
+-- to Day 1 (never zero) after a missed day — kind, not punishing.
+GameConfig.StreakBaseBonus = 20
+GameConfig.StreakPerDay = 10
+GameConfig.StreakMaxForBonus = 7 -- the bonus stops growing after a week
+
 -- The Sparkle Capsule: the very first one is a free gift after the tutorial.
 GameConfig.FirstCapsuleIsFree = true
 

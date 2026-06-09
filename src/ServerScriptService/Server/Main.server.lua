@@ -41,11 +41,23 @@ QuestService.init(world)
 SquishService.onHappyPop = function(player, def)
 	TutorialService.notePop(player, def)
 	QuestService.notePop(player, def)
+	DailyService.noteEvent(player, "pop")
 end
 
 -- Equipping/unequipping a buddy spawns or removes the floating companion.
 CollectionService.onBuddyChanged = function(player, defId)
 	BuddyService.setBuddy(player, defId)
+end
+
+-- Daily-quest tracking: a capsule open (and any new discovery), and Sparkle Bits.
+CapsuleService.onOpened = function(player, isNew)
+	DailyService.noteEvent(player, "capsule")
+	if isNew then
+		DailyService.noteEvent(player, "discover")
+	end
+end
+SparkleBitService.onCollected = function(player)
+	DailyService.noteEvent(player, "bit")
 end
 
 -- The Sparkle Capsule machine opens a capsule for whoever uses it.
@@ -61,6 +73,7 @@ end)
 -- 6) When a client says it's ready, send its state + a warm welcome.
 local requestState = Remotes.get(Remotes.RequestInitialState)
 requestState.OnServerEvent:Connect(function(player)
+	DailyService.onJoin(player)
 	PlayerDataService.sync(player)
 	TutorialService.welcome(player)
 	QuestService.checkReveal(player)

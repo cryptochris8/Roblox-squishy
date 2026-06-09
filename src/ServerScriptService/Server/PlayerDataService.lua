@@ -55,6 +55,9 @@ export type Profile = {
 	SparkleBits: { [string]: boolean },
 	Variants: { [string]: number },
 	LastDailyCapsuleDay: number,
+	StreakDays: number,
+	LastPlayDay: number,
+	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean } },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -79,6 +82,9 @@ local function newProfile(): Profile
 		SparkleBits = {},
 		Variants = {},
 		LastDailyCapsuleDay = 0,
+		StreakDays = 0,
+		LastPlayDay = 0,
+		DailyQuests = { day = 0, progress = {}, claimed = {} },
 	}
 end
 
@@ -112,6 +118,9 @@ local function serialize(p: Profile)
 		SparkleBits = p.SparkleBits,
 		Variants = p.Variants,
 		LastDailyCapsuleDay = p.LastDailyCapsuleDay,
+		StreakDays = p.StreakDays,
+		LastPlayDay = p.LastPlayDay,
+		DailyQuests = p.DailyQuests,
 	}
 end
 
@@ -164,6 +173,27 @@ local function deserialize(data: any): Profile
 		p.Variants = variants
 	end
 	p.LastDailyCapsuleDay = tonumber(data.LastDailyCapsuleDay) or 0
+	p.StreakDays = tonumber(data.StreakDays) or 0
+	p.LastPlayDay = tonumber(data.LastPlayDay) or 0
+	if type(data.DailyQuests) == "table" then
+		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
+		if type(data.DailyQuests.progress) == "table" then
+			for k, v in pairs(data.DailyQuests.progress) do
+				local n = tonumber(v)
+				if type(k) == "string" and n then
+					dq.progress[k] = n
+				end
+			end
+		end
+		if type(data.DailyQuests.claimed) == "table" then
+			for k, v in pairs(data.DailyQuests.claimed) do
+				if type(k) == "string" and v == true then
+					dq.claimed[k] = true
+				end
+			end
+		end
+		p.DailyQuests = dq
+	end
 	return p
 end
 
@@ -293,6 +323,13 @@ function PlayerDataService.snapshot(player: Player)
 		variants = p.Variants,
 		-- whether today's free Sparkle Capsule is available to claim
 		dailyCapsuleReady = todayIndex() > p.LastDailyCapsuleDay,
+		-- daily quests + gentle streak (the client derives the active set from `day`)
+		daily = {
+			streak = p.StreakDays,
+			day = p.DailyQuests.day,
+			progress = p.DailyQuests.progress,
+			claimed = p.DailyQuests.claimed,
+		},
 	}
 end
 

@@ -18,6 +18,10 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local CapsuleService = {}
 
+-- optional hook (wired by Main): onOpened(player, isNew), called after a capsule
+-- successfully opens. Typed `any` so strict mode allows the late binding.
+CapsuleService.onOpened = (nil :: any)
+
 local capsuleResultEvent: RemoteEvent
 local toastEvent: RemoteEvent
 local rng = Random.new()
@@ -124,6 +128,9 @@ function CapsuleService.tryOpen(player: Player, freeOverride: boolean?): boolean
 		variantUpgraded = variantUpgraded,
 	})
 	PlayerDataService.sync(player)
+	if CapsuleService.onOpened then
+		CapsuleService.onOpened(player, isNew)
+	end
 	return true
 end
 
