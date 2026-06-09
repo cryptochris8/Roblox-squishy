@@ -42,12 +42,19 @@ Internally, old JSON fields such as `burstSound` or `burstThreshold` may remain 
 
 ---
 
-## Current Build (Pudding Hills MVP)
+## Current Build (three lands — the full Lost Sparkle quest)
 
 Active Rojo project at the repo root (`default.project.json`, name `SquishySmash`).
-Run `rojo serve` from `C:\Users\chris\Roblox-squishy`, connect the Rojo plugin in Studio (Edit mode),
-then Play. The earlier QB1 football prototype is preserved on git branch/tag
-`qb1-prototype` and under `archive/qb1/`.
+Run `rojo serve` from `C:\Users\chris\Roblox-squishy` on **port 34872** (Gnarly
+Nutmeg — a separate game — serves on 34873; don't cross them), connect the Rojo
+plugin in Studio (Edit mode), then Play. The earlier QB1 football prototype is
+preserved on git branch/tag `qb1-prototype` and under `archive/qb1/`.
+
+Three lands are built — **Pudding Hills** (center, ~origin), **Goo Coast** (x≈600),
+and **Moonlit Hollow** (x≈1200) — on their own ground plates, connected by Travel
+Pads. The place has **StreamingEnabled**, so a distant land only replicates to a
+client once they're near it (to inspect a zone via Luau, teleport the character in
+first, or check server-side).
 
 ### File map
 
@@ -61,33 +68,38 @@ src/ReplicatedStorage/Shared/
   SparkleBitConfig.lua     the 10 hidden Sparkle Bit spots (shared: client renderer + server validator)
   VariantConfig.lua        duplicate→variant tiers (Sparkly/Rainbow): names, colours, bonus coins
   DailyQuestConfig.lua     rotating daily-quest templates + forDay(dayIndex)
+  ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
   PlayerDataService.lua    per-player profile (coins, discovered, variants, sparkle bits, shard quest, daily/streak) + leaderstats; DataStore load/save/autosave + BindToClose flush
-  WorldService.lua         builds Pudding Hills (ground, golden hills, syrup river+bridge, orchard, cottage, treats, capsule, guide, spread pads, shard pedestal, Goo Coast gate)
-  SquishService.lua        spawns friends; squish -> Joy -> Happy Pop -> coins -> respawn
-  CapsuleService.lua       Sparkle Capsule: weighted rarity, discover, duplicate→variant; free/daily override; onOpened hook
+  WorldService.lua         builds all 3 lands, bespoke each — Pudding Hills (river/orchard/cottage/treats), Goo Coast (goo sea/pier/tide-pools/sandcastle), Moonlit Hollow (moonpool/mushroom grove/log/fireflies); each with its own pads, capsule, guide, shard pedestal + travel hub
+  SquishService.lua        spawns each land's pack friends on its pads; squish -> Joy -> Happy Pop -> coins -> respawn
+  CapsuleService.lua       per-land Sparkle Capsule (tryOpen(player, capsuleKey, free)): weighted rarity, discover, duplicate→variant; onOpened hook
   CollectionService.lua    Equip Buddy (validated, toggles on/off)
   TutorialService.lua      "wake up 3 sleepy friends" quest -> 100 coins
   BuddyService.lua         spawns the equipped friend as a floating companion that follows you
-  QuestService.lua         The Lost Sparkle quest — First Shard (clue -> wake -> reveal at orchard -> recover -> open Goo Coast gate)
+  QuestService.lua         The Lost Sparkle quest — one shard per land (clue -> wake N -> shard appears -> recover -> next land opens); all 3 -> finale hook
   SparkleBitService.lua    validates + awards hidden Sparkle Bit pickups (range-checked); onCollected hook
   DailyService.lua         free daily capsule; rotating daily quests (noteEvent) + gentle login streak (onJoin); refreshes Sparkle Bits each day
+  TravelService.lua        teleports between lands via Travel Pads, gated by shard progress
+  FinaleService.lua        all 3 shards -> Restore the Sparkle (one-time +coins, brightens the world Sparkle orb)
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
   UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
   SparkleBits.lua          renders + detects the player's uncollected Sparkle Bits (server-validated pickup)
   DailyUI.lua              "Today's Quests" panel: gentle streak + 3 daily quests with progress bars
+  FinaleUI.lua             the "Restore the Sparkle" celebration (shown when all 3 shards are recovered)
 ```
 
 ### Contract (server <-> client)
 
 - Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
-  `ClaimDailyCapsule`; s->c `StateSync`, `SquishResult`, `CapsuleResult`,
-  `SparkleBitCollected`, `Toast`.
+  `ClaimDailyCapsule`, `ResetProgress` (owner-only); s->c `StateSync`,
+  `SquishResult`, `CapsuleResult`, `SparkleBitCollected`, `SparkleRestored`, `Toast`.
 - The `StateSync` snapshot carries: coins, discovered (+count), variants,
-  sparkleBits, quest (shard), tutorial, dailyCapsuleReady, daily (streak + quests).
+  sparkleBits, shards (per-land {progress, collected}), tutorial, dailyCapsuleReady,
+  daily (streak + quests), sparkleRestored.
 - Input is server-side: `ClickDetector.MouseClick` (squish) and
   `ProximityPrompt.Triggered` (capsule + guide) fire on the server. Hidden Sparkle
   Bits are client-rendered per-player, but the pickup award is server-validated
@@ -98,17 +110,22 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
 
 ### Not in MVP yet (deliberately)
 
-Playable Goo Coast + Moonlit Hollow zones (a teaser gate stands at the Pudding
-Hills edge, opened by recovering the First Shard), real 3D character meshes
-(buddies + world friends use placeholder squishy balls with faces for now), co-op
-/ social (Phase C — needs multiplayer playtest), and any monetization (Phase D —
-no Game Passes / Developer Products; **Sparkle Capsules stay FREE by design**, to
-avoid the Paid Random Items policy that restricts our 6–9 audience).
+Real 3D character meshes (buddies + world friends use placeholder squishy balls
+with faces for now); real **card art for 40 of the 48 friends** (8 have uploaded
+art, the rest show a coloured placeholder card — see
+`docs/08_ASSET_IMPORT_AND_PLACEHOLDER_PLAN.md`); co-op / social (Phase C — needs
+a multiplayer playtest); and any monetization (Phase D — no Game Passes /
+Developer Products; **Sparkle Capsules stay FREE by design**, to avoid the Paid
+Random Items policy that restricts our 6–9 audience).
 
 ### Build status
 
-Phases A (The First Shard quest + exploration) and B (collection depth + daily
-return loop) are implemented, playtested in Studio, and pushed to GitHub. See
-`docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap. **Changes are synced to Studio +
-git but go live in the published game only after File → Publish (Alt+P), a
-creator-only action.**
+Phases A (quest + exploration), B (collection depth + daily loop), and E (all
+three lands + travel + the Restore-the-Sparkle finale) are implemented, playtested
+in Studio, and pushed to GitHub. The game is **solo-completable end to end**: three
+distinct lands, a Sparkle shard per land, 48 friends across three free capsules,
+and the finale. Next: Phase C (co-op/social — needs a multiplayer playtest) and
+Phase D (monetization). See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap and
+`docs/12_PLAYTEST_CHECKLIST.md` for what to watch with the girls. **Changes are
+synced to Studio + git but go live in the published game only after File → Publish
+(Alt+P), a creator-only action.**
