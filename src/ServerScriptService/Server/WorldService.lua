@@ -51,31 +51,6 @@ end
 -- guide, shard pedestal, landing pad) for a land, themed by colour. Each new land
 -- then adds its own bespoke props. Pudding Hills keeps its own hand-built code.
 
-local PAD_OFFSETS = {
-	Vector3.new(-10, 2, 2), Vector3.new(9, 2, -2), Vector3.new(2, 2, 9),
-	Vector3.new(-34, 2, 2), Vector3.new(-28, 2, -18), Vector3.new(-40, 2, 8),
-	Vector3.new(30, 2, -12), Vector3.new(40, 2, 4), Vector3.new(22, 2, -22),
-	Vector3.new(-6, 2, -30), Vector3.new(14, 2, -34), Vector3.new(-20, 2, -38),
-}
-
-local function makePads(folder: Instance, center: Vector3, padColor: Color3): { CFrame }
-	local pads = {}
-	for _, off in ipairs(PAD_OFFSETS) do
-		local pos = center + off
-		local pad = part({
-			Name = "Pad",
-			Size = Vector3.new(6, 0.4, 6),
-			Position = pos - Vector3.new(0, 1.8, 0),
-			Color = padColor,
-			Transparency = 0.2,
-			CanCollide = false,
-		})
-		pad.Parent = folder
-		pads[#pads + 1] = CFrame.new(pos)
-	end
-	return pads
-end
-
 local function makeCapsule(folder: Instance, pos: Vector3, displayName: string, color: Color3): ProximityPrompt
 	local base = part({ Name = "CapsuleBase", Size = Vector3.new(6, 7, 6), Position = pos, Color = color })
 	base.Parent = folder
@@ -108,25 +83,6 @@ local function makeGuide(folder: Instance, pos: Vector3, name: string, color: Co
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = body
 	return prompt
-end
-
-local function makeHillsRing(folder: Instance, center: Vector3, palette: { Color3 }, seed: number)
-	local rng = Random.new(seed)
-	local count = 14
-	for i = 1, count do
-		local angle = (i / count) * math.pi * 2 + rng:NextNumber(-0.2, 0.2)
-		local radius = rng:NextNumber(58, 100)
-		local size = rng:NextNumber(24, 48)
-		local mound = part({
-			Name = "Hill" .. i,
-			Shape = Enum.PartType.Ball,
-			Size = Vector3.new(size, size, size),
-			Position = center + Vector3.new(math.cos(angle) * radius, -size * rng:NextNumber(0.34, 0.46), math.sin(angle) * radius),
-			Color = palette[((i - 1) % #palette) + 1],
-			CanCollide = false,
-		})
-		mound.Parent = folder
-	end
 end
 
 local function makeShardPedestal(folder: Instance, shardSpot: Vector3, color: Color3)
@@ -178,39 +134,6 @@ local function buildTravelHub(folder: Instance, center: Vector3, currentZoneName
 		end
 	end
 	return travelPads
-end
-
--- Builds the shared scaffold for a land; returns (folder, zoneEntry).
-local function buildZoneScaffold(zoneName: string, theme: any)
-	local zone = ZoneConfig.get(zoneName)
-	local folder = Instance.new("Folder")
-	folder.Name = string.gsub(zoneName, " ", "")
-	folder.Parent = Workspace
-
-	local center = zone.center
-	local ground = part({
-		Name = "Ground", Size = Vector3.new(320, 4, 320),
-		Position = center + Vector3.new(0, -2, 0), Color = theme.groundColor,
-	})
-	ground.Parent = folder
-
-	makeHillsRing(folder, center, theme.hillColors, theme.seed or 7)
-	local pads = makePads(folder, center, theme.padColor)
-	makeLandingPad(folder, zone.spawn, theme.accentColor)
-	local capsulePrompt = makeCapsule(folder, center + Vector3.new(0, 3.5, -12), theme.capsuleName, theme.capsuleColor)
-	local guidePrompt = makeGuide(folder, center + Vector3.new(-14, 2.5, 12), theme.guideName, theme.guideColor)
-	makeShardPedestal(folder, zone.shardSpot, theme.accentColor)
-	local travelPads = buildTravelHub(folder, center, zoneName)
-
-	return folder, {
-		zone = zoneName,
-		packId = zone.packId,
-		capsuleKey = zone.capsuleKey,
-		pads = pads,
-		capsulePrompt = capsulePrompt,
-		guidePrompt = guidePrompt,
-		travelPads = travelPads,
-	}
 end
 
 -- Goo Coast's own coastal pad layout (a curving shore + tide pools + the pier),
@@ -344,71 +267,96 @@ local function buildGooCoast()
 	}
 end
 
--- Moonlit Hollow: a soft-spooky twilight glade — glowing mushrooms, drifting
--- fireflies, and a gentle moon. Never scary; all brave-cuddle (book canon).
+-- Moonlit Hollow's own glade pad layout (around the moonpool, in the mushroom
+-- grove, and by the cozy log) — different from the other lands.
+local MOON_PAD_OFFSETS = {
+	Vector3.new(-14, 2, -4), Vector3.new(14, 2, -8), Vector3.new(-4, 2, -24),
+	Vector3.new(-40, 2, 14), Vector3.new(-30, 2, 32), Vector3.new(-48, 2, -2),
+	Vector3.new(34, 2, 18), Vector3.new(44, 2, 2), Vector3.new(28, 2, 36),
+	Vector3.new(6, 2, 30), Vector3.new(-10, 2, 42), Vector3.new(18, 2, -32),
+}
+
+-- Moonlit Hollow: a bespoke twilight glade — a still reflective moonpool under a
+-- low moon, a grove of giant glowing mushrooms, a cozy fallen log, glowing
+-- flowers, and drifting fireflies. Soft-spooky, never scary (book canon).
 local function buildMoonlitHollow()
-	local folder, entry = buildZoneScaffold("Moonlit Hollow", {
-		groundColor = Color3.fromRGB(122, 112, 160),
-		hillColors = {
-			Color3.fromRGB(108, 96, 150), Color3.fromRGB(140, 120, 180),
-			Color3.fromRGB(96, 110, 168), Color3.fromRGB(160, 140, 196),
-		},
-		padColor = Color3.fromRGB(186, 164, 230),
-		accentColor = Color3.fromRGB(196, 166, 255),
-		capsuleName = "Moonlit Capsule",
-		capsuleColor = Color3.fromRGB(150, 120, 210),
-		guideName = "Nox the Night Guide",
-		guideColor = Color3.fromRGB(176, 152, 224),
-		seed = 202,
-	})
-	local center = ZoneConfig.get("Moonlit Hollow").center
-
-	-- glowing mushrooms scattered through the glade
+	local zone = ZoneConfig.get("Moonlit Hollow")
+	local center = zone.center
+	local folder = Instance.new("Folder")
+	folder.Name = "MoonlitHollow"
+	folder.Parent = Workspace
 	local rng = Random.new(777)
-	local capColors = {
-		Color3.fromRGB(190, 130, 255), Color3.fromRGB(130, 200, 255),
-		Color3.fromRGB(255, 150, 220), Color3.fromRGB(160, 255, 220),
-	}
-	for i = 1, 12 do
-		local pos = center + Vector3.new(rng:NextNumber(-48, 48), 0, rng:NextNumber(-48, 48))
-		local h = rng:NextNumber(2.5, 5)
-		local stem = part({
-			Name = "Stem", Size = Vector3.new(0.9, h, 0.9),
-			Position = pos + Vector3.new(0, h / 2, 0), Color = Color3.fromRGB(232, 224, 240), CanCollide = false,
-		})
-		stem.Parent = folder
-		local cap = part({
-			Name = "Cap", Shape = Enum.PartType.Ball, Size = Vector3.new(3.4, 2.2, 3.4),
-			Position = pos + Vector3.new(0, h + 0.4, 0),
-			Color = capColors[((i - 1) % #capColors) + 1], Material = Enum.Material.Neon,
-			CanCollide = false, CastShadow = false,
-		})
-		cap.Parent = folder
-		local light = Instance.new("PointLight")
-		light.Color = cap.Color
-		light.Brightness = 1.5
-		light.Range = 12
-		light.Parent = cap
-	end
+	local capColors = { Color3.fromRGB(190, 130, 255), Color3.fromRGB(130, 200, 255), Color3.fromRGB(255, 150, 220), Color3.fromRGB(160, 255, 220) }
 
-	-- the gentle Moon above the glade
+	-- twilight ground
+	local ground = part({ Name = "Ground", Size = Vector3.new(320, 4, 320), Position = center + Vector3.new(0, -2, 0), Color = Color3.fromRGB(122, 112, 160) })
+	ground.Parent = folder
+
+	-- the Moonpool: a still, mirror-glossy pool, ringed by a soft glow
+	local pool = part({
+		Name = "Moonpool", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 46, 46),
+		Color = Color3.fromRGB(70, 80, 140), Material = Enum.Material.Glass, Reflectance = 0.5, Transparency = 0.1, CanCollide = false,
+	})
+	pool.CFrame = CFrame.new(center + Vector3.new(0, 0.2, -12)) * CFrame.Angles(0, 0, math.rad(90))
+	pool.Parent = folder
+	local ring = part({
+		Name = "PoolGlow", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.4, 52, 52),
+		Color = Color3.fromRGB(172, 162, 255), Material = Enum.Material.Neon, Transparency = 0.7, CanCollide = false,
+	})
+	ring.CFrame = CFrame.new(center + Vector3.new(0, 0.12, -12)) * CFrame.Angles(0, 0, math.rad(90))
+	ring.Parent = folder
+
+	-- the Moon, low over the pool so it reflects
 	local moon = part({
-		Name = "Moon", Shape = Enum.PartType.Ball, Size = Vector3.new(20, 20, 20),
-		Position = center + Vector3.new(42, 80, -52), Color = Color3.fromRGB(232, 230, 255),
+		Name = "Moon", Shape = Enum.PartType.Ball, Size = Vector3.new(22, 22, 22),
+		Position = center + Vector3.new(0, 72, -92), Color = Color3.fromRGB(236, 234, 255),
 		Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false,
 	})
 	moon.Parent = folder
 	local moonLight = Instance.new("PointLight")
 	moonLight.Color = Color3.fromRGB(200, 200, 255)
-	moonLight.Brightness = 1.2
-	moonLight.Range = 70
+	moonLight.Brightness = 1.4
+	moonLight.Range = 90
 	moonLight.Parent = moon
 
+	-- glowing mushrooms (stem + neon cap + glow)
+	local function mushroom(pos, h, capSize, color)
+		local stem = part({ Name = "Stem", Size = Vector3.new(h * 0.22, h, h * 0.22), Position = pos + Vector3.new(0, h / 2, 0), Color = Color3.fromRGB(236, 228, 244), CanCollide = false })
+		stem.Parent = folder
+		local cap = part({ Name = "Cap", Shape = Enum.PartType.Ball, Size = Vector3.new(capSize, capSize * 0.65, capSize), Position = pos + Vector3.new(0, h + capSize * 0.2, 0), Color = color, Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		cap.Parent = folder
+		local light = Instance.new("PointLight")
+		light.Color = color
+		light.Brightness = 1.6
+		light.Range = capSize * 3
+		light.Parent = cap
+	end
+	-- a grove of GIANT mushrooms on the west side
+	for i = 1, 5 do
+		mushroom(center + Vector3.new(rng:NextNumber(-62, -34), 0, rng:NextNumber(-12, 42)), rng:NextNumber(7, 12), rng:NextNumber(6, 10), capColors[((i - 1) % #capColors) + 1])
+	end
+	-- smaller mushrooms dotted around the glade
+	for i = 1, 10 do
+		mushroom(center + Vector3.new(rng:NextNumber(-56, 56), 0, rng:NextNumber(-52, 52)), rng:NextNumber(2.5, 4.5), rng:NextNumber(2.4, 3.6), capColors[((i - 1) % #capColors) + 1])
+	end
+
+	-- a cozy fallen log on the east side
+	local log = part({ Name = "CozyLog", Shape = Enum.PartType.Cylinder, Size = Vector3.new(22, 5, 5), Color = Color3.fromRGB(150, 116, 92) })
+	log.CFrame = CFrame.new(center + Vector3.new(40, 2.3, 20)) * CFrame.Angles(0, math.rad(35), 0)
+	log.Parent = folder
+
+	-- glowing twilight flowers scattered low to the ground
+	for _ = 1, 12 do
+		local flower = part({
+			Name = "GlowFlower", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4),
+			Position = center + Vector3.new(rng:NextNumber(-58, 58), 0.6, rng:NextNumber(-58, 58)),
+			Color = capColors[rng:NextInteger(1, #capColors)], Material = Enum.Material.Neon, CanCollide = false, CastShadow = false,
+		})
+		flower.Parent = folder
+	end
+
 	-- drifting fireflies
-	local fField = part({
-		Name = "Fireflies", Size = Vector3.new(180, 1, 180), Position = center + Vector3.new(0, 4, 0),
-		Transparency = 1, CanCollide = false, CanQuery = false,
-	})
+	local fField = part({ Name = "Fireflies", Size = Vector3.new(180, 1, 180), Position = center + Vector3.new(0, 4, 0), Transparency = 1, CanCollide = false, CanQuery = false })
 	fField.Parent = folder
 	local fly = Instance.new("ParticleEmitter")
 	fly.Texture = "rbxasset://textures/particles/sparkles_main.dds"
@@ -418,13 +366,35 @@ local function buildMoonlitHollow()
 	fly.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 1), NumberSequenceKeypoint.new(1, 0) })
 	fly.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.2), NumberSequenceKeypoint.new(0.8, 0.45), NumberSequenceKeypoint.new(1, 1) })
 	fly.Lifetime = NumberRange.new(3, 6)
-	fly.Rate = 30
+	fly.Rate = 34
 	fly.Speed = NumberRange.new(1, 3)
 	fly.Acceleration = Vector3.new(0, 1, 0)
 	fly.SpreadAngle = Vector2.new(60, 60)
 	fly.Parent = fField
 
-	return entry
+	-- gameplay infrastructure: own glade pads + themed capsule/guide + shard + travel
+	local pads = {}
+	for _, off in ipairs(MOON_PAD_OFFSETS) do
+		local pos = center + off
+		local pad = part({ Name = "Pad", Size = Vector3.new(6, 0.4, 6), Position = pos - Vector3.new(0, 1.8, 0), Color = Color3.fromRGB(186, 164, 230), Transparency = 0.2, CanCollide = false })
+		pad.Parent = folder
+		pads[#pads + 1] = CFrame.new(pos)
+	end
+	makeLandingPad(folder, zone.spawn, Color3.fromRGB(196, 166, 255))
+	local capsulePrompt = makeCapsule(folder, center + Vector3.new(24, 3.5, 26), "Moonlit Capsule", Color3.fromRGB(150, 120, 210))
+	local guidePrompt = makeGuide(folder, center + Vector3.new(-18, 2.5, 18), "Nox the Night Guide", Color3.fromRGB(176, 152, 224))
+	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(196, 166, 255))
+	local travelPads = buildTravelHub(folder, center, "Moonlit Hollow")
+
+	return {
+		zone = "Moonlit Hollow",
+		packId = zone.packId,
+		capsuleKey = zone.capsuleKey,
+		pads = pads,
+		capsulePrompt = capsulePrompt,
+		guidePrompt = guidePrompt,
+		travelPads = travelPads,
+	}
 end
 
 function WorldService.build()
