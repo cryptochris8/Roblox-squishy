@@ -223,13 +223,14 @@ function WorldService.build()
 	guidePrompt.Parent = guideBody
 	guideModel.Parent = folder
 
-	-- Spawn pads where sleepy squishy friends appear.
+	-- Spawn pads where sleepy squishy friends appear — spread across Pudding Hills
+	-- (west, east-by-the-orchard, central, and deeper north) so the world is a place
+	-- to explore, not one click-cluster.
 	local padPositions = {
-		Vector3.new(-16, 2, 4),
-		Vector3.new(-8, 2, -4),
-		Vector3.new(0, 2, 6),
-		Vector3.new(8, 2, -4),
-		Vector3.new(16, 2, 4),
+		Vector3.new(-10, 2, 2), Vector3.new(9, 2, -2), Vector3.new(2, 2, 9),
+		Vector3.new(-34, 2, 2), Vector3.new(-28, 2, -18), Vector3.new(-40, 2, 8),
+		Vector3.new(30, 2, -12), Vector3.new(40, 2, 4), Vector3.new(22, 2, -22),
+		Vector3.new(-6, 2, -30), Vector3.new(14, 2, -34), Vector3.new(-20, 2, -38),
 	}
 	local pads = {}
 	for i, pos in ipairs(padPositions) do
@@ -550,10 +551,50 @@ function WorldService.build()
 		music:Play()
 	end
 
+	-- ── Phase A: quest landmarks ─────────────────────────────────────────────
+	-- The lost shard's resting place at the orchard's edge (book canon). Empty now;
+	-- QuestService floats the shard here once enough friends are woken.
+	local shardSpot = Vector3.new(47, 0, -40)
+	local pedestal = part({
+		Name = "ShardPedestal",
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(1.2, 8, 8),
+		Color = Color3.fromRGB(244, 230, 214),
+		Reflectance = 0.1,
+		CanCollide = false,
+	})
+	pedestal.CFrame = CFrame.new(shardSpot + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	pedestal.Parent = folder
+
+	-- Goo Coast gate at the eastern border (where the syrup thins to a trickle). A
+	-- LOCKED teaser; recovering the First Shard opens it. (The Goo Coast zone itself
+	-- is future work — this is the visual promise.)
+	local gate = Instance.new("Model")
+	gate.Name = "GooCoastGate"
+	local gx = 124
+	for _, sx in ipairs({ -1, 1 }) do
+		local post = part({ Name = "Post", Size = Vector3.new(3, 16, 3),
+			Position = Vector3.new(gx, 8, 20 + sx * 9), Color = Color3.fromRGB(150, 224, 214) })
+		post.Parent = gate
+	end
+	local arch = part({ Name = "Arch", Size = Vector3.new(3, 3, 24),
+		Position = Vector3.new(gx, 17.5, 20), Color = Color3.fromRGB(150, 224, 214) })
+	arch.Parent = gate
+	local barrier = part({ Name = "Barrier", Size = Vector3.new(1.2, 16, 18),
+		Position = Vector3.new(gx, 8, 20), Color = Color3.fromRGB(190, 240, 255),
+		Material = Enum.Material.Glass, Transparency = 0.5 })
+	barrier.Parent = gate
+	floatingLabel("Goo Coast", Color3.fromRGB(40, 150, 150), arch, 4)
+	gate.PrimaryPart = arch
+	gate.Parent = folder
+
 	return {
 		pads = pads,
 		capsulePrompt = capsulePrompt,
 		guidePrompt = guidePrompt,
+		shardSpot = shardSpot,
+		gooCoastGate = gate,
+		gooCoastBarrier = barrier,
 	}
 end
 

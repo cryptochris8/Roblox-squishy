@@ -19,6 +19,11 @@ GameConfig.HappyPopHoldSeconds = 1.1      -- keep a popped friend briefly so its
 GameConfig.TutorialPopGoal = 3
 GameConfig.TutorialRewardCoins = 100
 
+-- The First Shard quest (Pudding Hills): wake this many sleepy friends to reveal
+-- where the lost shard fell, then recover it from the orchard's edge.
+GameConfig.FirstShardWakeGoal = 8
+GameConfig.FirstShardRewardCoins = 150
+
 -- The Sparkle Capsule: the very first one is a free gift after the tutorial.
 GameConfig.FirstCapsuleIsFree = true
 
@@ -32,7 +37,7 @@ GameConfig.PuddingHillsStarters = {
 	"sparkle_mochi",
 	"galaxy_dumpling",
 }
-GameConfig.PuddingHillsFriendCount = 5 -- how many sleepy friends are out at once
+GameConfig.PuddingHillsFriendCount = 12 -- sleepy friends spread across Pudding Hills
 
 -- A few cozy display constants
 GameConfig.ZoneName = "Pudding Hills"
