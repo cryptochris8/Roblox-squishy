@@ -68,8 +68,8 @@ local function pickRarity(weights: { [string]: number }, byRarity: { [string]: {
 	return entries[#entries].rarity
 end
 
-function CapsuleService.tryOpen(player: Player, freeOverride: boolean?): boolean
-	local cfg = CapsuleConfig.StarterCapsule
+function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverride: boolean?): boolean
+	local cfg = CapsuleConfig[capsuleKey or "StarterCapsule"] or CapsuleConfig.StarterCapsule
 
 	-- Make sure we can actually give a friend BEFORE charging coins or using the
 	-- free gift, so the player is never left empty-handed.

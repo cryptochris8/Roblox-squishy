@@ -13,6 +13,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
+local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 
 -- Bump the version suffix only if the saved shape changes incompatibly.
 local DATASTORE_NAME = "SquishyPlayerData_v1"
@@ -50,8 +51,7 @@ export type Profile = {
 	EquippedBuddyId: string?,
 	TutorialDone: boolean,
 	FirstCapsuleClaimed: boolean,
-	FirstShardProgress: number,
-	FirstShardCollected: boolean,
+	Shards: { [string]: { progress: number, collected: boolean } },
 	SparkleBits: { [string]: boolean },
 	Variants: { [string]: number },
 	LastDailyCapsuleDay: number,
@@ -67,6 +67,15 @@ local loadedOk: { [Player]: boolean } = {}
 local ready: { [Player]: boolean } = {}
 local stateSyncEvent: RemoteEvent
 
+-- Fresh per-zone shard quest state, built from the zone chain.
+local function newShards()
+	local s = {}
+	for _, name in ipairs(ZoneConfig.Order) do
+		s[name] = { progress = 0, collected = false }
+	end
+	return s
+end
+
 local function newProfile(): Profile
 	return {
 		SparkleCoins = GameConfig.StartingSparkleCoins,
@@ -77,8 +86,7 @@ local function newProfile(): Profile
 		EquippedBuddyId = nil,
 		TutorialDone = false,
 		FirstCapsuleClaimed = false,
-		FirstShardProgress = 0,
-		FirstShardCollected = false,
+		Shards = newShards(),
 		SparkleBits = {},
 		Variants = {},
 		LastDailyCapsuleDay = 0,
@@ -113,8 +121,7 @@ local function serialize(p: Profile)
 		EquippedBuddyId = p.EquippedBuddyId,
 		TutorialDone = p.TutorialDone,
 		FirstCapsuleClaimed = p.FirstCapsuleClaimed,
-		FirstShardProgress = p.FirstShardProgress,
-		FirstShardCollected = p.FirstShardCollected,
+		Shards = p.Shards,
 		SparkleBits = p.SparkleBits,
 		Variants = p.Variants,
 		LastDailyCapsuleDay = p.LastDailyCapsuleDay,
@@ -136,8 +143,17 @@ local function deserialize(data: any): Profile
 	p.TotalHappyPops = tonumber(data.TotalHappyPops) or p.TotalHappyPops
 	p.TutorialDone = data.TutorialDone == true
 	p.FirstCapsuleClaimed = data.FirstCapsuleClaimed == true
-	p.FirstShardProgress = tonumber(data.FirstShardProgress) or 0
-	p.FirstShardCollected = data.FirstShardCollected == true
+	-- Per-zone shards. Migrate the old single-shard fields into Pudding Hills.
+	if type(data.Shards) == "table" then
+		for _, name in ipairs(ZoneConfig.Order) do
+			local s = data.Shards[name]
+			if type(s) == "table" then
+				p.Shards[name] = { progress = tonumber(s.progress) or 0, collected = s.collected == true }
+			end
+		end
+	elseif data.FirstShardProgress ~= nil or data.FirstShardCollected ~= nil then
+		p.Shards["Pudding Hills"] = { progress = tonumber(data.FirstShardProgress) or 0, collected = data.FirstShardCollected == true }
+	end
 	if type(data.EquippedBuddyId) == "string" then
 		p.EquippedBuddyId = data.EquippedBuddyId
 	end
@@ -310,12 +326,7 @@ function PlayerDataService.snapshot(player: Player)
 			done = p.TutorialDone,
 			firstCapsuleClaimed = p.FirstCapsuleClaimed,
 		},
-		quest = {
-			shardProgress = math.min(p.FirstShardProgress, GameConfig.FirstShardWakeGoal),
-			shardGoal = GameConfig.FirstShardWakeGoal,
-			shardRevealed = p.FirstShardProgress >= GameConfig.FirstShardWakeGoal,
-			shardCollected = p.FirstShardCollected,
-		},
+		shards = p.Shards,
 		-- the set of hidden Sparkle Bits this player has already found (so the
 		-- client never re-renders one they've collected)
 		sparkleBits = p.SparkleBits,

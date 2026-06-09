@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UiTheme = require(script.Parent.UiTheme)
 local SparkleBitConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SparkleBitConfig"))
+local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
 
 local HudUI = {}
 
@@ -327,18 +328,29 @@ function HudUI.update(state)
 		end
 	end
 
-	-- The Lost Shard quest is the main objective; it subsumes the tutorial (waking
-	-- friends serves both). Falls back to the tutorial only if no quest data yet.
-	local quest = state.quest
-	if quest and not quest.shardCollected then
-		questFrame.Visible = true
-		if quest.shardRevealed then
-			questLabel.Text = "✨ Recover the Lost Shard at the orchard!"
-		else
-			questLabel.Text = "Find the Lost Shard  —  wake " .. (quest.shardProgress or 0) .. " / " .. (quest.shardGoal or 8) .. " sleepy friends"
+	-- Shard quest objective = the first land whose Sparkle shard isn't recovered yet.
+	local shards = state.shards
+	if shards then
+		local target, targetCfg = nil, nil
+		for _, zoneName in ipairs(ZoneConfig.Order) do
+			local s = shards[zoneName]
+			if s and not s.collected then
+				target, targetCfg = zoneName, ZoneConfig.get(zoneName)
+				break
+			end
 		end
-	elseif quest then
-		questFrame.Visible = false
+		if target and targetCfg then
+			questFrame.Visible = true
+			local s = shards[target]
+			local prog = math.min((s and s.progress) or 0, targetCfg.shardWakeGoal)
+			if prog >= targetCfg.shardWakeGoal then
+				questLabel.Text = "✨ Recover the " .. target .. " Shard!"
+			else
+				questLabel.Text = target .. " Shard  —  wake " .. prog .. " / " .. targetCfg.shardWakeGoal .. " sleepy friends"
+			end
+		else
+			questFrame.Visible = false -- every shard recovered
+		end
 	else
 		local tutorial = state.tutorial
 		if tutorial and not tutorial.done then

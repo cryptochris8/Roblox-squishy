@@ -31,13 +31,18 @@ BuddyService.init()
 SparkleBitService.init()
 DailyService.init()
 
--- 4) Build the cozy Pudding Hills world, then spawn the sleepy friends on it.
+-- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
-SquishService.init(world.pads)
-QuestService.init(world)
+QuestService.init()
+
+local zoneGroups = {}
+for _, z in ipairs(world.zones) do
+	zoneGroups[#zoneGroups + 1] = { zone = z.zone, packId = z.packId, pads = z.pads }
+end
+SquishService.init(zoneGroups)
 
 -- 5) Wire the world up.
--- A Happy Pop nudges the tutorial along.
+-- A Happy Pop nudges the tutorial + the land's shard quest along.
 SquishService.onHappyPop = function(player, def)
 	TutorialService.notePop(player, def)
 	QuestService.notePop(player, def)
@@ -60,15 +65,20 @@ SparkleBitService.onCollected = function(player)
 	DailyService.noteEvent(player, "bit")
 end
 
--- The Sparkle Capsule machine opens a capsule for whoever uses it.
-world.capsulePrompt.Triggered:Connect(function(player)
-	CapsuleService.tryOpen(player)
-end)
-
--- Soft Dumpling gives the Lost Shard clue when talked to.
-world.guidePrompt.Triggered:Connect(function(player)
-	QuestService.giveClue(player)
-end)
+-- Each land's Sparkle Capsule (draws from that land's pack) + guide (gives that
+-- land's shard clue).
+for _, z in ipairs(world.zones) do
+	if z.capsulePrompt then
+		z.capsulePrompt.Triggered:Connect(function(player)
+			CapsuleService.tryOpen(player, z.capsuleKey)
+		end)
+	end
+	if z.guidePrompt then
+		z.guidePrompt.Triggered:Connect(function(player)
+			QuestService.giveClue(player, z.zone)
+		end)
+	end
+end
 
 -- 6) When a client says it's ready, send its state + a warm welcome.
 local requestState = Remotes.get(Remotes.RequestInitialState)

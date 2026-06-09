@@ -93,7 +93,7 @@ function DailyService.claimDailyCapsule(player: Player)
 		return
 	end
 	-- Open a FREE capsule; only spend the day's claim if it actually opened.
-	if CapsuleService.tryOpen(player, true) then
+	if CapsuleService.tryOpen(player, "StarterCapsule", true) then
 		PlayerDataService.markDailyCapsuleClaimed(player)
 		PlayerDataService.sync(player)
 	end

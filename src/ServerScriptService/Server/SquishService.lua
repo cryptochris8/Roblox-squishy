@@ -21,7 +21,7 @@ SquishService.onHappyPop = nil :: ((Player, any) -> ())?
 
 local squishiesFolder: Folder
 local squishResultEvent: RemoteEvent
-local pads: { CFrame } = {}
+local pads: { { cf: CFrame, zone: string, packId: string } } = {}
 local activeByPad: { [number]: Model } = {} -- pad index -> the squishy currently there
 local objectCounter = 0
 local rng = Random.new()
@@ -35,14 +35,10 @@ local RARITY_COLORS = {
 	mythic = Color3.fromRGB(255, 210, 170),
 }
 
-local function pickStarterDef()
-	local pool = GameConfig.PuddingHillsStarters
-	for _ = 1, 6 do
-		local id = pool[rng:NextInteger(1, #pool)]
-		local def = SquishyData.getById(id)
-		if def then
-			return def
-		end
+local function pickDefForPack(packId: string)
+	local pool = SquishyData.getByPack(packId)
+	if #pool > 0 then
+		return pool[rng:NextInteger(1, #pool)]
 	end
 	return SquishyData.getById("soft_dumpling")
 end
@@ -86,11 +82,11 @@ local function buildSquishy(def, cf: CFrame): Model
 end
 
 function SquishService.spawnAtPad(padIndex: number)
-	local cf = pads[padIndex]
-	if not cf then
+	local p = pads[padIndex]
+	if not p then
 		return
 	end
-	local model = buildSquishy(pickStarterDef(), cf)
+	local model = buildSquishy(pickDefForPack(p.packId), p.cf)
 	model:SetAttribute("PadIndex", padIndex)
 	activeByPad[padIndex] = model
 end
@@ -190,15 +186,21 @@ function SquishService.handleSquish(player: Player, model: Model)
 	end
 end
 
-function SquishService.init(spawnPads: { CFrame })
-	pads = spawnPads
+-- zoneGroups: array of { zone = string, packId = string, pads = { CFrame } }.
+-- A sleepy friend from each zone's pack spawns at every pad in that zone.
+function SquishService.init(zoneGroups: { { zone: string, packId: string, pads: { CFrame } } })
+	pads = {}
+	for _, g in ipairs(zoneGroups) do
+		for _, cf in ipairs(g.pads) do
+			pads[#pads + 1] = { cf = cf, zone = g.zone, packId = g.packId }
+		end
+	end
 	squishiesFolder = Instance.new("Folder")
 	squishiesFolder.Name = "Squishies"
 	squishiesFolder.Parent = Workspace
 	squishResultEvent = Remotes.get(Remotes.SquishResult)
 
-	local count = math.min(GameConfig.PuddingHillsFriendCount, #pads)
-	for i = 1, count do
+	for i = 1, #pads do
 		SquishService.spawnAtPad(i)
 	end
 end

@@ -589,12 +589,16 @@ function WorldService.build()
 	gate.Parent = folder
 
 	return {
-		pads = pads,
-		capsulePrompt = capsulePrompt,
-		guidePrompt = guidePrompt,
-		shardSpot = shardSpot,
-		gooCoastGate = gate,
-		gooCoastBarrier = barrier,
+		zones = {
+			{
+				zone = "Pudding Hills",
+				packId = "launch_squishy_foods",
+				capsuleKey = "StarterCapsule",
+				pads = pads,
+				capsulePrompt = capsulePrompt,
+				guidePrompt = guidePrompt,
+			},
+		},
 	}
 end
 
