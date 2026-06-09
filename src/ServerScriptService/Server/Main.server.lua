@@ -20,6 +20,7 @@ local TutorialService = require(script.Parent.TutorialService)
 local BuddyService = require(script.Parent.BuddyService)
 local QuestService = require(script.Parent.QuestService)
 local SparkleBitService = require(script.Parent.SparkleBitService)
+local DailyService = require(script.Parent.DailyService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -28,6 +29,7 @@ CollectionService.init()
 TutorialService.init()
 BuddyService.init()
 SparkleBitService.init()
+DailyService.init()
 
 -- 4) Build the cozy Pudding Hills world, then spawn the sleepy friends on it.
 local world = WorldService.build()

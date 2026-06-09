@@ -14,6 +14,7 @@ Remotes.FOLDER_NAME = "SquishyRemotes"
 Remotes.RequestInitialState = "RequestInitialState" -- "I'm ready, send me my state"
 Remotes.EquipBuddyRequest = "EquipBuddyRequest"      -- defId: equip a discovered friend
 Remotes.CollectSparkleBit = "CollectSparkleBit"      -- id: I walked up to a hidden Sparkle Bit
+Remotes.ClaimDailyCapsule = "ClaimDailyCapsule"      -- claim today's free Sparkle Capsule
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -26,6 +27,7 @@ local ALL_EVENTS = {
 	Remotes.RequestInitialState,
 	Remotes.EquipBuddyRequest,
 	Remotes.CollectSparkleBit,
+	Remotes.ClaimDailyCapsule,
 	Remotes.StateSync,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,

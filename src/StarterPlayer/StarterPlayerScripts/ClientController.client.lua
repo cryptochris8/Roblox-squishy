@@ -25,6 +25,7 @@ local playerGui = localPlayer:WaitForChild("PlayerGui")
 -- Remote handles
 local equipBuddyRequest = Remotes.get(Remotes.EquipBuddyRequest)
 local requestInitialState = Remotes.get(Remotes.RequestInitialState)
+local claimDailyCapsule = Remotes.get(Remotes.ClaimDailyCapsule)
 
 -- Build the UI. Mount the Book before the HUD so the HUD's button can open it.
 ToastUI.mount(playerGui)
@@ -33,6 +34,8 @@ CollectionBookUI.mount(playerGui, function(defId)
 end)
 HudUI.mount(playerGui, function()
 	CollectionBookUI.show()
+end, function()
+	claimDailyCapsule:FireServer()
 end)
 CapsuleRevealUI.mount(playerGui)
 SquishFx.init()

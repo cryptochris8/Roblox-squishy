@@ -64,7 +64,7 @@ local function pickRarity(weights: { [string]: number }, byRarity: { [string]: {
 	return entries[#entries].rarity
 end
 
-function CapsuleService.tryOpen(player: Player)
+function CapsuleService.tryOpen(player: Player, freeOverride: boolean?): boolean
 	local cfg = CapsuleConfig.StarterCapsule
 
 	-- Make sure we can actually give a friend BEFORE charging coins or using the
@@ -73,16 +73,19 @@ function CapsuleService.tryOpen(player: Player)
 	local rarity = pickRarity(cfg.RarityWeights, byRarity)
 	if not rarity then
 		toastEvent:FireClient(player, "The Sparkle Capsule is recharging - try again in a moment!")
-		return
+		return false
 	end
 
-	-- The very first capsule is a free welcome gift; after that it costs coins.
-	local isFree = GameConfig.FirstCapsuleIsFree and not PlayerDataService.isFirstCapsuleClaimed(player)
-	if isFree then
-		PlayerDataService.markFirstCapsuleClaimed(player)
-	elseif not PlayerDataService.spendCoins(player, cfg.Cost) then
-		toastEvent:FireClient(player, "You need " .. cfg.Cost .. " Sparkle Coins to open a Sparkle Capsule!")
-		return
+	-- The first capsule and the daily gift are free; otherwise it costs coins.
+	local isFree = freeOverride == true
+	if not isFree then
+		if GameConfig.FirstCapsuleIsFree and not PlayerDataService.isFirstCapsuleClaimed(player) then
+			isFree = true
+			PlayerDataService.markFirstCapsuleClaimed(player)
+		elseif not PlayerDataService.spendCoins(player, cfg.Cost) then
+			toastEvent:FireClient(player, "You need " .. cfg.Cost .. " Sparkle Coins to open a Sparkle Capsule!")
+			return false
+		end
 	end
 
 	local bucket = byRarity[rarity]
@@ -121,6 +124,7 @@ function CapsuleService.tryOpen(player: Player)
 		variantUpgraded = variantUpgraded,
 	})
 	PlayerDataService.sync(player)
+	return true
 end
 
 function CapsuleService.init()

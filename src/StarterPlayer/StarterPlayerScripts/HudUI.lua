@@ -3,12 +3,14 @@
 -- current cozy quest, and a big round "Squishy Book" button.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local UiTheme = require(script.Parent.UiTheme)
 local SparkleBitConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SparkleBitConfig"))
 
 local HudUI = {}
 
 local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
+local dailyBtn, dailyPulse
 
 local function coinPill(parent)
 	local pill = UiTheme.panel({
@@ -117,6 +119,33 @@ local function questBanner(parent)
 	questLabel.Parent = questFrame
 end
 
+local function dailyButton(parent, onClaimDaily)
+	local btn = Instance.new("TextButton")
+	btn.Name = "DailyGiftButton"
+	btn.AnchorPoint = Vector2.new(0, 1)
+	btn.Position = UDim2.new(0, 18, 1, -18)
+	btn.Size = UDim2.fromOffset(214, 52)
+	btn.BackgroundColor3 = UiTheme.Colors.Coin
+	btn.BorderSizePixel = 0
+	btn.Font = UiTheme.HeaderFont
+	btn.TextSize = 20
+	btn.TextColor3 = UiTheme.Colors.Ink
+	btn.Text = "🎁 Free Daily Gift!"
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	UiTheme.corner(24, btn)
+	UiTheme.stroke(UiTheme.Colors.CoinDeep, 2, btn)
+	dailyBtn = btn
+	dailyPulse = TweenService:Create(btn, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+		Size = UDim2.fromOffset(226, 56),
+	})
+	btn.Activated:Connect(function()
+		if onClaimDaily then
+			onClaimDaily()
+		end
+	end)
+end
+
 local function bookButton(parent, onOpenBook)
 	local btn = Instance.new("TextButton")
 	btn.Name = "BookButton"
@@ -140,7 +169,7 @@ local function bookButton(parent, onOpenBook)
 	end)
 end
 
-function HudUI.mount(playerGui, onOpenBook)
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
@@ -152,6 +181,7 @@ function HudUI.mount(playerGui, onOpenBook)
 	bitsPill(screen)
 	questBanner(screen)
 	bookButton(screen, onOpenBook)
+	dailyButton(screen, onClaimDaily)
 end
 
 function HudUI.update(state)
@@ -169,6 +199,20 @@ function HudUI.update(state)
 			end
 		end
 		bitsLabel.Text = "✨ Bits " .. found .. "/" .. SparkleBitConfig.count()
+	end
+
+	if dailyBtn then
+		local ready = state.dailyCapsuleReady == true
+		dailyBtn.Text = ready and "🎁 Free Daily Gift!" or "🎁 Daily Gift  ✓"
+		dailyBtn.BackgroundColor3 = ready and UiTheme.Colors.Coin or UiTheme.Colors.Panel
+		dailyBtn.TextColor3 = ready and UiTheme.Colors.Ink or UiTheme.Colors.SoftInk
+		dailyBtn.AutoButtonColor = ready
+		if ready then
+			dailyPulse:Play()
+		else
+			dailyPulse:Cancel()
+			dailyBtn.Size = UDim2.fromOffset(214, 52)
+		end
 	end
 
 	-- The Lost Shard quest is the main objective; it subsumes the tutorial (waking

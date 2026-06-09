@@ -54,6 +54,7 @@ export type Profile = {
 	FirstShardCollected: boolean,
 	SparkleBits: { [string]: boolean },
 	Variants: { [string]: number },
+	LastDailyCapsuleDay: number,
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -77,6 +78,7 @@ local function newProfile(): Profile
 		FirstShardCollected = false,
 		SparkleBits = {},
 		Variants = {},
+		LastDailyCapsuleDay = 0,
 	}
 end
 
@@ -87,6 +89,11 @@ local function countKeys(t: { [string]: boolean }): number
 		n += 1
 	end
 	return n
+end
+
+-- UTC day index, for once-a-day resets (daily capsule, daily quests, streak).
+local function todayIndex(): number
+	return math.floor(os.time() / 86400)
 end
 
 -- Turn a live Profile into a plain, DataStore-safe table.
@@ -104,6 +111,7 @@ local function serialize(p: Profile)
 		FirstShardCollected = p.FirstShardCollected,
 		SparkleBits = p.SparkleBits,
 		Variants = p.Variants,
+		LastDailyCapsuleDay = p.LastDailyCapsuleDay,
 	}
 end
 
@@ -155,6 +163,7 @@ local function deserialize(data: any): Profile
 		end
 		p.Variants = variants
 	end
+	p.LastDailyCapsuleDay = tonumber(data.LastDailyCapsuleDay) or 0
 	return p
 end
 
@@ -282,6 +291,8 @@ function PlayerDataService.snapshot(player: Player)
 		sparkleBits = p.SparkleBits,
 		-- per-friend variant level (1 = Sparkly, 2 = Rainbow) for the Book + reveal
 		variants = p.Variants,
+		-- whether today's free Sparkle Capsule is available to claim
+		dailyCapsuleReady = todayIndex() > p.LastDailyCapsuleDay,
 	}
 end
 
@@ -382,6 +393,19 @@ function PlayerDataService.upgradeVariant(player: Player, id: string): number
 	cur += 1
 	p.Variants[id] = cur
 	return cur
+end
+
+function PlayerDataService.isDailyCapsuleReady(player: Player): boolean
+	local p = profiles[player]
+	return p ~= nil and todayIndex() > p.LastDailyCapsuleDay
+end
+
+function PlayerDataService.markDailyCapsuleClaimed(player: Player)
+	local p = profiles[player]
+	if not p then
+		return
+	end
+	p.LastDailyCapsuleDay = todayIndex()
 end
 
 function PlayerDataService.setBuddy(player: Player, defId: string?)
