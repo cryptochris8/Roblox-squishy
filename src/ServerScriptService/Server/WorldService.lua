@@ -213,52 +213,135 @@ local function buildZoneScaffold(zoneName: string, theme: any)
 	}
 end
 
--- Goo Coast: a glossy seafoam coast of gooey pools + drifting bubbles.
-local function buildGooCoast()
-	local folder, entry = buildZoneScaffold("Goo Coast", {
-		groundColor = Color3.fromRGB(182, 235, 220),
-		hillColors = {
-			Color3.fromRGB(140, 224, 210), Color3.fromRGB(120, 206, 224),
-			Color3.fromRGB(196, 240, 226), Color3.fromRGB(150, 230, 200),
-		},
-		padColor = Color3.fromRGB(150, 232, 224),
-		accentColor = Color3.fromRGB(120, 220, 224),
-		capsuleName = "Goo Capsule",
-		capsuleColor = Color3.fromRGB(120, 220, 200),
-		guideName = "Bloop the Goo Guide",
-		guideColor = Color3.fromRGB(150, 226, 234),
-		seed = 88,
-	})
-	local center = ZoneConfig.get("Goo Coast").center
+-- Goo Coast's own coastal pad layout (a curving shore + tide pools + the pier),
+-- deliberately different from Pudding Hills so the land feels its own.
+local GOO_PAD_OFFSETS = {
+	Vector3.new(-40, 2, 30), Vector3.new(-20, 2, 38), Vector3.new(2, 2, 40), Vector3.new(24, 2, 36), Vector3.new(42, 2, 28),
+	Vector3.new(-30, 2, 6), Vector3.new(34, 2, 10), Vector3.new(-8, 2, -6),
+	Vector3.new(10, 2, -18), Vector3.new(-20, 2, -26), Vector3.new(28, 2, -24), Vector3.new(0, 2, -36),
+}
 
-	-- glossy goo pools
-	for _, off in ipairs({ Vector3.new(-30, 0, -24), Vector3.new(28, 0, 10), Vector3.new(-42, 0, 12), Vector3.new(38, 0, -18), Vector3.new(2, 0, -34) }) do
-		local pool = part({
-			Name = "GooPool", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 15, 15),
-			Color = Color3.fromRGB(118, 224, 206), Material = Enum.Material.Glass,
-			Reflectance = 0.18, Transparency = 0.25, CanCollide = false,
+-- Goo Coast: a bespoke seafoam coast — a glossy gooey sea with a wooden pier out
+-- to the shard, bouncy translucent jelly dunes, tide-pools with shells, and a
+-- cheerful sandcastle. Hand-built, not a recoloured Pudding Hills.
+local function buildGooCoast()
+	local zone = ZoneConfig.get("Goo Coast")
+	local center = zone.center
+	local folder = Instance.new("Folder")
+	folder.Name = "GooCoast"
+	folder.Parent = Workspace
+	local rng = Random.new(404)
+
+	-- pale seafoam-sand beach
+	local ground = part({
+		Name = "Ground", Size = Vector3.new(320, 4, 320), Position = center + Vector3.new(0, -2, 0),
+		Color = Color3.fromRGB(226, 236, 214),
+	})
+	ground.Parent = folder
+
+	-- the gooey sea: a big glossy aqua lagoon across the north of the coast
+	local sea = part({
+		Name = "GooSea", Size = Vector3.new(300, 1.2, 150), Position = center + Vector3.new(0, 0.2, -78),
+		Color = Color3.fromRGB(96, 220, 206), Material = Enum.Material.Glass,
+		Reflectance = 0.2, Transparency = 0.2, CanCollide = false,
+	})
+	sea.Parent = folder
+	TweenService:Create(sea, TweenInfo.new(2.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Transparency = 0.36 }):Play()
+
+	-- bouncy translucent jelly dunes (arc around the beach, leaving the sea open)
+	local jellyColors = { Color3.fromRGB(140, 230, 214), Color3.fromRGB(255, 190, 200), Color3.fromRGB(180, 220, 255), Color3.fromRGB(200, 245, 210) }
+	for i = 1, 10 do
+		local angle = math.rad(15) + (i / 10) * math.pi * 1.15
+		local radius = rng:NextNumber(72, 98)
+		local size = rng:NextNumber(22, 40)
+		local mound = part({
+			Name = "JellyDune" .. i, Shape = Enum.PartType.Ball, Size = Vector3.new(size, size * 0.8, size),
+			Position = center + Vector3.new(math.cos(angle) * radius, -size * 0.42, math.sin(angle) * radius + 24),
+			Color = jellyColors[((i - 1) % #jellyColors) + 1], Material = Enum.Material.Glass,
+			Transparency = 0.25, Reflectance = 0.1, CanCollide = false,
 		})
-		pool.CFrame = CFrame.new(center + off + Vector3.new(0, 0.2, 0)) * CFrame.Angles(0, 0, math.rad(90))
-		pool.Parent = folder
+		mound.Parent = folder
 	end
 
-	-- drifting glossy bubbles
-	local rng = Random.new(321)
-	for i = 1, 16 do
-		local s = rng:NextNumber(1.6, 3.6)
-		local pos = center + Vector3.new(rng:NextNumber(-46, 46), rng:NextNumber(2, 7), rng:NextNumber(-46, 46))
+	-- a wooden pier reaching from the beach out over the goo sea toward the shard
+	for i = 0, 10 do
+		local z = 14 - i * 6
+		local plank = part({ Name = "Plank", Size = Vector3.new(10, 0.8, 5), Position = center + Vector3.new(0, 1.4, z), Color = Color3.fromRGB(206, 170, 120) })
+		plank.Parent = folder
+		if i % 2 == 0 then
+			for _, sx in ipairs({ -1, 1 }) do
+				local post = part({ Name = "Post", Size = Vector3.new(0.8, 4, 0.8), Position = center + Vector3.new(sx * 4.2, 0, z), Color = Color3.fromRGB(170, 134, 92) })
+				post.Parent = folder
+			end
+		end
+	end
+
+	-- tide pools with little shells
+	local shellColors = { Color3.fromRGB(255, 214, 224), Color3.fromRGB(255, 236, 200), Color3.fromRGB(214, 230, 255) }
+	for _, off in ipairs({ Vector3.new(-34, 0, 12), Vector3.new(36, 0, 16), Vector3.new(-14, 0, 0) }) do
+		local pool = part({
+			Name = "TidePool", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 12, 12),
+			Color = Color3.fromRGB(120, 224, 220), Material = Enum.Material.Glass, Transparency = 0.25, Reflectance = 0.15, CanCollide = false,
+		})
+		pool.CFrame = CFrame.new(center + off + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		pool.Parent = folder
+		for s = 1, 3 do
+			local shell = part({
+				Name = "Shell", Shape = Enum.PartType.Ball, Size = Vector3.new(2.4, 1.3, 2.4),
+				Position = center + off + Vector3.new(rng:NextNumber(-5, 5), 0.4, rng:NextNumber(-5, 5)),
+				Color = shellColors[((s - 1) % #shellColors) + 1], CanCollide = false,
+			})
+			shell.Parent = folder
+		end
+	end
+
+	-- a cheerful sandcastle landmark
+	local sandColor = Color3.fromRGB(240, 218, 168)
+	local castleBase = center + Vector3.new(-48, 0, 42)
+	local keep = part({ Name = "CastleKeep", Size = Vector3.new(12, 8, 12), Position = castleBase + Vector3.new(0, 4, 0), Color = sandColor })
+	keep.Parent = folder
+	for _, off in ipairs({ Vector3.new(-6, 0, -6), Vector3.new(6, 0, -6), Vector3.new(-6, 0, 6), Vector3.new(6, 0, 6) }) do
+		local tower = part({ Name = "CastleTower", Size = Vector3.new(5, 11, 5), Position = castleBase + off + Vector3.new(0, 5.5, 0), Color = sandColor })
+		tower.Parent = folder
+		local coneTop = part({ Name = "CastleTop", Shape = Enum.PartType.Ball, Size = Vector3.new(5.4, 4, 5.4), Position = castleBase + off + Vector3.new(0, 12, 0), Color = Color3.fromRGB(255, 150, 170) })
+		coneTop.Parent = folder
+	end
+
+	-- drifting glossy bubbles for life
+	for i = 1, 14 do
+		local sz = rng:NextNumber(1.6, 3.4)
+		local pos = center + Vector3.new(rng:NextNumber(-60, 60), rng:NextNumber(3, 8), rng:NextNumber(-70, 50))
 		local bubble = part({
-			Name = "Bubble", Shape = Enum.PartType.Ball, Size = Vector3.new(s, s, s),
-			Position = pos, Color = Color3.fromRGB(196, 244, 255), Material = Enum.Material.Glass,
-			Transparency = 0.35, Reflectance = 0.1, CanCollide = false, CastShadow = false,
+			Name = "Bubble", Shape = Enum.PartType.Ball, Size = Vector3.new(sz, sz, sz), Position = pos,
+			Color = Color3.fromRGB(200, 245, 255), Material = Enum.Material.Glass, Transparency = 0.4, Reflectance = 0.1, CanCollide = false, CastShadow = false,
 		})
 		bubble.Parent = folder
-		TweenService:Create(bubble, TweenInfo.new(rng:NextNumber(2, 3.5), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-			Position = pos + Vector3.new(0, 2.5, 0),
-		}):Play()
+		TweenService:Create(bubble, TweenInfo.new(rng:NextNumber(2, 3.5), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Position = pos + Vector3.new(0, 2.5, 0) }):Play()
 	end
 
-	return entry
+	-- gameplay infrastructure: own coastal pads + themed capsule/guide + shard + travel
+	local pads = {}
+	for _, off in ipairs(GOO_PAD_OFFSETS) do
+		local pos = center + off
+		local pad = part({ Name = "Pad", Size = Vector3.new(6, 0.4, 6), Position = pos - Vector3.new(0, 1.8, 0), Color = Color3.fromRGB(150, 232, 224), Transparency = 0.2, CanCollide = false })
+		pad.Parent = folder
+		pads[#pads + 1] = CFrame.new(pos)
+	end
+	makeLandingPad(folder, zone.spawn, Color3.fromRGB(120, 220, 224))
+	local capsulePrompt = makeCapsule(folder, center + Vector3.new(-22, 3.5, 26), "Goo Capsule", Color3.fromRGB(120, 220, 200))
+	local guidePrompt = makeGuide(folder, center + Vector3.new(16, 2.5, 18), "Bloop the Goo Guide", Color3.fromRGB(150, 226, 234))
+	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(120, 220, 224))
+	local travelPads = buildTravelHub(folder, center, "Goo Coast")
+
+	return {
+		zone = "Goo Coast",
+		packId = zone.packId,
+		capsuleKey = zone.capsuleKey,
+		pads = pads,
+		capsulePrompt = capsulePrompt,
+		guidePrompt = guidePrompt,
+		travelPads = travelPads,
+	}
 end
 
 -- Moonlit Hollow: a soft-spooky twilight glade — glowing mushrooms, drifting
