@@ -13,7 +13,7 @@
 
 return {
 	-- Background music (looping, global). Empty = off until you paste a track id.
-	Music = "",
+	Music = "rbxassetid://89318061116311",
 	MusicVolume = 0.3,
 
 	-- Squish feedback (built-in sounds; always available).
