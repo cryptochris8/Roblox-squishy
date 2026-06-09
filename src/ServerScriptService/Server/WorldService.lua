@@ -7,6 +7,9 @@
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
 
 local WorldService = {}
 
@@ -41,6 +44,221 @@ local function floatingLabel(text: string, color: Color3, parent: BasePart, heig
 	label.TextStrokeTransparency = 0.2
 	label.Text = text
 	label.Parent = gui
+end
+
+-- ── Reusable builders for the lands beyond Pudding Hills ────────────────────
+-- These build the shared gameplay infrastructure (ground, dunes, pads, capsule,
+-- guide, shard pedestal, landing pad) for a land, themed by colour. Each new land
+-- then adds its own bespoke props. Pudding Hills keeps its own hand-built code.
+
+local PAD_OFFSETS = {
+	Vector3.new(-10, 2, 2), Vector3.new(9, 2, -2), Vector3.new(2, 2, 9),
+	Vector3.new(-34, 2, 2), Vector3.new(-28, 2, -18), Vector3.new(-40, 2, 8),
+	Vector3.new(30, 2, -12), Vector3.new(40, 2, 4), Vector3.new(22, 2, -22),
+	Vector3.new(-6, 2, -30), Vector3.new(14, 2, -34), Vector3.new(-20, 2, -38),
+}
+
+local function makePads(folder: Instance, center: Vector3, padColor: Color3): { CFrame }
+	local pads = {}
+	for _, off in ipairs(PAD_OFFSETS) do
+		local pos = center + off
+		local pad = part({
+			Name = "Pad",
+			Size = Vector3.new(6, 0.4, 6),
+			Position = pos - Vector3.new(0, 1.8, 0),
+			Color = padColor,
+			Transparency = 0.2,
+			CanCollide = false,
+		})
+		pad.Parent = folder
+		pads[#pads + 1] = CFrame.new(pos)
+	end
+	return pads
+end
+
+local function makeCapsule(folder: Instance, pos: Vector3, displayName: string, color: Color3): ProximityPrompt
+	local base = part({ Name = "CapsuleBase", Size = Vector3.new(6, 7, 6), Position = pos, Color = color })
+	base.Parent = folder
+	local dome = part({
+		Name = "CapsuleDome", Shape = Enum.PartType.Ball, Size = Vector3.new(6.5, 6.5, 6.5),
+		Position = pos + Vector3.new(0, 5, 0), Color = Color3.fromRGB(255, 255, 255),
+		Material = Enum.Material.Glass, Transparency = 0.3,
+	})
+	dome.Parent = folder
+	floatingLabel(displayName, color, dome, 4)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ObjectText = displayName
+	prompt.ActionText = "Open " .. displayName
+	prompt.HoldDuration = 0.2
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = base
+	return prompt
+end
+
+local function makeGuide(folder: Instance, pos: Vector3, name: string, color: Color3): ProximityPrompt
+	local body = part({ Name = "Body", Shape = Enum.PartType.Ball, Size = Vector3.new(5, 5, 5), Position = pos, Color = color })
+	body.Parent = folder
+	floatingLabel(name, color, body, 3.5)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ObjectText = name
+	prompt.ActionText = "Talk"
+	prompt.HoldDuration = 0.1
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = body
+	return prompt
+end
+
+local function makeHillsRing(folder: Instance, center: Vector3, palette: { Color3 }, seed: number)
+	local rng = Random.new(seed)
+	local count = 14
+	for i = 1, count do
+		local angle = (i / count) * math.pi * 2 + rng:NextNumber(-0.2, 0.2)
+		local radius = rng:NextNumber(58, 100)
+		local size = rng:NextNumber(24, 48)
+		local mound = part({
+			Name = "Hill" .. i,
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(size, size, size),
+			Position = center + Vector3.new(math.cos(angle) * radius, -size * rng:NextNumber(0.34, 0.46), math.sin(angle) * radius),
+			Color = palette[((i - 1) % #palette) + 1],
+			CanCollide = false,
+		})
+		mound.Parent = folder
+	end
+end
+
+local function makeShardPedestal(folder: Instance, shardSpot: Vector3, color: Color3)
+	local pedestal = part({
+		Name = "ShardPedestal", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.2, 8, 8),
+		Color = color, Reflectance = 0.1, CanCollide = false,
+	})
+	pedestal.CFrame = CFrame.new(shardSpot + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	pedestal.Parent = folder
+end
+
+local function makeLandingPad(folder: Instance, pos: Vector3, color: Color3)
+	local pad = part({
+		Name = "LandingPad", Size = Vector3.new(16, 0.4, 16), Position = pos - Vector3.new(0, 1.6, 0),
+		Color = color, Transparency = 0.1, CanCollide = false,
+	})
+	pad.Parent = folder
+end
+
+-- A small travel hub (signpost pads) for hopping to the other lands. The server
+-- gates each hop on shard progress; these pads just send the request.
+local function buildTravelHub(folder: Instance, center: Vector3, currentZoneName: string)
+	local travelPads = {}
+	local idx = 0
+	for _, destName in ipairs(ZoneConfig.Order) do
+		if destName ~= currentZoneName then
+			idx += 1
+			local pos = center + Vector3.new((idx - 1.5) * 14, 2, 46)
+			local pad = part({
+				Name = "TravelPad", Size = Vector3.new(9, 0.6, 9),
+				Position = pos - Vector3.new(0, 1.6, 0),
+				Color = Color3.fromRGB(255, 224, 150), Material = Enum.Material.Neon, CanCollide = false,
+			})
+			pad.Parent = folder
+			local post = part({
+				Name = "Signpost", Size = Vector3.new(0.7, 6, 0.7),
+				Position = pos + Vector3.new(0, 1.5, 0), Color = Color3.fromRGB(244, 230, 214),
+			})
+			post.Parent = folder
+			floatingLabel("→ " .. destName, Color3.fromRGB(120, 90, 60), post, 3.5)
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.ObjectText = "Travel Pad"
+			prompt.ActionText = "Go to " .. destName
+			prompt.HoldDuration = 0.3
+			prompt.MaxActivationDistance = 12
+			prompt.RequiresLineOfSight = false
+			prompt.Parent = pad
+			travelPads[#travelPads + 1] = { prompt = prompt, destZone = destName }
+		end
+	end
+	return travelPads
+end
+
+-- Builds the shared scaffold for a land; returns (folder, zoneEntry).
+local function buildZoneScaffold(zoneName: string, theme: any)
+	local zone = ZoneConfig.get(zoneName)
+	local folder = Instance.new("Folder")
+	folder.Name = string.gsub(zoneName, " ", "")
+	folder.Parent = Workspace
+
+	local center = zone.center
+	local ground = part({
+		Name = "Ground", Size = Vector3.new(320, 4, 320),
+		Position = center + Vector3.new(0, -2, 0), Color = theme.groundColor,
+	})
+	ground.Parent = folder
+
+	makeHillsRing(folder, center, theme.hillColors, theme.seed or 7)
+	local pads = makePads(folder, center, theme.padColor)
+	makeLandingPad(folder, zone.spawn, theme.accentColor)
+	local capsulePrompt = makeCapsule(folder, center + Vector3.new(0, 3.5, -12), theme.capsuleName, theme.capsuleColor)
+	local guidePrompt = makeGuide(folder, center + Vector3.new(-14, 2.5, 12), theme.guideName, theme.guideColor)
+	makeShardPedestal(folder, zone.shardSpot, theme.accentColor)
+	local travelPads = buildTravelHub(folder, center, zoneName)
+
+	return folder, {
+		zone = zoneName,
+		packId = zone.packId,
+		capsuleKey = zone.capsuleKey,
+		pads = pads,
+		capsulePrompt = capsulePrompt,
+		guidePrompt = guidePrompt,
+		travelPads = travelPads,
+	}
+end
+
+-- Goo Coast: a glossy seafoam coast of gooey pools + drifting bubbles.
+local function buildGooCoast()
+	local folder, entry = buildZoneScaffold("Goo Coast", {
+		groundColor = Color3.fromRGB(182, 235, 220),
+		hillColors = {
+			Color3.fromRGB(140, 224, 210), Color3.fromRGB(120, 206, 224),
+			Color3.fromRGB(196, 240, 226), Color3.fromRGB(150, 230, 200),
+		},
+		padColor = Color3.fromRGB(150, 232, 224),
+		accentColor = Color3.fromRGB(120, 220, 224),
+		capsuleName = "Goo Capsule",
+		capsuleColor = Color3.fromRGB(120, 220, 200),
+		guideName = "Bloop the Goo Guide",
+		guideColor = Color3.fromRGB(150, 226, 234),
+		seed = 88,
+	})
+	local center = ZoneConfig.get("Goo Coast").center
+
+	-- glossy goo pools
+	for _, off in ipairs({ Vector3.new(-30, 0, -24), Vector3.new(28, 0, 10), Vector3.new(-42, 0, 12), Vector3.new(38, 0, -18), Vector3.new(2, 0, -34) }) do
+		local pool = part({
+			Name = "GooPool", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 15, 15),
+			Color = Color3.fromRGB(118, 224, 206), Material = Enum.Material.Glass,
+			Reflectance = 0.18, Transparency = 0.25, CanCollide = false,
+		})
+		pool.CFrame = CFrame.new(center + off + Vector3.new(0, 0.2, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		pool.Parent = folder
+	end
+
+	-- drifting glossy bubbles
+	local rng = Random.new(321)
+	for i = 1, 16 do
+		local s = rng:NextNumber(1.6, 3.6)
+		local pos = center + Vector3.new(rng:NextNumber(-46, 46), rng:NextNumber(2, 7), rng:NextNumber(-46, 46))
+		local bubble = part({
+			Name = "Bubble", Shape = Enum.PartType.Ball, Size = Vector3.new(s, s, s),
+			Position = pos, Color = Color3.fromRGB(196, 244, 255), Material = Enum.Material.Glass,
+			Transparency = 0.35, Reflectance = 0.1, CanCollide = false, CastShadow = false,
+		})
+		bubble.Parent = folder
+		TweenService:Create(bubble, TweenInfo.new(rng:NextNumber(2, 3.5), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Position = pos + Vector3.new(0, 2.5, 0),
+		}):Play()
+	end
+
+	return entry
 end
 
 function WorldService.build()
@@ -588,18 +806,17 @@ function WorldService.build()
 	gate.PrimaryPart = arch
 	gate.Parent = folder
 
-	return {
-		zones = {
-			{
-				zone = "Pudding Hills",
-				packId = "launch_squishy_foods",
-				capsuleKey = "StarterCapsule",
-				pads = pads,
-				capsulePrompt = capsulePrompt,
-				guidePrompt = guidePrompt,
-			},
-		},
+	local puddingHills = {
+		zone = "Pudding Hills",
+		packId = "launch_squishy_foods",
+		capsuleKey = "StarterCapsule",
+		pads = pads,
+		capsulePrompt = capsulePrompt,
+		guidePrompt = guidePrompt,
+		travelPads = buildTravelHub(folder, Vector3.new(0, 0, 0), "Pudding Hills"),
 	}
+
+	return { zones = { puddingHills, buildGooCoast() } }
 end
 
 return WorldService

@@ -21,6 +21,7 @@ local BuddyService = require(script.Parent.BuddyService)
 local QuestService = require(script.Parent.QuestService)
 local SparkleBitService = require(script.Parent.SparkleBitService)
 local DailyService = require(script.Parent.DailyService)
+local TravelService = require(script.Parent.TravelService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -30,6 +31,7 @@ TutorialService.init()
 BuddyService.init()
 SparkleBitService.init()
 DailyService.init()
+TravelService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -76,6 +78,11 @@ for _, z in ipairs(world.zones) do
 	if z.guidePrompt then
 		z.guidePrompt.Triggered:Connect(function(player)
 			QuestService.giveClue(player, z.zone)
+		end)
+	end
+	for _, tp in ipairs(z.travelPads or {}) do
+		tp.prompt.Triggered:Connect(function(player)
+			TravelService.travel(player, tp.destZone)
 		end)
 	end
 end
