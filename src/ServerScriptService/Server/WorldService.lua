@@ -49,15 +49,15 @@ function WorldService.build()
 	-- (Lighting.Technology can't be assigned from a script at runtime — set it to
 	-- Future in Studio's Lighting properties if you want nicer shadows.)
 	pcall(function()
-		Lighting.Brightness = 2.6
-		Lighting.ClockTime = 15.6 -- warm late-afternoon storybook light
-		Lighting.GeographicLatitude = 18
-		Lighting.Ambient = Color3.fromRGB(182, 168, 186)
-		Lighting.OutdoorAmbient = Color3.fromRGB(226, 204, 206)
-		Lighting.ExposureCompensation = 0.2
+		Lighting.Brightness = 2.5
+		Lighting.ClockTime = 16.8 -- warm golden-hour storybook light
+		Lighting.GeographicLatitude = 14
+		Lighting.Ambient = Color3.fromRGB(196, 176, 178)
+		Lighting.OutdoorAmbient = Color3.fromRGB(238, 210, 196)
+		Lighting.ExposureCompensation = 0.25
 		Lighting.EnvironmentDiffuseScale = 1
-		Lighting.EnvironmentSpecularScale = 0.9
-		Lighting.FogEnd = 1600
+		Lighting.EnvironmentSpecularScale = 0.85
+		Lighting.FogEnd = 1800
 
 		-- Create-or-update a lighting child so this is safe to run more than once.
 		local function ensure(parent: Instance, className: string, name: string, props)
@@ -75,17 +75,17 @@ function WorldService.build()
 
 		-- Soft hazy air for depth and dreaminess.
 		ensure(Lighting, "Atmosphere", "Atmosphere", {
-			Density = 0.34, Offset = 0.15,
-			Color = Color3.fromRGB(240, 226, 234),
-			Decay = Color3.fromRGB(170, 160, 205),
-			Glare = 0.15, Haze = 1.6,
+			Density = 0.42, Offset = 0.2,
+			Color = Color3.fromRGB(252, 230, 214), -- warm cream-peach haze
+			Decay = Color3.fromRGB(236, 176, 150), -- warm decay pulls the sky off blue toward peach
+			Glare = 0.2, Haze = 2.4,
 		})
 		-- Pastel sky with a big, gentle sun.
 		ensure(Lighting, "Sky", "Sky", { SunAngularSize = 16, MoonAngularSize = 11 })
 		-- Warm, lightly saturated storybook grade.
 		ensure(Lighting, "ColorCorrectionEffect", "Grade", {
-			Brightness = 0, Contrast = 0.05, Saturation = 0.12,
-			TintColor = Color3.fromRGB(255, 242, 232),
+			Brightness = 0.02, Contrast = 0.04, Saturation = 0.1,
+			TintColor = Color3.fromRGB(255, 238, 224), -- warm storybook grade
 		})
 		-- Soft glow on the brightest spots (suits the "sparkle" theme).
 		ensure(Lighting, "BloomEffect", "Bloom", { Intensity = 0.6, Size = 24, Threshold = 1.25 })
@@ -95,8 +95,8 @@ function WorldService.build()
 		local terrain = Workspace:FindFirstChildOfClass("Terrain")
 		if terrain then
 			ensure(terrain, "Clouds", "Clouds", {
-				Cover = 0.55, Density = 0.5,
-				Color = Color3.fromRGB(255, 250, 248),
+				Cover = 0.5, Density = 0.42,
+				Color = Color3.fromRGB(255, 210, 210), -- soft dusty-pink storybook clouds
 			})
 		end
 	end)
@@ -118,7 +118,7 @@ function WorldService.build()
 		Name = "Ground",
 		Size = Vector3.new(320, 4, 320),
 		Position = Vector3.new(0, -2, 0),
-		Color = Color3.fromRGB(255, 232, 222),
+		Color = Color3.fromRGB(255, 238, 214), -- warm cream, matching the storybook valley floor
 	})
 	ground.Parent = folder
 
@@ -126,13 +126,14 @@ function WorldService.build()
 	-- Placed beyond the play area (radius > 55) so they frame the world without
 	-- blocking the pads, capsule, or spawn. CanCollide off so nothing snags on them.
 	local hillRng = Random.new(2026)
+	-- Warm golden/honey/butterscotch dunes, matching the storybook Pudding Hills plate.
 	local hillPalette = {
-		Color3.fromRGB(255, 214, 228), -- pink
-		Color3.fromRGB(255, 232, 210), -- peach
-		Color3.fromRGB(238, 222, 255), -- lavender
-		Color3.fromRGB(214, 240, 255), -- sky-mint
-		Color3.fromRGB(255, 244, 224), -- cream
-		Color3.fromRGB(255, 224, 236), -- blush
+		Color3.fromRGB(247, 193, 116), -- golden butterscotch
+		Color3.fromRGB(255, 214, 150), -- honey
+		Color3.fromRGB(255, 228, 178), -- warm cream-gold
+		Color3.fromRGB(243, 184, 120), -- caramel
+		Color3.fromRGB(255, 236, 201), -- pale cream-gold
+		Color3.fromRGB(250, 204, 138), -- soft amber
 	}
 	local hillCount = 16
 	for i = 1, hillCount do
@@ -263,9 +264,9 @@ function WorldService.build()
 		local seg = part({
 			Name = "River" .. i,
 			Size = Vector3.new(dir.Magnitude + width, 0.4, width),
-			Color = Color3.fromRGB(236, 168, 92),
-			Reflectance = 0.18,
-			Transparency = 0.1,
+			Color = Color3.fromRGB(255, 245, 226), -- pale cream "syrup" (matches the book plate)
+			Reflectance = 0.08,
+			Transparency = 0,
 			CanCollide = false,
 			CanQuery = false,
 		})
