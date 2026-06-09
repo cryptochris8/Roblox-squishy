@@ -380,6 +380,43 @@ function WorldService.build()
 	cottage.PrimaryPart = body
 	cottage.Parent = folder
 
+	-- ── Phase 3: life & polish ──────────────────────────────────────────────
+	-- Ambient drifting sparkle motes across the whole valley — gentle floating magic.
+	local sparkleField = part({
+		Name = "ValleySparkles",
+		Size = Vector3.new(190, 1, 190),
+		Position = Vector3.new(0, 3, 0),
+		Transparency = 1,
+		CanCollide = false,
+		CanQuery = false,
+	})
+	sparkleField.Parent = folder
+	local motesField = Instance.new("ParticleEmitter")
+	motesField.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	motesField.LightEmission = 0.9
+	motesField.LightInfluence = 0
+	motesField.Color = ColorSequence.new(Color3.fromRGB(255, 244, 222), Color3.fromRGB(255, 214, 232))
+	motesField.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.4, 1.6),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	motesField.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.3),
+		NumberSequenceKeypoint.new(0.8, 0.45),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	motesField.Lifetime = NumberRange.new(4, 7)
+	motesField.Rate = 36
+	motesField.Speed = NumberRange.new(1, 3)
+	motesField.Acceleration = Vector3.new(0, 1.5, 0)
+	motesField.EmissionDirection = Enum.NormalId.Top
+	motesField.SpreadAngle = Vector2.new(40, 40)
+	motesField.Rotation = NumberRange.new(0, 360)
+	motesField.RotSpeed = NumberRange.new(-30, 30)
+	motesField.Parent = sparkleField
+
 	-- The Sparkle: the light that comes from being found (storybook canon) — a soft
 	-- glowing orb high above the world. Purely cosmetic; gently breathes + glows.
 	local sparkle = Instance.new("Model")
