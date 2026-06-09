@@ -261,6 +261,89 @@ local function buildGooCoast()
 	return entry
 end
 
+-- Moonlit Hollow: a soft-spooky twilight glade — glowing mushrooms, drifting
+-- fireflies, and a gentle moon. Never scary; all brave-cuddle (book canon).
+local function buildMoonlitHollow()
+	local folder, entry = buildZoneScaffold("Moonlit Hollow", {
+		groundColor = Color3.fromRGB(122, 112, 160),
+		hillColors = {
+			Color3.fromRGB(108, 96, 150), Color3.fromRGB(140, 120, 180),
+			Color3.fromRGB(96, 110, 168), Color3.fromRGB(160, 140, 196),
+		},
+		padColor = Color3.fromRGB(186, 164, 230),
+		accentColor = Color3.fromRGB(196, 166, 255),
+		capsuleName = "Moonlit Capsule",
+		capsuleColor = Color3.fromRGB(150, 120, 210),
+		guideName = "Nox the Night Guide",
+		guideColor = Color3.fromRGB(176, 152, 224),
+		seed = 202,
+	})
+	local center = ZoneConfig.get("Moonlit Hollow").center
+
+	-- glowing mushrooms scattered through the glade
+	local rng = Random.new(777)
+	local capColors = {
+		Color3.fromRGB(190, 130, 255), Color3.fromRGB(130, 200, 255),
+		Color3.fromRGB(255, 150, 220), Color3.fromRGB(160, 255, 220),
+	}
+	for i = 1, 12 do
+		local pos = center + Vector3.new(rng:NextNumber(-48, 48), 0, rng:NextNumber(-48, 48))
+		local h = rng:NextNumber(2.5, 5)
+		local stem = part({
+			Name = "Stem", Size = Vector3.new(0.9, h, 0.9),
+			Position = pos + Vector3.new(0, h / 2, 0), Color = Color3.fromRGB(232, 224, 240), CanCollide = false,
+		})
+		stem.Parent = folder
+		local cap = part({
+			Name = "Cap", Shape = Enum.PartType.Ball, Size = Vector3.new(3.4, 2.2, 3.4),
+			Position = pos + Vector3.new(0, h + 0.4, 0),
+			Color = capColors[((i - 1) % #capColors) + 1], Material = Enum.Material.Neon,
+			CanCollide = false, CastShadow = false,
+		})
+		cap.Parent = folder
+		local light = Instance.new("PointLight")
+		light.Color = cap.Color
+		light.Brightness = 1.5
+		light.Range = 12
+		light.Parent = cap
+	end
+
+	-- the gentle Moon above the glade
+	local moon = part({
+		Name = "Moon", Shape = Enum.PartType.Ball, Size = Vector3.new(20, 20, 20),
+		Position = center + Vector3.new(42, 80, -52), Color = Color3.fromRGB(232, 230, 255),
+		Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false,
+	})
+	moon.Parent = folder
+	local moonLight = Instance.new("PointLight")
+	moonLight.Color = Color3.fromRGB(200, 200, 255)
+	moonLight.Brightness = 1.2
+	moonLight.Range = 70
+	moonLight.Parent = moon
+
+	-- drifting fireflies
+	local fField = part({
+		Name = "Fireflies", Size = Vector3.new(180, 1, 180), Position = center + Vector3.new(0, 4, 0),
+		Transparency = 1, CanCollide = false, CanQuery = false,
+	})
+	fField.Parent = folder
+	local fly = Instance.new("ParticleEmitter")
+	fly.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	fly.LightEmission = 1
+	fly.LightInfluence = 0
+	fly.Color = ColorSequence.new(Color3.fromRGB(200, 170, 255), Color3.fromRGB(170, 230, 255))
+	fly.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 1), NumberSequenceKeypoint.new(1, 0) })
+	fly.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.2), NumberSequenceKeypoint.new(0.8, 0.45), NumberSequenceKeypoint.new(1, 1) })
+	fly.Lifetime = NumberRange.new(3, 6)
+	fly.Rate = 30
+	fly.Speed = NumberRange.new(1, 3)
+	fly.Acceleration = Vector3.new(0, 1, 0)
+	fly.SpreadAngle = Vector2.new(60, 60)
+	fly.Parent = fField
+
+	return entry
+end
+
 function WorldService.build()
 	-- Cozy storybook lighting + soft post-processing (all free + built-in). Wrapped
 	-- in pcall so a cosmetic hiccup can NEVER stop the world from building.
@@ -816,7 +899,7 @@ function WorldService.build()
 		travelPads = buildTravelHub(folder, Vector3.new(0, 0, 0), "Pudding Hills"),
 	}
 
-	return { zones = { puddingHills, buildGooCoast() } }
+	return { zones = { puddingHills, buildGooCoast(), buildMoonlitHollow() } }
 end
 
 return WorldService
