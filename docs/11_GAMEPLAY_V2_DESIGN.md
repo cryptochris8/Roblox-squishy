@@ -32,10 +32,13 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - The real revenue is **retention** (Roblox Creator Rewards) — a daily cozy habit beats impulse buys.
 
 ## Phased build plan
-- **Phase A — "The First Shard" (Pudding Hills):** spread the world + hide friends/secrets; the First Shard clue-quest (wake friends → shard appears at the orchard → recover → unlock Goo Coast); a quest HUD tracker. **← start here**
-- **Phase B — Depth & return:** Collection Book hub (silhouettes + %); daily free capsule + daily quests + gentle streak; duplicate→variant (Sparkly/Rainbow) tier.
-- **Phase C — Shared & social:** co-op "Everybody Squish" shard events; server-wide Restore-the-Sparkle meter; leaderboards; show-off buddies. (Migrate `PlayerDataService` → ProfileStore session-locking before trading.)
-- **Phase D — Monetization:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive.
+- **✅ Phase A — "The First Shard" (Pudding Hills) — DONE (2026-06-09):** spread world + hidden friends/secrets; the First Shard clue-quest (wake friends → shard appears at the orchard → recover → Goo Coast gate opens); quest HUD tracker; hidden Sparkle Bits exploration collectibles.
+- **✅ Phase B — Depth & return — DONE (2026-06-09):** Collection Book hub (silhouettes + completion % + per-zone counts); duplicate→variant (Sparkly/Rainbow) tier; free daily capsule; rotating daily quests + a gentle login streak; hidden Sparkle Bits refresh daily.
+- **Phase C — Shared & social — NEXT (needs multiplayer playtest):** co-op "Everybody Squish" shard events; server-wide Restore-the-Sparkle meter; leaderboards; show-off buddies. (Migrate `PlayerDataService` → ProfileStore session-locking before trading.) *Hard to validate solo — best built/tested with 2+ players.*
+- **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
+
+### Build log
+- **2026-06-09 (overnight autonomous build):** Phases A + B fully implemented, playtested in Studio, committed, and pushed to GitHub. All systems server-authoritative + DataStore-persisted. Capsules remain FREE (earned coins only). The game is solo-completable and now has daily reasons to return. **To play the new version in the live Roblox game, publish from Studio (File → Publish, Alt+P) — a creator-only action.**
 
 ## Honest constraints
 - Solo-dad cadence → favor **renewable/rotating systems** (daily/weekly/events) over hand-built content.

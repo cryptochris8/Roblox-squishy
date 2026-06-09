@@ -56,34 +56,59 @@ src/ReplicatedStorage/Shared/
   SquishyDefinitions.lua   generated 56-friend data (48 launch + 8 event) — source of truth
   RarityConfig / PackConfig / CapsuleConfig   generated configs
   SquishyData.lua          query helpers (getById/getByPack/getByZone/getByRarity/getLaunchRoster)
-  GameConfig.lua           kid-friendly tunables (Joy per squish, tutorial, starters)
+  GameConfig.lua           kid-friendly tunables (Joy, tutorial, First Shard goal, Sparkle Bits, streak)
+  SoundConfig.lua          background music + squish/Happy-Pop sound ids
+  SparkleBitConfig.lua     the 10 hidden Sparkle Bit spots (shared: client renderer + server validator)
+  VariantConfig.lua        duplicate→variant tiers (Sparkly/Rainbow): names, colours, bonus coins
+  DailyQuestConfig.lua     rotating daily-quest templates + forDay(dayIndex)
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
-  Main.server.lua          entry: setup remotes, init services, build world, wire prompts
-  PlayerDataService.lua    per-player profile (coins, discovered, totals) + leaderstats; DataStore load/save/autosave + BindToClose flush
-  WorldService.lua         builds Pudding Hills (ground, hills, capsule, guide, pads)
+  Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
+  PlayerDataService.lua    per-player profile (coins, discovered, variants, sparkle bits, shard quest, daily/streak) + leaderstats; DataStore load/save/autosave + BindToClose flush
+  WorldService.lua         builds Pudding Hills (ground, golden hills, syrup river+bridge, orchard, cottage, treats, capsule, guide, spread pads, shard pedestal, Goo Coast gate)
   SquishService.lua        spawns friends; squish -> Joy -> Happy Pop -> coins -> respawn
-  CapsuleService.lua       Sparkle Capsule: weighted rarity, discover, Friendship Bonus (server RNG)
+  CapsuleService.lua       Sparkle Capsule: weighted rarity, discover, duplicate→variant; free/daily override; onOpened hook
   CollectionService.lua    Equip Buddy (validated, toggles on/off)
   TutorialService.lua      "wake up 3 sleepy friends" quest -> 100 coins
   BuddyService.lua         spawns the equipped friend as a floating companion that follows you
+  QuestService.lua         The Lost Sparkle quest — First Shard (clue -> wake -> reveal at orchard -> recover -> open Goo Coast gate)
+  SparkleBitService.lua    validates + awards hidden Sparkle Bit pickups (range-checked); onCollected hook
+  DailyService.lua         free daily capsule; rotating daily quests (noteEvent) + gentle login streak (onJoin); refreshes Sparkle Bits each day
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
   UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
+  SparkleBits.lua          renders + detects the player's uncollected Sparkle Bits (server-validated pickup)
+  DailyUI.lua              "Today's Quests" panel: gentle streak + 3 daily quests with progress bars
 ```
 
 ### Contract (server <-> client)
 
-- Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`; s->c `StateSync`,
-  `SquishResult`, `CapsuleResult`, `BuddyEquipped`, `Toast`.
+- Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
+  `ClaimDailyCapsule`; s->c `StateSync`, `SquishResult`, `CapsuleResult`,
+  `SparkleBitCollected`, `Toast`.
+- The `StateSync` snapshot carries: coins, discovered (+count), variants,
+  sparkleBits, quest (shard), tutorial, dailyCapsuleReady, daily (streak + quests).
 - Input is server-side: `ClickDetector.MouseClick` (squish) and
-  `ProximityPrompt.Triggered` (capsule + guide) fire on the server.
+  `ProximityPrompt.Triggered` (capsule + guide) fire on the server. Hidden Sparkle
+  Bits are client-rendered per-player, but the pickup award is server-validated
+  (range-checked).
 - Card art uses `def.ImageAssetId` (currently `rbxassetid://REPLACE_ME`); the UI
   falls back to a coloured placeholder until real image asset ids are pasted into
   `SquishyDefinitions.lua` (see `docs/08_ASSET_IMPORT_AND_PLACEHOLDER_PLAN.md`).
 
 ### Not in MVP yet (deliberately)
 
-Goo Coast + Moonlit Hollow zones, real 3D character meshes (buddies and world
-friends use placeholder squishy balls with faces for now), and any monetization
-(no Game Passes / Developer Products).
+Playable Goo Coast + Moonlit Hollow zones (a teaser gate stands at the Pudding
+Hills edge, opened by recovering the First Shard), real 3D character meshes
+(buddies + world friends use placeholder squishy balls with faces for now), co-op
+/ social (Phase C — needs multiplayer playtest), and any monetization (Phase D —
+no Game Passes / Developer Products; **Sparkle Capsules stay FREE by design**, to
+avoid the Paid Random Items policy that restricts our 6–9 audience).
+
+### Build status
+
+Phases A (The First Shard quest + exploration) and B (collection depth + daily
+return loop) are implemented, playtested in Studio, and pushed to GitHub. See
+`docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap. **Changes are synced to Studio +
+git but go live in the published game only after File → Publish (Alt+P), a
+creator-only action.**
