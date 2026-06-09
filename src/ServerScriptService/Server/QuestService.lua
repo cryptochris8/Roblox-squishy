@@ -169,10 +169,17 @@ function QuestService.onShardTriggered(player: Player)
 	PlayerDataService.sync(player)
 end
 
--- Reveal the shard for a returning player who already qualifies.
+-- On join: reveal the shard for a returning player who's qualified but hasn't
+-- recovered it yet, and re-open Goo Coast for anyone who already finished (the
+-- gate is a shared landmark that rebuilds closed on each server start).
 function QuestService.checkReveal(player: Player)
 	local profile = PlayerDataService.get(player)
-	if profile and not profile.FirstShardCollected and profile.FirstShardProgress >= GameConfig.FirstShardWakeGoal then
+	if not profile then
+		return
+	end
+	if profile.FirstShardCollected then
+		openGate()
+	elseif profile.FirstShardProgress >= GameConfig.FirstShardWakeGoal then
 		QuestService.revealShard()
 	end
 end
