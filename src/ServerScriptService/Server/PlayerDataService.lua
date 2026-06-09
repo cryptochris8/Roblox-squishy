@@ -12,6 +12,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 
 -- Bump the version suffix only if the saved shape changes incompatibly.
 local DATASTORE_NAME = "SquishyPlayerData_v1"
@@ -52,6 +53,7 @@ export type Profile = {
 	FirstShardProgress: number,
 	FirstShardCollected: boolean,
 	SparkleBits: { [string]: boolean },
+	Variants: { [string]: number },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -74,6 +76,7 @@ local function newProfile(): Profile
 		FirstShardProgress = 0,
 		FirstShardCollected = false,
 		SparkleBits = {},
+		Variants = {},
 	}
 end
 
@@ -100,6 +103,7 @@ local function serialize(p: Profile)
 		FirstShardProgress = p.FirstShardProgress,
 		FirstShardCollected = p.FirstShardCollected,
 		SparkleBits = p.SparkleBits,
+		Variants = p.Variants,
 	}
 end
 
@@ -140,6 +144,16 @@ local function deserialize(data: any): Profile
 			end
 		end
 		p.SparkleBits = bits
+	end
+	if type(data.Variants) == "table" then
+		local variants = {}
+		for id, lvl in pairs(data.Variants) do
+			local n = tonumber(lvl)
+			if type(id) == "string" and n then
+				variants[id] = math.clamp(math.floor(n), 1, VariantConfig.Max)
+			end
+		end
+		p.Variants = variants
 	end
 	return p
 end
@@ -266,6 +280,8 @@ function PlayerDataService.snapshot(player: Player)
 		-- the set of hidden Sparkle Bits this player has already found (so the
 		-- client never re-renders one they've collected)
 		sparkleBits = p.SparkleBits,
+		-- per-friend variant level (1 = Sparkly, 2 = Rainbow) for the Book + reveal
+		variants = p.Variants,
 	}
 end
 
@@ -345,6 +361,27 @@ function PlayerDataService.collectSparkleBit(player: Player, id: string): (boole
 	end
 	p.SparkleBits[id] = true
 	return true, countKeys(p.SparkleBits)
+end
+
+function PlayerDataService.getVariant(player: Player, id: string): number
+	local p = profiles[player]
+	return (p and p.Variants[id]) or 0
+end
+
+-- Upgrade an owned friend's variant one step (Discovered -> Sparkly -> Rainbow).
+-- Returns the new level (unchanged if not owned or already maxed).
+function PlayerDataService.upgradeVariant(player: Player, id: string): number
+	local p = profiles[player]
+	if not p or not p.Discovered[id] then
+		return 0
+	end
+	local cur = p.Variants[id] or 0
+	if cur >= VariantConfig.Max then
+		return cur
+	end
+	cur += 1
+	p.Variants[id] = cur
+	return cur
 end
 
 function PlayerDataService.setBuddy(player: Player, defId: string?)

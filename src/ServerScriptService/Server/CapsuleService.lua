@@ -12,6 +12,7 @@ local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
 local CapsuleConfig = require(Shared:WaitForChild("CapsuleConfig"))
+local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -89,8 +90,19 @@ function CapsuleService.tryOpen(player: Player)
 
 	local isNew = PlayerDataService.discoverCard(player, def.Id)
 	local bonusCoins = 0
+	local variantLevel = 0
+	local variantUpgraded = false
 	if not isNew then
-		bonusCoins = cfg.DuplicateRewardCoins or 0
+		-- A duplicate "shines up" the friend: Discovered -> Sparkly -> Rainbow.
+		variantLevel = PlayerDataService.getVariant(player, def.Id)
+		if variantLevel < VariantConfig.Max then
+			variantLevel = PlayerDataService.upgradeVariant(player, def.Id)
+			variantUpgraded = true
+			local lv = VariantConfig.Levels[variantLevel]
+			bonusCoins = (lv and lv.bonusCoins) or cfg.DuplicateRewardCoins or 0
+		else
+			bonusCoins = VariantConfig.MaxDuplicateCoins or cfg.DuplicateRewardCoins or 0
+		end
 		if bonusCoins > 0 then
 			PlayerDataService.addCoins(player, bonusCoins)
 		end
@@ -105,6 +117,8 @@ function CapsuleService.tryOpen(player: Player)
 		isNew = isNew,
 		bonusCoins = bonusCoins,
 		wasFree = isFree,
+		variantLevel = variantLevel,
+		variantUpgraded = variantUpgraded,
 	})
 	PlayerDataService.sync(player)
 end

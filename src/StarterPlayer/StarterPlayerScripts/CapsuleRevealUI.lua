@@ -1,11 +1,14 @@
 -- CapsuleRevealUI
 -- The gentle "Discover a Friend" moment: a Sparkle Capsule wobbles, sparkles,
 -- and reveals a card. Warm and celebratory, never gambling-flavored. Duplicates
--- are framed as a happy "Friendship Bonus".
+-- are framed as a happy "Friendship Bonus" and shine the friend up a variant tier
+-- (Sparkly -> Rainbow).
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UiTheme = require(script.Parent.UiTheme)
+local VariantConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("VariantConfig"))
 
 local CapsuleRevealUI = {}
 
@@ -51,12 +54,37 @@ local function cardArt(parent, result)
 	return art
 end
 
+-- A little "✨ Sparkly" / "🌈 Rainbow" ribbon for variant reveals.
+local function variantBadge(parent, icon, name, color, position)
+	local vb = Instance.new("TextLabel")
+	vb.AnchorPoint = Vector2.new(1, 0)
+	vb.Position = position
+	vb.Size = UDim2.fromOffset(118, 28)
+	vb.BackgroundColor3 = color
+	vb.BorderSizePixel = 0
+	vb.Font = UiTheme.HeaderFont
+	vb.TextSize = 15
+	vb.TextColor3 = Color3.fromRGB(255, 255, 255)
+	vb.Text = icon .. " " .. name
+	vb.ZIndex = 4
+	vb.Parent = parent
+	UiTheme.corner(14, vb)
+	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, vb)
+	return vb
+end
+
 function CapsuleRevealUI.play(result, onClose)
 	if not layer or busy then
 		return
 	end
 	busy = true
 	layer:ClearAllChildren()
+
+	local variantLevel = result.variantLevel or 0
+	local variantUpgraded = result.variantUpgraded == true
+	local variantName = VariantConfig.nameFor(variantLevel)
+	local variantColor = VariantConfig.colorFor(variantLevel)
+	local variantIcon = VariantConfig.iconFor(variantLevel)
 
 	-- One safe way to close this reveal (tap "Yay!", tap outside, press Esc, an
 	-- error, or the watchdog). Guarded so it only ever runs once per reveal.
@@ -162,6 +190,9 @@ function CapsuleRevealUI.play(result, onClose)
 				bigHeadline.TextStrokeTransparency = 0.15
 				if result.isNew then
 					bigHeadline.Text = "New Friend Discovered!"
+				elseif variantUpgraded then
+					bigHeadline.Text = variantIcon .. " " .. variantName .. "!   +" .. (result.bonusCoins or 0) .. " Sparkle Coins"
+					bigHeadline.TextStrokeColor3 = variantColor
 				elseif (result.bonusCoins or 0) > 0 then
 					bigHeadline.Text = "Friendship Bonus!  +" .. result.bonusCoins .. " Sparkle Coins"
 				else
@@ -181,6 +212,10 @@ function CapsuleRevealUI.play(result, onClose)
 					Size = UDim2.fromOffset(322, 430),
 				}):Play()
 				task.wait(0.32)
+
+				if variantLevel >= 1 then
+					variantBadge(layer, variantIcon, variantName, variantColor, UDim2.new(0.5, 150, 0.5, -210))
+				end
 
 				local bigYay = Instance.new("TextButton")
 				bigYay.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -210,7 +245,7 @@ function CapsuleRevealUI.play(result, onClose)
 				radius = 22,
 			})
 			card.Parent = layer
-			UiTheme.stroke(UiTheme.rarityColor(result.rarity), 4, card)
+			UiTheme.stroke(variantLevel >= 1 and variantColor or UiTheme.rarityColor(result.rarity), 4, card)
 
 			-- flip-in (grow width)
 			TweenService:Create(card, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -219,6 +254,9 @@ function CapsuleRevealUI.play(result, onClose)
 			task.wait(0.3)
 
 			cardArt(card, result)
+			if variantLevel >= 1 then
+				variantBadge(card, variantIcon, variantName, variantColor, UDim2.fromOffset(280, 26))
+			end
 
 			local headline = Instance.new("TextLabel")
 			headline.BackgroundTransparency = 1
@@ -227,7 +265,14 @@ function CapsuleRevealUI.play(result, onClose)
 			headline.Font = UiTheme.HeaderFont
 			headline.TextSize = 24
 			headline.TextColor3 = UiTheme.Colors.AccentDeep
-			headline.Text = result.isNew and "New Friend Discovered!" or "Friendship Bonus!"
+			if result.isNew then
+				headline.Text = "New Friend Discovered!"
+			elseif variantUpgraded then
+				headline.Text = variantIcon .. " " .. variantName .. "!"
+				headline.TextColor3 = variantColor
+			else
+				headline.Text = "Friendship Bonus!"
+			end
 			headline.Parent = card
 
 			local sub = Instance.new("TextLabel")
@@ -241,6 +286,9 @@ function CapsuleRevealUI.play(result, onClose)
 			if result.isNew then
 				sub.Text = result.displayName .. " (" .. (result.cardNumber or "")
 					.. ") joined your Squishy Book!"
+			elseif variantUpgraded then
+				sub.Text = result.displayName .. " is now " .. variantName .. "!  +"
+					.. (result.bonusCoins or 0) .. " Sparkle Coins"
 			else
 				sub.Text = "You already know " .. result.displayName .. "!  +"
 					.. (result.bonusCoins or 0) .. " Sparkle Coins"

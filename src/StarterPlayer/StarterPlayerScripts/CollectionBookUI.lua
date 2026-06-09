@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
+local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local UiTheme = require(script.Parent.UiTheme)
 
 local CollectionBookUI = {}
@@ -183,7 +184,25 @@ local function makeCell(def)
 	fullImg.Parent = frame
 	UiTheme.corner(16, fullImg)
 
-	local function refresh(discovered)
+	-- variant ribbon (Sparkly/Rainbow), top-right; hidden until the friend is upgraded
+	local vBadge = Instance.new("TextLabel")
+	vBadge.Name = "VariantBadge"
+	vBadge.AnchorPoint = Vector2.new(1, 0)
+	vBadge.Position = UDim2.fromOffset(144, 30)
+	vBadge.Size = UDim2.fromOffset(78, 22)
+	vBadge.BackgroundColor3 = UiTheme.Colors.Accent
+	vBadge.BorderSizePixel = 0
+	vBadge.Font = UiTheme.HeaderFont
+	vBadge.TextSize = 13
+	vBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
+	vBadge.ZIndex = 3
+	vBadge.Visible = false
+	vBadge.Parent = frame
+	UiTheme.corner(11, vBadge)
+	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 1, vBadge)
+
+	local function refresh(discovered, variantLevel)
+		local vl = variantLevel or 0
 		local hasArt = discovered and isRealImage(def.ImageAssetId)
 		fullImg.Visible = hasArt
 		fullImg.Image = hasArt and def.ImageAssetId or ""
@@ -191,7 +210,15 @@ local function makeCell(def)
 		art.Visible = not hasArt
 		nameLbl.Visible = not hasArt
 		numLbl.Visible = not hasArt
-		stroke.Color = discovered and UiTheme.rarityColor(def.Rarity) or UiTheme.Colors.Locked
+		if discovered and vl >= 1 then
+			stroke.Color = VariantConfig.colorFor(vl)
+			vBadge.Visible = true
+			vBadge.Text = VariantConfig.iconFor(vl) .. " " .. VariantConfig.nameFor(vl)
+			vBadge.BackgroundColor3 = VariantConfig.colorFor(vl)
+		else
+			stroke.Color = discovered and UiTheme.rarityColor(def.Rarity) or UiTheme.Colors.Locked
+			vBadge.Visible = false
+		end
 		if hasArt then
 			return
 		end
@@ -324,7 +351,9 @@ function CollectionBookUI.openDetail(def)
 	sub.Font = UiTheme.BodyFont
 	sub.TextSize = 15
 	sub.TextColor3 = UiTheme.Colors.AccentDeep
-	sub.Text = UiTheme.rarityLabel(def.Rarity) .. "  •  " .. (def.PackName or "") .. "  •  " .. (def.Zone or "")
+	local detailVl = (lastState and lastState.variants and lastState.variants[def.Id]) or 0
+	local variantPrefix = detailVl >= 1 and (VariantConfig.iconFor(detailVl) .. " " .. VariantConfig.nameFor(detailVl) .. "  •  ") or ""
+	sub.Text = variantPrefix .. UiTheme.rarityLabel(def.Rarity) .. "  •  " .. (def.PackName or "") .. "  •  " .. (def.Zone or "")
 	sub.Parent = card
 
 	local lore = Instance.new("TextLabel")
@@ -400,11 +429,12 @@ function CollectionBookUI.refresh()
 		end
 	end
 
+	local variantSet = (lastState and lastState.variants) or {}
 	for _, entry in pairs(cells) do
 		local visible = cellMatchesTab(entry.def)
 		entry.frame.Visible = visible
 		if visible then
-			entry.refresh(discoveredSet[entry.def.Id] == true)
+			entry.refresh(discoveredSet[entry.def.Id] == true, variantSet[entry.def.Id] or 0)
 		end
 	end
 
