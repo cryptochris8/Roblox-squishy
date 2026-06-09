@@ -23,6 +23,32 @@ local openEquipBtn = nil  -- its Equip Buddy button (reconciled from server stat
 
 local TABS = { "All", "Pudding Hills", "Goo Coast", "Moonlit Hollow", "Events" }
 
+-- Which tab a friend belongs to (All = every launch friend; Events = non-launch).
+local function tabMatch(def, tab)
+	if tab == "All" then
+		return def.ReleaseType == "launch"
+	elseif tab == "Events" then
+		return def.ReleaseType ~= "launch"
+	else
+		return def.ReleaseType == "launch" and def.Zone == tab
+	end
+end
+
+-- Count discovered / total across the 48-friend launch roster, for completion %.
+local launchRosterCache = nil
+local function launchStats(discoveredSet)
+	if not launchRosterCache then
+		launchRosterCache = SquishyData.getLaunchRoster()
+	end
+	local disc = 0
+	for _, def in ipairs(launchRosterCache) do
+		if discoveredSet[def.Id] then
+			disc += 1
+		end
+	end
+	return disc, #launchRosterCache
+end
+
 local function isRealImage(id)
 	return type(id) == "string" and id ~= "" and not string.find(id, "REPLACE_ME")
 end
@@ -41,14 +67,27 @@ local function artInto(holder, def, discovered)
 		end
 	end
 	if not discovered then
+		-- A cute "mystery friend" silhouette: a dark squishy ball with a soft "?".
+		local blob = Instance.new("Frame")
+		blob.AnchorPoint = Vector2.new(0.5, 0.5)
+		blob.Position = UDim2.fromScale(0.5, 0.54)
+		blob.Size = UDim2.fromScale(0.66, 0.66)
+		blob.BackgroundColor3 = Color3.fromRGB(108, 96, 122)
+		blob.BackgroundTransparency = 0.1
+		blob.BorderSizePixel = 0
+		blob.Parent = holder
+		local bc = Instance.new("UICorner")
+		bc.CornerRadius = UDim.new(1, 0)
+		bc.Parent = blob
 		local q = Instance.new("TextLabel")
 		q.BackgroundTransparency = 1
 		q.Size = UDim2.fromScale(1, 1)
 		q.Font = UiTheme.HeaderFont
-		q.TextSize = 40
+		q.TextSize = 34
 		q.TextColor3 = Color3.fromRGB(255, 255, 255)
+		q.TextTransparency = 0.2
 		q.Text = "?"
-		q.Parent = holder
+		q.Parent = blob
 		return
 	end
 	if isRealImage(def.ImageAssetId) then
@@ -306,7 +345,7 @@ local function buildTabs(parent)
 	local row = Instance.new("Frame")
 	row.BackgroundTransparency = 1
 	row.Position = UDim2.fromOffset(20, 70)
-	row.Size = UDim2.new(1, -40, 0, 38)
+	row.Size = UDim2.new(1, -40, 0, 48)
 	row.Parent = parent
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Horizontal
@@ -315,11 +354,12 @@ local function buildTabs(parent)
 
 	for _, tabName in ipairs(TABS) do
 		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.fromOffset(132, 38)
+		btn.Size = UDim2.fromOffset(132, 48)
 		btn.BackgroundColor3 = UiTheme.Colors.Panel
 		btn.BorderSizePixel = 0
 		btn.Font = UiTheme.HeaderFont
-		btn.TextSize = 15
+		btn.TextSize = 14
+		btn.TextWrapped = true
 		btn.TextColor3 = UiTheme.Colors.SoftInk
 		btn.Text = tabName
 		btn.Parent = row
@@ -334,24 +374,32 @@ local function buildTabs(parent)
 end
 
 local function cellMatchesTab(def)
-	if currentTab == "All" then
-		return def.ReleaseType == "launch"
-	elseif currentTab == "Events" then
-		return def.ReleaseType ~= "launch"
-	else
-		return def.ReleaseType == "launch" and def.Zone == currentTab
-	end
+	return tabMatch(def, currentTab)
 end
 
 function CollectionBookUI.refresh()
-	-- tab highlight
-	for name, btn in pairs(tabButtons) do
-		local active = (name == currentTab)
-		btn.BackgroundColor3 = active and UiTheme.Colors.AccentDeep or UiTheme.Colors.Panel
-		btn.TextColor3 = active and Color3.fromRGB(255, 255, 255) or UiTheme.Colors.SoftInk
+	local discoveredSet = (lastState and lastState.discovered) or {}
+
+	-- tab highlight + per-tab discovered/total counts
+	for _, tabName in ipairs(TABS) do
+		local btn = tabButtons[tabName]
+		if btn then
+			local d, t = 0, 0
+			for _, entry in pairs(cells) do
+				if tabMatch(entry.def, tabName) then
+					t += 1
+					if discoveredSet[entry.def.Id] then
+						d += 1
+					end
+				end
+			end
+			local active = (tabName == currentTab)
+			btn.BackgroundColor3 = active and UiTheme.Colors.AccentDeep or UiTheme.Colors.Panel
+			btn.TextColor3 = active and Color3.fromRGB(255, 255, 255) or UiTheme.Colors.SoftInk
+			btn.Text = tabName .. "\n" .. d .. " / " .. t
+		end
 	end
 
-	local discoveredSet = (lastState and lastState.discovered) or {}
 	for _, entry in pairs(cells) do
 		local visible = cellMatchesTab(entry.def)
 		entry.frame.Visible = visible
@@ -360,8 +408,10 @@ function CollectionBookUI.refresh()
 		end
 	end
 
-	if progressLabel and lastState then
-		progressLabel.Text = (lastState.discoveredCount or 0) .. " / 48 Discovered"
+	if progressLabel then
+		local disc, total = launchStats(discoveredSet)
+		local pct = total > 0 and math.floor(disc / total * 100 + 0.5) or 0
+		progressLabel.Text = disc .. " / " .. total .. "  •  " .. pct .. "% complete"
 	end
 end
 
@@ -374,7 +424,9 @@ function CollectionBookUI.update(state)
 	if root and root.Visible then
 		CollectionBookUI.refresh()
 	elseif progressLabel and state then
-		progressLabel.Text = (state.discoveredCount or 0) .. " / 48 Discovered"
+		local disc, total = launchStats(state.discovered or {})
+		local pct = total > 0 and math.floor(disc / total * 100 + 0.5) or 0
+		progressLabel.Text = disc .. " / " .. total .. "  •  " .. pct .. "% complete"
 	end
 end
 
@@ -468,8 +520,8 @@ function CollectionBookUI.mount(playerGui, onEquip)
 	buildTabs(panel)
 
 	grid = Instance.new("ScrollingFrame")
-	grid.Position = UDim2.fromOffset(20, 116)
-	grid.Size = UDim2.new(1, -40, 1, -132)
+	grid.Position = UDim2.fromOffset(20, 128)
+	grid.Size = UDim2.new(1, -40, 1, -144)
 	grid.BackgroundTransparency = 1
 	grid.BorderSizePixel = 0
 	grid.ScrollBarThickness = 8
