@@ -301,7 +301,7 @@ function SquishFx.handle(result)
 		entries[result.objectId] = nil
 	else
 		sparkle(body, 6, Color3.fromRGB(255, 240, 205))
-		playSound(body, SoundConfig.Squish, 0.5, 1.2)
+		playSound(body, SoundConfig.Squish, 0.7, 1.0)
 	end
 end
 

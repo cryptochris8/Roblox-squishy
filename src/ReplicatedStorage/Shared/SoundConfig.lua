@@ -17,6 +17,6 @@ return {
 	MusicVolume = 0.3,
 
 	-- Squish feedback (built-in sounds; always available).
-	Squish = "rbxasset://sounds/clickfast.wav",          -- soft boop on each squish
+	Squish = "rbxassetid://116062165012558",             -- player-picked squish sound
 	HappyPop = "rbxasset://sounds/electronicpingshort.wav", -- bright sparkle on Happy Pop
 }
