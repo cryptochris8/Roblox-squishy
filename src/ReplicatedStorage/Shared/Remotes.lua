@@ -16,9 +16,11 @@ Remotes.EquipBuddyRequest = "EquipBuddyRequest"      -- defId: equip a discovere
 Remotes.CollectSparkleBit = "CollectSparkleBit"      -- id: I walked up to a hidden Sparkle Bit
 Remotes.ClaimDailyCapsule = "ClaimDailyCapsule"      -- claim today's free Sparkle Capsule
 Remotes.ResetProgress = "ResetProgress"              -- OWNER ONLY: wipe my profile + rejoin fresh
+Remotes.OwnerDebug = "OwnerDebug"                    -- OWNER ONLY: playtest triggers (start event/surge)
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
+Remotes.SocialSync = "SocialSync"       -- shared-world state: Sparkle Surge meter + Everybody Squish event
 Remotes.SquishResult = "SquishResult"   -- a friend was squished / Happy Popped (to everyone)
 Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
 Remotes.SparkleBitCollected = "SparkleBitCollected" -- a hidden Sparkle Bit was found (to finder)
@@ -31,7 +33,9 @@ local ALL_EVENTS = {
 	Remotes.CollectSparkleBit,
 	Remotes.ClaimDailyCapsule,
 	Remotes.ResetProgress,
+	Remotes.OwnerDebug,
 	Remotes.StateSync,
+	Remotes.SocialSync,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,

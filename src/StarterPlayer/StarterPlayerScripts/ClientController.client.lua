@@ -20,6 +20,7 @@ local SquishFx = require(here:WaitForChild("SquishFx"))
 local SparkleBits = require(here:WaitForChild("SparkleBits"))
 local DailyUI = require(here:WaitForChild("DailyUI"))
 local FinaleUI = require(here:WaitForChild("FinaleUI"))
+local SocialUI = require(here:WaitForChild("SocialUI"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -29,6 +30,7 @@ local equipBuddyRequest = Remotes.get(Remotes.EquipBuddyRequest)
 local requestInitialState = Remotes.get(Remotes.RequestInitialState)
 local claimDailyCapsule = Remotes.get(Remotes.ClaimDailyCapsule)
 local resetProgress = Remotes.get(Remotes.ResetProgress)
+local ownerDebug = Remotes.get(Remotes.OwnerDebug)
 
 -- Build the UI. Mount the Book before the HUD so the HUD's button can open it.
 ToastUI.mount(playerGui)
@@ -45,7 +47,10 @@ end, function()
 	DailyUI.show()
 end, function()
 	resetProgress:FireServer()
+end, function(action)
+	ownerDebug:FireServer(action)
 end)
+SocialUI.mount(playerGui)
 CapsuleRevealUI.mount(playerGui)
 SquishFx.init()
 SparkleBits.init(function(msg)
@@ -74,6 +79,10 @@ end)
 
 Remotes.get(Remotes.SparkleRestored).OnClientEvent:Connect(function(info)
 	FinaleUI.play(info)
+end)
+
+Remotes.get(Remotes.SocialSync).OnClientEvent:Connect(function(state)
+	SocialUI.update(state)
 end)
 
 print("[Squishy Smash] Client ready for " .. localPlayer.Name)

@@ -4,6 +4,7 @@
 -- orb brightens, and the client plays a celebration.
 
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
@@ -57,6 +58,14 @@ function FinaleService.celebrate(player: Player)
 	brightenWorldSparkle()
 	restoredEvent:FireClient(player, { reward = first and GameConfig.FinaleRewardCoins or 0, first = first })
 	toastEvent:FireClient(player, "✨ You restored the Sparkle! The whole Squishy world shines again! ✨")
+	-- Let the rest of the server share the big moment (their first time only).
+	if first then
+		for _, other in ipairs(Players:GetPlayers()) do
+			if other ~= player then
+				toastEvent:FireClient(other, "🌟 " .. player.DisplayName .. " restored the Sparkle! The whole world shines brighter!")
+			end
+		end
+	end
 	PlayerDataService.sync(player)
 end
 

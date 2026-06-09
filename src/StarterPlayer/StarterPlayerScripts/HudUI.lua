@@ -253,6 +253,34 @@ local function resetButton(parent, onReset)
 	end)
 end
 
+-- Owner-only playtest tools: trigger the shared-world moments on cue (great for
+-- demoing a Surge or an Everybody Squish to the kids without waiting on timers).
+local function ownerDemoButtons(parent, onOwnerDebug)
+	local function demoBtn(text, xOffset, action)
+		local btn = Instance.new("TextButton")
+		btn.Name = "Demo" .. action
+		btn.AnchorPoint = Vector2.new(0.5, 1)
+		btn.Position = UDim2.new(0.5, xOffset, 1, -16)
+		btn.Size = UDim2.fromOffset(92, 32)
+		btn.BackgroundColor3 = Color3.fromRGB(150, 120, 140)
+		btn.BackgroundTransparency = 0.2
+		btn.BorderSizePixel = 0
+		btn.Font = UiTheme.BodyFont
+		btn.TextSize = 14
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Text = text
+		btn.Parent = parent
+		UiTheme.corner(16, btn)
+		btn.Activated:Connect(function()
+			if onOwnerDebug then
+				onOwnerDebug(action)
+			end
+		end)
+	end
+	demoBtn("🌟 Event", -150, "startEvent")
+	demoBtn("✨ Surge", 150, "startSurge")
+end
+
 local function bookButton(parent, onOpenBook)
 	local btn = Instance.new("TextButton")
 	btn.Name = "BookButton"
@@ -276,7 +304,7 @@ local function bookButton(parent, onOpenBook)
 	end)
 end
 
-function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress)
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
@@ -291,9 +319,10 @@ function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetPr
 	dailyButton(screen, onClaimDaily)
 	dailyQuestsButton(screen, onOpenDaily)
 
-	-- The Reset tool only ever appears for the place owner (you) — never the kids.
+	-- These tools only ever appear for the place owner (you) — never the kids.
 	if game.CreatorType == Enum.CreatorType.User and Players.LocalPlayer.UserId == game.CreatorId then
 		resetButton(screen, onResetProgress)
+		ownerDemoButtons(screen, onOwnerDebug)
 	end
 end
 

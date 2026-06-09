@@ -11,6 +11,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
+local SocialConfig = require(Shared:WaitForChild("SocialConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -18,6 +19,10 @@ local SquishService = {}
 
 -- Set by Main so the tutorial can react to Happy Pops.
 SquishService.onHappyPop = nil :: ((Player, any) -> ())?
+-- Set by Main: a GOLDEN friend (an "Everybody Squish!" event friend) Happy Popped.
+SquishService.onGoldenPop = nil :: ((Player, any, Model) -> ())?
+-- Set by Main: what to multiply coin awards by right now (Sparkle Surge = 2).
+SquishService.coinMultiplier = nil :: (() -> number)?
 
 local squishiesFolder: Folder
 local squishResultEvent: RemoteEvent
@@ -81,6 +86,37 @@ local function buildSquishy(def, cf: CFrame): Model
 	return model
 end
 
+-- Spawns a temporary GOLDEN friend for an "Everybody Squish!" event: dressed in
+-- gold with its own sparkle, worth extra coins, and never tied to a pad (so it
+-- doesn't respawn — the event owns its life). Returns the model.
+function SquishService.spawnGolden(packId: string, cf: CFrame): Model
+	local model = buildSquishy(pickDefForPack(packId), cf)
+	model:SetAttribute("Golden", true)
+
+	local body = model.PrimaryPart
+	if body then
+		body.Color = Color3.fromRGB(255, 213, 110)
+		body.Reflectance = 0.12
+
+		local glow = Instance.new("ParticleEmitter")
+		glow.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		glow.LightEmission = 0.9
+		glow.Color = ColorSequence.new(Color3.fromRGB(255, 226, 140), Color3.fromRGB(255, 246, 214))
+		glow.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 1.4), NumberSequenceKeypoint.new(1, 0),
+		})
+		glow.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.2), NumberSequenceKeypoint.new(1, 1),
+		})
+		glow.Lifetime = NumberRange.new(0.8, 1.4)
+		glow.Rate = 10
+		glow.Speed = NumberRange.new(1.5, 3.5)
+		glow.SpreadAngle = Vector2.new(180, 180)
+		glow.Parent = body
+	end
+	return model
+end
+
 function SquishService.spawnAtPad(padIndex: number)
 	local p = pads[padIndex]
 	if not p then
@@ -139,7 +175,14 @@ function SquishService.handleSquish(player: Player, model: Model)
 
 	if joy >= 1 then
 		-- Happy Pop!
+		local isGolden = model:GetAttribute("Golden") == true
 		local coins = def.CoinReward or 5
+		if isGolden then
+			coins *= SocialConfig.EventGoldenCoinMultiplier
+		end
+		if SquishService.coinMultiplier then
+			coins = math.floor(coins * SquishService.coinMultiplier())
+		end
 		PlayerDataService.addCoins(player, coins)
 		PlayerDataService.incHappyPop(player)
 
@@ -172,6 +215,9 @@ function SquishService.handleSquish(player: Player, model: Model)
 
 		if SquishService.onHappyPop then
 			SquishService.onHappyPop(player, def)
+		end
+		if isGolden and SquishService.onGoldenPop then
+			SquishService.onGoldenPop(player, def, model)
 		end
 		PlayerDataService.sync(player)
 	else

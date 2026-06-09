@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
+local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -82,7 +83,41 @@ local function addFace(body: BasePart)
 	mouth.BackgroundColor3 = EYE_COLOR
 end
 
-local function buildBuddy(def): Model
+-- A soft particle aura for Sparkly/Rainbow variant buddies, so an upgraded
+-- friend is something the other kids can SEE.
+local function addVariantAura(body: BasePart, variantLevel: number)
+	if variantLevel < 1 then
+		return
+	end
+	local aura = Instance.new("ParticleEmitter")
+	aura.Name = "VariantAura"
+	aura.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	aura.LightEmission = 0.9
+	if variantLevel >= 2 then
+		-- Rainbow: the sparkles drift through the whole candy rainbow.
+		aura.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 150, 160)),
+			ColorSequenceKeypoint.new(0.35, Color3.fromRGB(255, 220, 130)),
+			ColorSequenceKeypoint.new(0.65, Color3.fromRGB(150, 230, 180)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 180, 255)),
+		})
+	else
+		aura.Color = ColorSequence.new(VariantConfig.colorFor(variantLevel), Color3.fromRGB(255, 255, 255))
+	end
+	aura.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 0.9), NumberSequenceKeypoint.new(1, 0),
+	})
+	aura.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.25), NumberSequenceKeypoint.new(1, 1),
+	})
+	aura.Lifetime = NumberRange.new(0.9, 1.5)
+	aura.Rate = 7
+	aura.Speed = NumberRange.new(1, 2.5)
+	aura.SpreadAngle = Vector2.new(180, 180)
+	aura.Parent = body
+end
+
+local function buildBuddy(def, owner: Player, variantLevel: number): Model
 	local model = Instance.new("Model")
 	model.Name = "Buddy"
 
@@ -101,23 +136,29 @@ local function buildBuddy(def): Model
 	model.PrimaryPart = body
 
 	addFace(body)
+	addVariantAura(body, variantLevel)
+
+	-- The show-off tag: whose buddy it is, plus the variant badge (✨/🌈), so kids
+	-- can spot each other's favourites across the play zone.
+	local icon = VariantConfig.iconFor(variantLevel)
+	local tagText = (icon ~= "" and icon .. " " or "") .. owner.DisplayName .. "'s " .. def.DisplayName
 
 	local nameGui = Instance.new("BillboardGui")
 	nameGui.Name = "BuddyName"
-	nameGui.Size = UDim2.fromOffset(140, 24)
+	nameGui.Size = UDim2.fromOffset(220, 24)
 	nameGui.StudsOffsetWorldSpace = Vector3.new(0, 2.2, 0)
 	nameGui.AlwaysOnTop = true
-	nameGui.MaxDistance = 60
+	nameGui.MaxDistance = 80
 	nameGui.Parent = body
 	local nameLbl = Instance.new("TextLabel")
 	nameLbl.BackgroundTransparency = 1
 	nameLbl.Size = UDim2.fromScale(1, 1)
 	nameLbl.Font = Enum.Font.FredokaOne
 	nameLbl.TextSize = 16
-	nameLbl.TextColor3 = Color3.fromRGB(110, 80, 110)
+	nameLbl.TextColor3 = if variantLevel >= 1 then VariantConfig.colorFor(variantLevel) else Color3.fromRGB(110, 80, 110)
 	nameLbl.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
 	nameLbl.TextStrokeTransparency = 0.2
-	nameLbl.Text = def.DisplayName
+	nameLbl.Text = tagText
 	nameLbl.Parent = nameGui
 
 	return model
@@ -147,7 +188,7 @@ function BuddyService.setBuddy(player: Player, defId: string?)
 	if not def then
 		return
 	end
-	local model = buildBuddy(def)
+	local model = buildBuddy(def, player, PlayerDataService.getVariant(player, defId))
 	model.Parent = buddyFolder
 	buddies[player] = model
 
