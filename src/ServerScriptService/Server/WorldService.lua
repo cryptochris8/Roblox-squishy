@@ -243,6 +243,142 @@ function WorldService.build()
 		table.insert(pads, CFrame.new(pos))
 	end
 
+	-- ── Phase 2: landmarks ──────────────────────────────────────────────────
+	-- Syrup river: a glossy amber ribbon winding west→east across the valley,
+	-- thinning to a trickle at the eastern (Goo Coast) border. CanCollide off so it
+	-- reads as shallow syrup the player wades through; a bridge crosses it.
+	local riverFolder = Instance.new("Folder")
+	riverFolder.Name = "SyrupRiver"
+	riverFolder.Parent = folder
+	local riverPts = {
+		Vector3.new(-104, 0, 26), Vector3.new(-55, 0, 15), Vector3.new(-16, 0, 23),
+		Vector3.new(20, 0, 18), Vector3.new(58, 0, 25), Vector3.new(104, 0, 20),
+	}
+	local riverW = { 14, 12, 11, 9, 6, 3 }
+	for i = 1, #riverPts - 1 do
+		local a, b = riverPts[i], riverPts[i + 1]
+		local mid = (a + b) / 2
+		local dir = b - a
+		local width = (riverW[i] + riverW[i + 1]) / 2
+		local seg = part({
+			Name = "River" .. i,
+			Size = Vector3.new(dir.Magnitude + width, 0.4, width),
+			Color = Color3.fromRGB(236, 168, 92),
+			Reflectance = 0.18,
+			Transparency = 0.1,
+			CanCollide = false,
+			CanQuery = false,
+		})
+		seg.CFrame = CFrame.new(mid.X, 0.16, mid.Z) * CFrame.Angles(0, math.atan2(-dir.Z, dir.X), 0)
+		seg.Parent = riverFolder
+	end
+
+	-- A cozy bridge over the syrup, on the spawn → play-area path.
+	local bridge = Instance.new("Model")
+	bridge.Name = "SyrupBridge"
+	local deck = part({
+		Name = "Deck",
+		Size = Vector3.new(12, 0.8, 18),
+		Position = Vector3.new(0, 0.4, 20.5),
+		Color = Color3.fromRGB(255, 236, 212),
+	})
+	deck.Parent = bridge
+	for _, sx in ipairs({ -1, 1 }) do
+		local rail = part({
+			Name = "Rail",
+			Size = Vector3.new(0.6, 1.6, 18),
+			Position = Vector3.new(sx * 5.4, 1.3, 20.5),
+			Color = Color3.fromRGB(236, 196, 158),
+		})
+		rail.Parent = bridge
+	end
+	bridge.PrimaryPart = deck
+	bridge.Parent = folder
+
+	-- Orchard: a little grove of soft pastel trees (a landmark), northeast of the
+	-- play area. Trunks are solid; fluffy canopies are walk-through.
+	local orchard = Instance.new("Folder")
+	orchard.Name = "Orchard"
+	orchard.Parent = folder
+	local treeRng = Random.new(77)
+	local canopyColors = {
+		Color3.fromRGB(186, 224, 180), Color3.fromRGB(255, 200, 214),
+		Color3.fromRGB(206, 224, 255), Color3.fromRGB(220, 204, 240),
+	}
+	local treeSpots = {
+		Vector3.new(40, 0, -30), Vector3.new(52, 0, -22), Vector3.new(34, 0, -42),
+		Vector3.new(50, 0, -42), Vector3.new(60, 0, -32), Vector3.new(44, 0, -54),
+	}
+	local canopyPuffs = {
+		{ Vector3.new(0, 0, 0), 9 }, { Vector3.new(3.4, -1.2, 1.2), 6 },
+		{ Vector3.new(-3, -1, -1.6), 6 }, { Vector3.new(0.5, 3, 0), 6.5 },
+	}
+	for ti, spot in ipairs(treeSpots) do
+		local scale = treeRng:NextNumber(0.85, 1.25)
+		local trunkH = 7 * scale
+		local trunk = part({
+			Name = "Trunk",
+			Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(trunkH, 2.2 * scale, 2.2 * scale),
+			Color = Color3.fromRGB(196, 154, 116),
+		})
+		trunk.CFrame = CFrame.new(spot.X, trunkH / 2, spot.Z) * CFrame.Angles(0, 0, math.rad(90))
+		trunk.Parent = orchard
+		local canopyColor = canopyColors[((ti - 1) % #canopyColors) + 1]
+		local baseY = trunkH + 1.5 * scale
+		for _, puff in ipairs(canopyPuffs) do
+			local off, d = puff[1], puff[2] * scale
+			local canopy = part({
+				Name = "Canopy",
+				Shape = Enum.PartType.Ball,
+				Size = Vector3.new(d, d, d),
+				Position = Vector3.new(spot.X + off.X, baseY + off.Y, spot.Z + off.Z),
+				Color = canopyColor,
+				CanCollide = false,
+			})
+			canopy.Parent = orchard
+		end
+	end
+
+	-- A cozy cream cottage hub, west of spawn.
+	local cottage = Instance.new("Model")
+	cottage.Name = "CottageHub"
+	local cBase = Vector3.new(-48, 0, 34)
+	local body = part({
+		Name = "Body",
+		Size = Vector3.new(18, 13, 15),
+		Position = cBase + Vector3.new(0, 6.5, 0),
+		Color = Color3.fromRGB(255, 240, 224),
+	})
+	body.Parent = cottage
+	local roof = part({ -- soft rounded dome roof
+		Name = "Roof",
+		Shape = Enum.PartType.Ball,
+		Size = Vector3.new(20, 11, 17),
+		Position = cBase + Vector3.new(0, 14, 0),
+		Color = Color3.fromRGB(255, 196, 178),
+		CanCollide = false,
+	})
+	roof.Parent = cottage
+	local door = part({
+		Name = "Door",
+		Size = Vector3.new(4.5, 7, 0.6),
+		Position = cBase + Vector3.new(0, 3.5, 7.6),
+		Color = Color3.fromRGB(196, 150, 120),
+	})
+	door.Parent = cottage
+	local window = part({
+		Name = "Window",
+		Size = Vector3.new(3.6, 3.6, 0.6),
+		Position = cBase + Vector3.new(5.5, 8, 7.6),
+		Color = Color3.fromRGB(190, 226, 255),
+		Material = Enum.Material.Glass,
+		Transparency = 0.25,
+	})
+	window.Parent = cottage
+	cottage.PrimaryPart = body
+	cottage.Parent = folder
+
 	-- The Sparkle: the light that comes from being found (storybook canon) — a soft
 	-- glowing orb high above the world. Purely cosmetic; gently breathes + glows.
 	local sparkle = Instance.new("Model")
