@@ -25,6 +25,14 @@ imported to Roblox, wired into SquishyModelFactory. Chris approved free rein.
    skips billboard face when BakedFace; applyGolden on mesh = remove SurfaceAppearance
    + gold Color + sparkle. Spawn yaw 180 so faces point toward the southern spawns.
 
+## Facing contract (learned from the Edit-mode preview, 2026-06-10 ~05:15)
+Raw Meshy meshes face -Z; with PivotOffset = Angles(0,180), the PIVOT's +Z is
+the face and the pivot's -Z is the BACK. So: PivotTo(CFrame.new(pos)) (pads) =
+face points +Z/south toward spawns = CORRECT; any lookAt-style placement must
+append `* CFrame.Angles(0, math.rad(180), 0)` (WeeklyService visitor already
+fixed). workspace.PREVIEW_SoftDumpling is a temporary Edit-mode preview for
+Chris — REMOVE before publish (it's inert but sits on the spawn path).
+
 ## Files
 - manifest.json     friendId -> { taskId, status, fbx, thumb, credits } (generation)
 - upload_result.json friendId -> { assetId } (Roblox Model ids)
@@ -45,7 +53,7 @@ imported to Roblox, wired into SquishyModelFactory. Chris approved free rein.
       velocity flag, not content. Stash holds only soft_dumpling (loaded
       pre-flag).
       PROBE LOG: 01:50 still 403 (both LoadAsset and an Open Cloud metadata
-      GET). Continuing hourly single-probe checks.
+      GET). 04:42 still 403 (LoadAsset). Continuing hourly single-probe checks.
 - [ ] RESUME PLAN: wait >=60 min of zero Roblox asset traffic; probe ONE
       LoadAsset (old decal 78485349787050). When clear:
       1) resolve the 24 uploaded ids into ServerStorage.MeshBodies (chunks of 8;

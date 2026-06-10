@@ -161,7 +161,10 @@ local function refreshVisitor()
 	local model = SquishyModelFactory.build(currentDef)
 	model.Name = "Visitor_" .. currentDef.Id
 	local face = CFrame.lookAt(Vector3.new(TENT_POS.X, 0, TENT_POS.Z), Vector3.new(0, 0, 34))
-	model:PivotTo(face * CFrame.new(0, 2, 0.8))
+	-- mesh-body contract: the pivot's -Z is the BACK, so a lookAt toward the
+	-- spawn needs a 180 flip or card-mesh visitors would greet kids with the
+	-- back of their head
+	model:PivotTo(face * CFrame.new(0, 2, 0.8) * CFrame.Angles(0, math.rad(180), 0))
 	model.Parent = tentFolder
 	visitorModel = model
 
