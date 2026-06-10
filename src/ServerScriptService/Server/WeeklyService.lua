@@ -103,7 +103,7 @@ local function buildTent(parent: Instance)
 	signGui.Size = UDim2.fromOffset(250, 52)
 	signGui.StudsOffsetWorldSpace = Vector3.new(0, 8, 0)
 	signGui.AlwaysOnTop = true
-	signGui.MaxDistance = 120
+	signGui.MaxDistance = 70
 	signGui.Parent = back
 	local lbl = Instance.new("TextLabel")
 	lbl.BackgroundTransparency = 1

@@ -32,7 +32,7 @@ local function floatingLabel(text: string, color: Color3, parent: BasePart, heig
 	gui.Size = UDim2.fromOffset(190, 44)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, height, 0)
 	gui.AlwaysOnTop = true
-	gui.MaxDistance = 80
+	gui.MaxDistance = 60 -- labels announce what's NEAR; distant ones just stack into word soup
 	gui.Parent = parent
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
@@ -451,10 +451,12 @@ local function buildGooCoast()
 		pads[#pads + 1] = CFrame.new(pos)
 	end
 	makeLandingPad(folder, zone.spawn, Color3.fromRGB(120, 220, 224))
-	local capsulePrompt = makeCapsule(folder, center + Vector3.new(-22, 3.5, 26), "Goo Capsule", Color3.fromRGB(120, 220, 200))
-	local guidePrompt = makeGuide(folder, center + Vector3.new(16, 2.5, 18), "Bloop the Goo Guide", Color3.fromRGB(150, 226, 234))
+	-- the capsule keeps the sandcastle company (the western beach district)
+	local capsulePrompt = makeCapsule(folder, center + Vector3.new(-38, 3.5, 34), "Goo Capsule", Color3.fromRGB(120, 220, 200))
+	local guidePrompt = makeGuide(folder, center + Vector3.new(10, 2.5, 14), "Bloop the Goo Guide", Color3.fromRGB(150, 226, 234))
 	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(120, 220, 224))
-	local travelPads = buildTravelHub(folder, center, "Goo Coast")
+	-- travel plaza out by the rocky cove (east shore), not on the spawn sand
+	local travelPads = buildTravelHub(folder, center + Vector3.new(52, 0, -30), "Goo Coast")
 
 	return {
 		zone = "Goo Coast",
@@ -688,10 +690,13 @@ local function buildMoonlitHollow()
 		pads[#pads + 1] = CFrame.new(pos)
 	end
 	makeLandingPad(folder, zone.spawn, Color3.fromRGB(196, 166, 255))
-	local capsulePrompt = makeCapsule(folder, center + Vector3.new(24, 3.5, 26), "Moonlit Capsule", Color3.fromRGB(150, 120, 210))
-	local guidePrompt = makeGuide(folder, center + Vector3.new(-18, 2.5, 18), "Nox the Night Guide", Color3.fromRGB(176, 152, 224))
+	-- the capsule glows beside the cozy log (the glade's eastern district)
+	local capsulePrompt = makeCapsule(folder, center + Vector3.new(34, 3.5, 34), "Moonlit Capsule", Color3.fromRGB(150, 120, 210))
+	local guidePrompt = makeGuide(folder, center + Vector3.new(-14, 2.5, 16), "Nox the Night Guide", Color3.fromRGB(176, 152, 224))
 	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(196, 166, 255))
-	local travelPads = buildTravelHub(folder, center, "Moonlit Hollow")
+	-- travel plaza up by the stargazing circle (the glade's quiet north), with
+	-- the glowing stepping stones already leading the way
+	local travelPads = buildTravelHub(folder, center + Vector3.new(36, 0, -98), "Moonlit Hollow")
 
 	return {
 		zone = "Moonlit Hollow",
@@ -884,13 +889,15 @@ function WorldService.build()
 	spawn.Neutral = true
 	spawn.Parent = folder
 
-	-- Sparkle Capsule machine.
+	-- Sparkle Capsule machine — out in its own little glade on the windmill
+	-- path (districts pass: the spawn meadow stays uncluttered; the First Day
+	-- arrow walks new players here).
 	local capsuleModel = Instance.new("Model")
 	capsuleModel.Name = "SparkleCapsule"
 	local capsuleBase = part({
 		Name = "Base",
 		Size = Vector3.new(6, 7, 6),
-		Position = Vector3.new(0, 3.5, -12),
+		Position = Vector3.new(-12, 3.5, -36),
 		Color = Color3.fromRGB(255, 180, 205),
 	})
 	capsuleBase.Parent = capsuleModel
@@ -898,7 +905,7 @@ function WorldService.build()
 		Name = "Dome",
 		Shape = Enum.PartType.Ball,
 		Size = Vector3.new(6.5, 6.5, 6.5),
-		Position = Vector3.new(0, 8.5, -12),
+		Position = Vector3.new(-12, 8.5, -36),
 		Color = Color3.fromRGB(190, 230, 255),
 		Transparency = 0.35,
 		Material = Enum.Material.Glass,
@@ -906,7 +913,7 @@ function WorldService.build()
 	})
 	capsuleDome.Parent = capsuleModel
 	capsuleModel.PrimaryPart = capsuleBase
-	floatingLabel("Sparkle Capsule", Color3.fromRGB(225, 90, 150), capsuleBase, 6.5)
+	floatingLabel("Sparkle Capsule", Color3.fromRGB(225, 90, 150), capsuleBase, 7.5)
 
 	local capsulePrompt = Instance.new("ProximityPrompt")
 	capsulePrompt.ActionText = "Open Sparkle Capsule"
@@ -1414,6 +1421,12 @@ function WorldService.build()
 	ribbonPath(folder, { Vector3.new(6, 0, 8), Vector3.new(38, 0, -28) }, 3, pathColor) -- to the orchard + shard
 	ribbonPath(folder, { Vector3.new(10, 0, 32), Vector3.new(54, 0, 28) }, 3, pathColor) -- past the boutique to the picnic
 
+	-- Travel Plaza: the hub lives out on the eastern rise (the road toward the
+	-- old Goo Coast gate), its own destination instead of spawn furniture.
+	local travelPads = buildTravelHub(folder, Vector3.new(80, 0, -16), "Pudding Hills")
+	-- a path spur from the picnic meadow out to the plaza
+	ribbonPath(folder, { Vector3.new(56, 0, 26), Vector3.new(74, 0, 30) }, 3, pathColor)
+
 	local puddingHills = {
 		zone = "Pudding Hills",
 		packId = "launch_squishy_foods",
@@ -1421,7 +1434,7 @@ function WorldService.build()
 		pads = pads,
 		capsulePrompt = capsulePrompt,
 		guidePrompt = guidePrompt,
-		travelPads = buildTravelHub(folder, Vector3.new(0, 0, 0), "Pudding Hills"),
+		travelPads = travelPads,
 	}
 
 	return { zones = { puddingHills, buildGooCoast(), buildMoonlitHollow() } }

@@ -440,11 +440,12 @@ function RoomService.init()
 	Remotes.get(Remotes.PlaceRoomItem).OnServerEvent:Connect(onPlace)
 	Players.PlayerRemoving:Connect(onLeaveCleanup)
 
-	-- The way in: a cozy glowing door near the Pudding Hills spawn.
+	-- The way in: a cozy glowing door IN THE VILLAGE (districts pass — your
+	-- home door belongs on the cottage lane, not parked at spawn).
 	task.spawn(function()
 		local home = Workspace:WaitForChild("PuddingHills", 30) or Workspace
-		local base = Vector3.new(18, 0, 42)
-		local face = CFrame.lookAt(base, Vector3.new(0, 0, 34))
+		local base = Vector3.new(-34, 0, 22)
+		local face = CFrame.lookAt(base, Vector3.new(-8, 0, 30))
 		for _, sx in ipairs({ -1, 1 }) do
 			local post = part({ Name = "RoomDoorPost", Size = Vector3.new(0.9, 8, 0.9), Color = C(244, 230, 214) })
 			post.CFrame = face * CFrame.new(sx * 2.8, 4, 0)
@@ -463,7 +464,7 @@ function RoomService.init()
 		gui.Size = UDim2.fromOffset(200, 40)
 		gui.StudsOffsetWorldSpace = Vector3.new(0, 6.2, 0)
 		gui.AlwaysOnTop = true
-		gui.MaxDistance = 90
+		gui.MaxDistance = 60
 		gui.Parent = door
 		local lbl = Instance.new("TextLabel")
 		lbl.BackgroundTransparency = 1

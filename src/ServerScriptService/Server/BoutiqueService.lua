@@ -42,9 +42,10 @@ end
 local function buildStall(parent: Instance)
 	local model = Instance.new("Model")
 	model.Name = "SparkleBoutique"
-	local base = Vector3.new(26, 0, 28)
-	-- face the spawn pad
-	local face = CFrame.lookAt(Vector3.new(base.X, 0, base.Z), Vector3.new(0, 0, 34))
+	-- Market Meadow: the stall anchors the eastern picnic district (districts
+	-- pass — the spawn meadow stays clear), facing the path that leads there.
+	local base = Vector3.new(54, 0, 14)
+	local face = CFrame.lookAt(Vector3.new(base.X, 0, base.Z), Vector3.new(30, 0, 30))
 
 	local counter = part({
 		Name = "Counter", Size = Vector3.new(10, 3.4, 4),
@@ -99,7 +100,7 @@ local function buildStall(parent: Instance)
 	gui.Size = UDim2.fromOffset(220, 46)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, 6.6, 0)
 	gui.AlwaysOnTop = true
-	gui.MaxDistance = 90
+	gui.MaxDistance = 60
 	gui.Parent = counterTop
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1

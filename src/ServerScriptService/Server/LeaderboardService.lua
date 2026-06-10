@@ -336,13 +336,13 @@ local function refreshAll()
 end
 
 function LeaderboardService.init()
-	-- The boards live in Pudding Hills, flanking the travel hub so every visit to
-	-- the Travel Pads walks past them. Built once the land exists.
+	-- The boards flank the Travel Plaza on the eastern rise (districts pass),
+	-- so every trip to the Travel Pads walks past them. Built once the land exists.
 	task.spawn(function()
 		local home = Workspace:WaitForChild("PuddingHills", 30) or Workspace
-		local lookAt = Vector3.new(0, 0, 34) -- face the spawn pad
-		buildBoard(home, BOARDS[1], Vector3.new(-17, 0, 53), lookAt)
-		buildBoard(home, BOARDS[2], Vector3.new(17, 0, 53), lookAt)
+		local lookAt = Vector3.new(80, 0, 30) -- face the plaza the pads sit on
+		buildBoard(home, BOARDS[1], Vector3.new(64, 0, 42), lookAt)
+		buildBoard(home, BOARDS[2], Vector3.new(96, 0, 42), lookAt)
 
 		-- First refresh soon after startup (so a solo Studio run sees itself fast),
 		-- then the gentle long cycle.
