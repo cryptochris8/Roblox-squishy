@@ -92,8 +92,8 @@
                         "error":  null
                     },
     "phantom_jelly_beast":  {
-                                "assetId":  null,
-                                "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                                "assetId":  "105389172367967",
+                                "error":  null
                             },
     "plasma_goo_ball":  {
                             "assetId":  null,

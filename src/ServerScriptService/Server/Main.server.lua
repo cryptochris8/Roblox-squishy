@@ -30,6 +30,7 @@ local LeaderboardService = require(script.Parent.LeaderboardService)
 local BoutiqueService = require(script.Parent.BoutiqueService)
 local WeeklyService = require(script.Parent.WeeklyService)
 local CodeService = require(script.Parent.CodeService)
+local RoomService = require(script.Parent.RoomService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -47,6 +48,7 @@ LeaderboardService.init()
 BoutiqueService.init()
 WeeklyService.init()
 CodeService.init()
+RoomService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()

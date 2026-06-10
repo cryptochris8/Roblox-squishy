@@ -20,6 +20,8 @@ Remotes.OwnerDebug = "OwnerDebug"                    -- OWNER ONLY: playtest tri
 Remotes.BuyCosmetic = "BuyCosmetic"                  -- id: buy a boutique item with Sparkle Coins
 Remotes.EquipCosmetic = "EquipCosmetic"              -- (type, id?): wear an owned item / take it off
 Remotes.RedeemCode = "RedeemCode"                    -- text: try a storybook magic word
+Remotes.VisitRoom = "VisitRoom"                      -- ("visit"/"leave"): hop to/from my Squishy Room
+Remotes.PlaceRoomItem = "PlaceRoomItem"              -- (slotId, itemId?): buy-if-needed + place / clear
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -29,6 +31,7 @@ Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
 Remotes.SparkleBitCollected = "SparkleBitCollected" -- a hidden Sparkle Bit was found (to finder)
 Remotes.SparkleRestored = "SparkleRestored" -- all 3 shards recovered — the finale celebration
 Remotes.OpenBoutique = "OpenBoutique"   -- the Sparkle Boutique stall asked the client to open its shop
+Remotes.OpenRoomCatalog = "OpenRoomCatalog" -- a room slot asked the client to open the furniture picker
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -41,9 +44,12 @@ local ALL_EVENTS = {
 	Remotes.BuyCosmetic,
 	Remotes.EquipCosmetic,
 	Remotes.RedeemCode,
+	Remotes.VisitRoom,
+	Remotes.PlaceRoomItem,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
+	Remotes.OpenRoomCatalog,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,

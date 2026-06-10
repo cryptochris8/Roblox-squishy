@@ -79,6 +79,7 @@ export type Profile = {
 	SparkleRestored: boolean,
 	Cosmetics: { Owned: { [string]: boolean }, Equipped: { [string]: string } },
 	RedeemedCodes: { [string]: boolean },
+	Room: { Owned: { [string]: boolean }, Placed: { [string]: string } },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -117,6 +118,7 @@ local function newProfile(): Profile
 		SparkleRestored = false,
 		Cosmetics = { Owned = {}, Equipped = {} },
 		RedeemedCodes = {},
+		Room = { Owned = {}, Placed = {} },
 	}
 end
 
@@ -155,6 +157,7 @@ local function serialize(p: Profile)
 		SparkleRestored = p.SparkleRestored,
 		Cosmetics = p.Cosmetics,
 		RedeemedCodes = p.RedeemedCodes,
+		Room = p.Room,
 	}
 end
 
@@ -246,6 +249,25 @@ local function deserialize(data: any): Profile
 			end
 		end
 		p.RedeemedCodes = codes
+	end
+	if type(data.Room) == "table" then
+		local owned, placed = {}, {}
+		if type(data.Room.Owned) == "table" then
+			for id, has in pairs(data.Room.Owned) do
+				if type(id) == "string" and has == true then
+					owned[id] = true
+				end
+			end
+		end
+		if type(data.Room.Placed) == "table" then
+			for slotId, itemId in pairs(data.Room.Placed) do
+				-- only keep placements of items the player actually owns
+				if type(slotId) == "string" and type(itemId) == "string" and owned[itemId] then
+					placed[slotId] = itemId
+				end
+			end
+		end
+		p.Room = { Owned = owned, Placed = placed }
 	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
@@ -453,6 +475,11 @@ function PlayerDataService.snapshot(player: Player)
 		cosmetics = {
 			owned = p.Cosmetics.Owned,
 			equipped = p.Cosmetics.Equipped,
+		},
+		-- the Squishy Room: furniture owned + what's placed in each slot
+		room = {
+			owned = p.Room.Owned,
+			placed = p.Room.Placed,
 		},
 	}
 end

@@ -1,5 +1,10 @@
 # Mesh pipeline — overnight run state (2026-06-09/10)
 
+## ✅ UNFROZEN 2026-06-10 (~08:3x): appeal GRANTED, ban lifted, probe CLEAR.
+Resume mode: trickle_upload.ps1 (one upload / 8 min / moderation check / stop
+on any anomaly) running for the remaining 24; resolve step needs Studio open.
+History below kept for the record:
+
 ## ⛔ FROZEN — ACCOUNT MODERATION (read before ANY Roblox API call)
 2026-06-10: the batch FBX uploads triggered a FALSE-POSITIVE "Sexual Content"
 strike on one auto-extracted UV texture atlas (image asset 73392967314447 —
