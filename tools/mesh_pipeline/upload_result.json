@@ -120,75 +120,75 @@
                              "error":  null
                          },
     "round_eared_creature":  {
-                                 "assetId":  null,
-                                 "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                                 "assetId":  "94070049803589",
+                                 "error":  null
                              },
     "shockwave_blob":  {
-                           "assetId":  null,
-                           "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                           "assetId":  "122762750739561",
+                           "error":  null
                        },
     "singularity_goo_core":  {
-                                 "assetId":  null,
-                                 "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                                 "assetId":  "97164384231282",
+                                 "error":  null
                              },
     "sleepy_slime_pet":  {
-                             "assetId":  null,
-                             "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                             "assetId":  "130446347735307",
+                             "error":  null
                          },
     "soft_dumpling":  {
                           "assetId":  "108401232695457",
                           "error":  null
                       },
     "soft_fang_critter":  {
-                              "assetId":  null,
-                              "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                              "assetId":  "111156832054175",
+                              "error":  null
                           },
     "soft_stress_orb":  {
-                            "assetId":  null,
-                            "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                            "assetId":  "102588581221010",
+                            "error":  null
                         },
     "sparkle_mochi":  {
-                          "assetId":  null,
-                          "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                          "assetId":  "127128926012582",
+                          "error":  null
                       },
     "squish_bat":  {
-                       "assetId":  null,
-                       "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                       "assetId":  "78772034777239",
+                       "error":  null
                    },
     "squish_capsule":  {
-                           "assetId":  null,
-                           "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                           "assetId":  "83089786872944",
+                           "error":  null
                        },
     "star_eyed_bunny":  {
-                            "assetId":  null,
-                            "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                            "assetId":  "132077516328774",
+                            "error":  null
                         },
     "sticky_pop_ball":  {
-                            "assetId":  null,
-                            "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                            "assetId":  "136579521300960",
+                            "error":  null
                         },
     "strawberry_dumpling":  {
-                                "assetId":  null,
-                                "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                                "assetId":  "119148377200684",
+                                "error":  null
                             },
     "stretch_cube":  {
-                         "assetId":  null,
-                         "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                         "assetId":  "122004542093248",
+                         "error":  null
                      },
     "syrup_cube":  {
-                       "assetId":  null,
-                       "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                       "assetId":  "135841447224266",
+                       "error":  null
                    },
     "tiny_blob_monster":  {
-                              "assetId":  null,
-                              "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                              "assetId":  "108705564678273",
+                              "error":  null
                           },
     "wobble_drop":  {
-                        "assetId":  null,
-                        "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                        "assetId":  "134731342093617",
+                        "error":  null
                     },
     "wobble_kitty":  {
-                         "assetId":  null,
-                         "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                         "assetId":  "84239122695514",
+                         "error":  null
                      }
 }

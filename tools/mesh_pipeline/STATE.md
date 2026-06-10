@@ -1,3 +1,10 @@
+# Mesh pipeline — COMPLETE 2026-06-10 ✅
+48/48 generated, uploaded (all Approved), resolved into the REAL place's
+ServerStorage.MeshBodies (PlaceId 105594294243426 / universe 10292103666 —
+ALWAYS verify game.GameId before resolving; rojo renames any place it fills,
+which once disguised a throwaway baseplate as the real one). Final boot:
+36/36 spawned friends mesh-bodied. History below for the record.
+
 # Mesh pipeline — overnight run state (2026-06-09/10)
 
 ## ✅ UNFROZEN 2026-06-10 (~08:3x): appeal GRANTED, ban lifted, probe CLEAR.

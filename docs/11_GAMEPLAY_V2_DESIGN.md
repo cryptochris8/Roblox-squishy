@@ -38,6 +38,21 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — DECIDED 2026-06-10 (build queued after ProfileStore + Squishy Room):** Chris approved Game Passes + premium cosmetics alongside the retention engine. **Locked prices:** Extra Buddy Slot 99 R$, Coin Boost +25% 149 R$, Sparkle Club VIP 249 R$ (passes); premium boutique cosmetics 79–249 R$ as Developer Products. **No coin packs in v1** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed. Remaining manual step when built: Chris creates the products in Creator Hub and pastes ids into the config.
 
 ### Build log
+- **2026-06-10 (card-faithful 3D meshes — COMPLETE, all 48):** Every launch
+  friend's trading-card art became its real in-game 3D body via the Meshy
+  image-to-3D pipeline (tools/mesh_pipeline): 48/48 generated (zero rerolls
+  needed), uploaded through a false-positive moderation strike + successful
+  same-day appeal (one texture atlas misread as inappropriate; lessons + the
+  cautious one-at-a-time uploader are in STATE.md), resolved into
+  ServerStorage.MeshBodies, and verified in-world (final boot: 36/36 spawned
+  friends mesh-bodied; squish→pop, buddies + hats, golden events all work on
+  mesh bodies). Part-built archetypes remain the fallback (the 8 weekly event
+  friends keep them by design — no cards yet). Same day: SESSION LOCKING
+  verified live on the real save; the SQUISHY ROOM shipped (sky neighborhood
+  y=700 after the underground fog lesson; soft lighting after the bloom
+  lesson); first marketing set cut from Chris's live screenshots
+  (marketing/). Phase D prices locked (99/149/249 R$ passes; premium
+  cosmetics 79-249 R$; no coin packs v1).
 - **2026-06-10 (freshness + storybook tie-ins):** Three returning-player features
   in one pass. (1) **Sparkle Bits everywhere** — 8 new hidden bits per new land
   tied to the spread-world landmarks (the pier's end, behind the lighthouse, the
