@@ -114,8 +114,8 @@ local function buildLamp(folder, baseCF, item)
 	shade.Parent = folder
 	local light = Instance.new("PointLight")
 	light.Color = item.color
-	light.Brightness = 1.4
-	light.Range = 16
+	light.Brightness = 0.7
+	light.Range = 14
 	light.Parent = shade
 end
 
@@ -259,7 +259,7 @@ local function buildRoomShell(player: Player, index: number): (Folder, { [string
 		wall.Parent = folder
 	end
 
-	-- warm ceiling light so rooms aren't cave-dark underground
+	-- a soft ceiling light: gentle, or the bloom blows out the little pastel box
 	local glow = part({
 		Name = "CeilingGlow", Shape = Enum.PartType.Ball, Size = Vector3.new(3, 1.4, 3),
 		Position = origin + Vector3.new(0, size.Y - 0.8, 0), Color = C(255, 236, 200),
@@ -268,8 +268,8 @@ local function buildRoomShell(player: Player, index: number): (Folder, { [string
 	glow.Parent = folder
 	local light = Instance.new("PointLight")
 	light.Color = C(255, 236, 200)
-	light.Brightness = 1.6
-	light.Range = 34
+	light.Brightness = 0.55
+	light.Range = 26
 	light.Parent = glow
 
 	-- the way home: a glowing door on the front wall

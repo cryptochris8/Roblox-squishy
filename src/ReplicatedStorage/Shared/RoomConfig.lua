@@ -22,8 +22,10 @@ export type RoomItem = {
 
 local RoomConfig = {}
 
--- The rooms sit far below the lands (own "neighborhood"), one per player slot.
-RoomConfig.NeighborhoodOrigin = Vector3.new(0, -500, 0)
+-- The rooms float high above the lands (a sky neighborhood) — up there the air
+-- is clear of the Atmosphere's ground haze (deep underground everything renders
+-- fog-washed, and y=-500 is the engine's fall-kill height), one per player slot.
+RoomConfig.NeighborhoodOrigin = Vector3.new(0, 700, 0)
 RoomConfig.RoomSpacing = 200
 RoomConfig.MaxRooms = 30 -- per-server instanced rooms (plenty for a family server)
 

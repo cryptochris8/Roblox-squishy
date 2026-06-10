@@ -96,28 +96,28 @@
                                 "error":  null
                             },
     "plasma_goo_ball":  {
-                            "assetId":  null,
-                            "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                            "assetId":  "132453932820711",
+                            "error":  null
                         },
     "prism_stress_orb":  {
-                             "assetId":  null,
-                             "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                             "assetId":  "77337758868376",
+                             "error":  null
                          },
     "pudding_pop":  {
-                        "assetId":  null,
-                        "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                        "assetId":  "96167344520510",
+                        "error":  null
                     },
     "puff_ghost":  {
-                       "assetId":  null,
-                       "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                       "assetId":  "81297624156132",
+                       "error":  null
                    },
     "rainbow_jelly_bun":  {
-                              "assetId":  null,
-                              "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                              "assetId":  "123048093164069",
+                              "error":  null
                           },
     "rice_ball_squish":  {
-                             "assetId":  null,
-                             "error":  "HTTP 403 {\"errors\":[{\"code\":0,\"message\":\"User is moderated\"}]}\n"
+                             "assetId":  "97672404718063",
+                             "error":  null
                          },
     "round_eared_creature":  {
                                  "assetId":  null,
