@@ -59,6 +59,7 @@ export type Profile = {
 	LastPlayDay: number,
 	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean } },
 	SparkleRestored: boolean,
+	Cosmetics: { Owned: { [string]: boolean }, Equipped: { [string]: string } },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -95,6 +96,7 @@ local function newProfile(): Profile
 		LastPlayDay = 0,
 		DailyQuests = { day = 0, progress = {}, claimed = {} },
 		SparkleRestored = false,
+		Cosmetics = { Owned = {}, Equipped = {} },
 	}
 end
 
@@ -131,6 +133,7 @@ local function serialize(p: Profile)
 		LastPlayDay = p.LastPlayDay,
 		DailyQuests = p.DailyQuests,
 		SparkleRestored = p.SparkleRestored,
+		Cosmetics = p.Cosmetics,
 	}
 end
 
@@ -195,6 +198,25 @@ local function deserialize(data: any): Profile
 	p.StreakDays = tonumber(data.StreakDays) or 0
 	p.LastPlayDay = tonumber(data.LastPlayDay) or 0
 	p.SparkleRestored = data.SparkleRestored == true
+	if type(data.Cosmetics) == "table" then
+		local owned, equipped = {}, {}
+		if type(data.Cosmetics.Owned) == "table" then
+			for id, has in pairs(data.Cosmetics.Owned) do
+				if type(id) == "string" and has == true then
+					owned[id] = true
+				end
+			end
+		end
+		if type(data.Cosmetics.Equipped) == "table" then
+			for slot, id in pairs(data.Cosmetics.Equipped) do
+				-- only keep an equip that the player actually owns
+				if type(slot) == "string" and type(id) == "string" and owned[id] then
+					equipped[slot] = id
+				end
+			end
+		end
+		p.Cosmetics = { Owned = owned, Equipped = equipped }
+	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
 		if type(data.DailyQuests.progress) == "table" then
@@ -346,6 +368,11 @@ function PlayerDataService.snapshot(player: Player)
 			claimed = p.DailyQuests.claimed,
 		},
 		sparkleRestored = p.SparkleRestored,
+		-- the Sparkle Boutique: what they own + what their buddy is wearing
+		cosmetics = {
+			owned = p.Cosmetics.Owned,
+			equipped = p.Cosmetics.Equipped,
+		},
 	}
 end
 
@@ -490,6 +517,36 @@ function PlayerDataService.setBuddy(player: Player, defId: string?)
 	local p = profiles[player]
 	if not p then return end
 	p.EquippedBuddyId = defId
+end
+
+-- ── Sparkle Boutique cosmetics ──────────────────────────────────────────────
+function PlayerDataService.ownsCosmetic(player: Player, id: string): boolean
+	local p = profiles[player]
+	return (p ~= nil) and (p.Cosmetics.Owned[id] == true)
+end
+
+function PlayerDataService.grantCosmetic(player: Player, id: string)
+	local p = profiles[player]
+	if p then
+		p.Cosmetics.Owned[id] = true
+	end
+end
+
+-- Wear an owned item in its slot (id = nil takes the slot's item off).
+function PlayerDataService.setEquippedCosmetic(player: Player, slot: string, id: string?)
+	local p = profiles[player]
+	if not p then
+		return
+	end
+	if id ~= nil and not p.Cosmetics.Owned[id] then
+		return
+	end
+	p.Cosmetics.Equipped[slot] = id :: any -- nil clears the slot
+end
+
+function PlayerDataService.getEquippedCosmetics(player: Player): { [string]: string }
+	local p = profiles[player]
+	return (p and p.Cosmetics.Equipped) or {}
 end
 
 function PlayerDataService.setTutorialDone(player: Player)

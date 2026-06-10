@@ -37,6 +37,13 @@ where they get stuck or light up matters more than what they say.*
 - [ ] Do duplicates → **✨Sparkly / 🌈Rainbow** feel exciting (not "a miss")?
 - [ ] Do **daily quests** + the **🔥 streak** make them want to return tomorrow?
 
+## The Sparkle Boutique (the new coin sink)
+- [ ] Do they find the ✨ **Sparkle Boutique** stall near spawn on their own?
+- [ ] Is the shop readable? (Prices, "Tap to wear", "Wearing ✓" — watch the 6-year-old.)
+- [ ] Do they *want* something? Which item gets wished for first? (Tells us price anchors.)
+- [ ] Does buying → instantly wearing it feel magical? Do sisters notice each other's hats/balloons?
+- [ ] Are prices right? (Too cheap = no goals; too dear = frustration. Note coin balances!)
+
 ## Together moments (Phase C — THIS is the multiplayer validation)
 - [ ] **Sparkle Surge:** do they notice the ✨ meter (left column) filling from *everyone's* pops? Does "x2 COINS!" cause a happy frenzy?
 - [ ] **🌟 Everybody Squish!** (use your owner **🌟 Event** button to demo one on cue): do they understand "wake N golden friends *together*"? Do they split up or cluster? Does the everyone-gets-coins finish feel like a team win?

@@ -27,6 +27,7 @@ local FinaleService = require(script.Parent.FinaleService)
 local SurgeService = require(script.Parent.SurgeService)
 local GroupEventService = require(script.Parent.GroupEventService)
 local LeaderboardService = require(script.Parent.LeaderboardService)
+local BoutiqueService = require(script.Parent.BoutiqueService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -41,6 +42,7 @@ FinaleService.init()
 SurgeService.init()
 GroupEventService.init()
 LeaderboardService.init()
+BoutiqueService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -83,6 +85,14 @@ end
 -- Equipping/unequipping a buddy spawns or removes the floating companion.
 CollectionService.onBuddyChanged = function(player, defId)
 	BuddyService.setBuddy(player, defId)
+end
+
+-- Boutique purchases/outfit changes re-dress the buddy on the spot.
+BoutiqueService.onCosmeticsChanged = function(player)
+	local profile = PlayerDataService.get(player)
+	if profile and profile.EquippedBuddyId then
+		BuddyService.setBuddy(player, profile.EquippedBuddyId)
+	end
 end
 
 -- Daily-quest tracking: a capsule open (and any new discovery), and Sparkle Bits.

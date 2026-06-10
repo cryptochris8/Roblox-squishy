@@ -70,6 +70,7 @@ src/ReplicatedStorage/Shared/
   DailyQuestConfig.lua     rotating daily-quest templates + forDay(dayIndex)
   ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain
   SocialConfig.lua         Phase C tunables: Sparkle Surge meter, Everybody Squish event, leaderboards
+  CosmeticsConfig.lua      Sparkle Boutique catalog (hats/trails/balloons, coin prices, builder hints)
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
@@ -88,6 +89,7 @@ src/ServerScriptService/Server/   (server-authoritative)
   SurgeService.lua         server-wide Sparkle Surge meter: every Happy Pop fills it (goal scales w/ player count) -> 60s of x2 coins for everyone
   GroupEventService.lua    "Everybody Squish!": every ~7min golden friends appear at the busiest land; shared goal -> +coins for all online
   LeaderboardService.lua   OrderedDataStore boards ("Top Friend Finders" / "Joy Champions") on physical signs at the Pudding Hills travel hub
+  BoutiqueService.lua      the Sparkle Boutique stall (Pudding Hills, near spawn): validated coin-only buy/equip of buddy cosmetics; auto-wear on purchase
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
   UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
@@ -95,15 +97,17 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   DailyUI.lua              "Today's Quests" panel: gentle streak + 3 daily quests with progress bars
   FinaleUI.lua             the "Restore the Sparkle" celebration (shown when all 3 shards are recovered)
   SocialUI.lua             shared-world HUD: Surge meter pill (left column) + "Everybody Squish" banner with countdowns
+  BoutiqueUI.lua           the Sparkle Boutique shop panel (price/owned/"Wearing ✓" states, gentle buy confirm)
 ```
 
 ### Contract (server <-> client)
 
 - Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
-  `ClaimDailyCapsule`, `ResetProgress` (owner-only), `OwnerDebug` (owner-only:
-  "startEvent"/"startSurge" demo triggers, with HUD buttons next to Reset); s->c
-  `StateSync`, `SocialSync` (surge meter + event slices, with seconds-remaining),
-  `SquishResult`, `CapsuleResult`, `SparkleBitCollected`, `SparkleRestored`, `Toast`.
+  `ClaimDailyCapsule`, `BuyCosmetic`, `EquipCosmetic`, `ResetProgress` (owner-only),
+  `OwnerDebug` (owner-only: "startEvent"/"startSurge" demo triggers, with HUD
+  buttons next to Reset); s->c `StateSync`, `SocialSync` (surge meter + event
+  slices, with seconds-remaining), `OpenBoutique`, `SquishResult`, `CapsuleResult`,
+  `SparkleBitCollected`, `SparkleRestored`, `Toast`.
 - The `StateSync` snapshot carries: coins, discovered (+count), variants,
   sparkleBits, shards (per-land {progress, collected}), tutorial, dailyCapsuleReady,
   daily (streak + quests), sparkleRestored.
@@ -137,7 +141,11 @@ it), the "Everybody Squish!" golden-friend co-op event, cross-server leaderboard
 at the Pudding Hills hub, show-off buddy tags (owner name + ✨/🌈 variant badge +
 aura), and server-wide shout-outs for discoveries/shards/the finale. Phase C is
 solo-verified; the four-player family playtest is its real multiplayer validation
-(see `docs/12_PLAYTEST_CHECKLIST.md`). Next: Phase D (monetization — needs
-pricing/business calls). See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap.
+(see `docs/12_PLAYTEST_CHECKLIST.md`). The **Sparkle Boutique** (2026-06-09) adds
+the first coin sink + Phase D groundwork: buddy cosmetics (hats/trails/balloons)
+bought with EARNED Sparkle Coins only, auto-worn on purchase, persisted, and
+visible to everyone — the same system later sells premium cosmetics if/when Robux
+products are priced. Next: Phase D (monetization — needs pricing/business calls).
+See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap.
 **Changes are synced to Studio + git but go live in the published game only after
 File → Publish (Alt+P), a creator-only action.**

@@ -38,6 +38,17 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
 
 ### Build log
+- **2026-06-09 (Sparkle Boutique — cosmetics + the first coin sink):** A cute
+  striped stall near the Pudding Hills spawn sells buddy cosmetics for EARNED
+  Sparkle Coins (never Robux): 6 part-built hats (party hat, star clip, bow,
+  flower crown, mushroom cap, tiny crown), 4 sparkle trails (bubbles, hearts,
+  stars, rainbow), 2 balloons. One slot per type; buying auto-wears it; outfits
+  persist and replicate (everyone sees them — show-off synergy with Phase C).
+  Server-validated buy/equip (price, catalog, ownership, slot). This doubles as
+  Phase D groundwork: the same system can sell premium cosmetics later once
+  pricing is decided. Verified in Studio: exact charges, friendly rejection when
+  short on coins, fuzz-safe remotes, persistence across sessions, walk-up-press-E
+  shop open, and all three prop types rendered on the buddy.
 - **2026-06-09 (Phase C — shared & social):** Sparkle Surge meter (SurgeService +
   a HUD pill in the left column), "Everybody Squish!" golden-friend event
   (GroupEventService: busiest-land pick, goal scaled by player count, success =

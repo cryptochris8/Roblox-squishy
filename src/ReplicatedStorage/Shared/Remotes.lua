@@ -17,6 +17,8 @@ Remotes.CollectSparkleBit = "CollectSparkleBit"      -- id: I walked up to a hid
 Remotes.ClaimDailyCapsule = "ClaimDailyCapsule"      -- claim today's free Sparkle Capsule
 Remotes.ResetProgress = "ResetProgress"              -- OWNER ONLY: wipe my profile + rejoin fresh
 Remotes.OwnerDebug = "OwnerDebug"                    -- OWNER ONLY: playtest triggers (start event/surge)
+Remotes.BuyCosmetic = "BuyCosmetic"                  -- id: buy a boutique item with Sparkle Coins
+Remotes.EquipCosmetic = "EquipCosmetic"              -- (type, id?): wear an owned item / take it off
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -25,6 +27,7 @@ Remotes.SquishResult = "SquishResult"   -- a friend was squished / Happy Popped 
 Remotes.CapsuleResult = "CapsuleResult" -- a Sparkle Capsule reveal result
 Remotes.SparkleBitCollected = "SparkleBitCollected" -- a hidden Sparkle Bit was found (to finder)
 Remotes.SparkleRestored = "SparkleRestored" -- all 3 shards recovered — the finale celebration
+Remotes.OpenBoutique = "OpenBoutique"   -- the Sparkle Boutique stall asked the client to open its shop
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -34,8 +37,11 @@ local ALL_EVENTS = {
 	Remotes.ClaimDailyCapsule,
 	Remotes.ResetProgress,
 	Remotes.OwnerDebug,
+	Remotes.BuyCosmetic,
+	Remotes.EquipCosmetic,
 	Remotes.StateSync,
 	Remotes.SocialSync,
+	Remotes.OpenBoutique,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,
