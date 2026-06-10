@@ -1,5 +1,18 @@
 # Mesh pipeline — overnight run state (2026-06-09/10)
 
+## ⛔ FROZEN — ACCOUNT MODERATION (read before ANY Roblox API call)
+2026-06-10: the batch FBX uploads triggered a FALSE-POSITIVE "Sexual Content"
+strike on one auto-extracted UV texture atlas (image asset 73392967314447 —
+scrambled pink kawaii texture islands misread by the classifier) → **7-day
+account ban**, which is what the "User is moderated" 403s actually were (NOT a
+velocity flag — earlier diagnosis corrected). Chris is appealing via
+roblox.com/report-appeals (appeal text provided 2026-06-10 morning).
+**RULES UNTIL CHRIS CONFIRMS RESOLUTION: make ZERO Roblox API calls — no
+probes, no uploads, no LoadAsset. Do not reschedule probe wakeups.**
+When cleared: resume uploads ONE asset at a time (a day apart initially),
+visually checking each texture first; stop + appeal at the first flag; never
+batch again. The 24 already-uploaded Model assets remain Approved in inventory.
+
 Goal: card-faithful 3D meshes for all 48 launch friends via Meshy image-to-3D,
 imported to Roblox, wired into SquishyModelFactory. Chris approved free rein.
 
@@ -53,7 +66,12 @@ Chris — REMOVE before publish (it's inert but sits on the spawn path).
       velocity flag, not content. Stash holds only soft_dumpling (loaded
       pre-flag).
       PROBE LOG: 01:50 still 403 (both LoadAsset and an Open Cloud metadata
-      GET). 04:42 still 403 (LoadAsset). Continuing hourly single-probe checks.
+      GET). 04:42 still 403. 05:44 still 403. 06:45 still 403. 06:49 still 403.
+      07:47 still 403 (via Open Cloud GET — STUDIO IS NOW CLOSED, so probes use
+      PowerShell; the resolve steps will need Studio reopened on Squishy Smash
+      when the flag clears). Continuing hourly single-probe
+      checks. (If still blocked past ~24h, Chris may need to check
+      create.roblox.com or Roblox support for an account notice.)
 - [ ] RESUME PLAN: wait >=60 min of zero Roblox asset traffic; probe ONE
       LoadAsset (old decal 78485349787050). When clear:
       1) resolve the 24 uploaded ids into ServerStorage.MeshBodies (chunks of 8;

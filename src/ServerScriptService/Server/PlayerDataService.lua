@@ -4,10 +4,20 @@
 -- totals, equipped buddy, and tutorial state. Everything is server-side and
 -- validated. Progress is persisted with DataStores: load on join, save on leave,
 -- a periodic autosave, and a flush on server shutdown.
+--
+-- SESSION LOCKING (ProfileStore-style, built in): every save blob carries a
+-- `_lock = { id, ts }`. A server only adopts a profile after stamping its own
+-- lock via UpdateAsync, REFUSES to adopt one freshly locked by another server
+-- (that player plays on a temporary profile instead — e.g. a Studio session
+-- while the same account is in the live game), steals locks that have gone
+-- stale (a crashed server), refreshes its lock on every autosave, aborts any
+-- write the moment another server has taken the lock over, and releases the
+-- lock on leave/shutdown. This kills the two-sessions-last-writer-wins hazard.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
@@ -20,6 +30,14 @@ local DATASTORE_NAME = "SquishyPlayerData_v1"
 local DATA_VERSION = 1
 local MAX_RETRIES = 4
 local AUTOSAVE_INTERVAL = 90 -- seconds between background saves of active players
+
+-- Session lock tuning. TTL must comfortably exceed the autosave interval (the
+-- autosave is what keeps a live session's lock fresh); a lock older than TTL
+-- belongs to a dead server and may be stolen.
+local SESSION_ID = HttpService:GenerateGUID(false)
+local LOCK_TTL = 240
+local ACQUIRE_ATTEMPTS = 7
+local ACQUIRE_WAIT = 5
 
 -- GetDataStore THROWS in an unpublished place ("You must publish this place to
 -- the web to access DataStore"), which would take down the whole server on load.
@@ -255,30 +273,65 @@ local function keyFor(player: Player): string
 	return "Player_" .. tostring(player.UserId)
 end
 
--- Reads saved data with retries. Returns (ok, data): ok=false means the read
--- errored (so the caller must not overwrite); data=nil with ok=true is a brand
--- new player with nothing saved yet.
-local function loadData(player: Player): (boolean, any)
+-- Loads a player's data AND acquires their session lock, in one UpdateAsync.
+-- Returns (ok, data, acquired):
+--   ok=false                 -> DataStore errored (must not overwrite later)
+--   ok=true, acquired=false  -> another live server holds the lock (play on a
+--                               temporary profile; never write)
+--   ok=true, acquired=true   -> data is ours (nil = brand-new player)
+local function loadData(player: Player): (boolean, any, boolean)
 	local store = playerStore
 	if not (dataStoreEnabled and store) then
-		return false, nil -- in-memory session: behave like a brand-new, unsavable profile
+		return false, nil, false -- in-memory session: behave like a brand-new, unsavable profile
 	end
 	local key = keyFor(player)
-	for attempt = 1, MAX_RETRIES do
-		local ok, result = pcall(function()
-			return store:GetAsync(key)
+	local sawForeignLock = false
+	for attempt = 1, ACQUIRE_ATTEMPTS do
+		local lockedElsewhere = false
+		local loaded: any = nil
+		local ok, err = pcall(function()
+			store:UpdateAsync(key, function(old)
+				local lock = type(old) == "table" and old._lock
+				if type(lock) == "table" and lock.id ~= SESSION_ID
+					and os.time() - (tonumber(lock.ts) or 0) < LOCK_TTL then
+					lockedElsewhere = true
+					return nil -- abort: another live server owns this profile
+				end
+				-- ours (fresh player, our own lock, or a stale lock we steal)
+				loaded = old
+				local stamped: any = if type(old) == "table" then old else { version = DATA_VERSION }
+				stamped._lock = { id = SESSION_ID, ts = os.time() }
+				return stamped
+			end)
 		end)
-		if ok then
-			return true, result
+		if ok and not lockedElsewhere then
+			return true, loaded, true
 		end
-		warn(string.format("[Squishy Smash] DataStore load failed for %s (attempt %d/%d): %s", player.Name, attempt, MAX_RETRIES, tostring(result)))
-		task.wait(attempt * 1.5)
+		if ok then
+			-- locked by another live session. A normal server hop releases within
+			-- seconds, so wait and retry; a session that NEVER releases (e.g. the
+			-- same account playing elsewhere) leaves us on a temp profile.
+			sawForeignLock = true
+			if player.Parent == nil then
+				return true, nil, false -- they left while we waited
+			end
+		else
+			warn(string.format("[Squishy Smash] DataStore load failed for %s (attempt %d/%d): %s", player.Name, attempt, ACQUIRE_ATTEMPTS, tostring(err)))
+		end
+		if attempt < ACQUIRE_ATTEMPTS then
+			task.wait(ACQUIRE_WAIT)
+		end
 	end
-	return false, nil
+	if sawForeignLock then
+		return true, nil, false
+	end
+	return false, nil, false
 end
 
--- Atomically saves a player's current profile (skipped if their load errored).
-local function saveData(player: Player): boolean
+-- Atomically saves a player's current profile (skipped if their load errored or
+-- this server doesn't own their session). `releasing` frees the lock (used on
+-- leave/shutdown); otherwise the save also refreshes our lock's heartbeat.
+local function saveData(player: Player, releasing: boolean?): boolean
 	local p = profiles[player]
 	if not p then
 		return false
@@ -288,18 +341,34 @@ local function saveData(player: Player): boolean
 		return false -- in-memory session: nothing to persist
 	end
 	if loadedOk[player] == false then
-		warn(string.format("[Squishy Smash] Skipping save for %s — earlier load failed, refusing to overwrite saved data.", player.Name))
+		warn(string.format("[Squishy Smash] Skipping save for %s — this session doesn't own their saved profile.", player.Name))
 		return false
 	end
 	local key = keyFor(player)
 	local payload = serialize(p)
 	for attempt = 1, MAX_RETRIES do
+		local lostLock = false
 		local ok, err = pcall(function()
-			store:UpdateAsync(key, function()
-				return payload
+			store:UpdateAsync(key, function(old)
+				local lock = type(old) == "table" and old._lock
+				if type(lock) == "table" and lock.id ~= SESSION_ID
+					and os.time() - (tonumber(lock.ts) or 0) < LOCK_TTL then
+					lostLock = true
+					return nil -- abort: another server took this profile over
+				end
+				local outgoing: any = payload
+				outgoing._lock = if releasing then nil else { id = SESSION_ID, ts = os.time() }
+				return outgoing
 			end)
 		end)
 		if ok then
+			if lostLock then
+				-- We were superseded (e.g. our lock went stale during an outage and
+				-- another server stole it). Never write again this session.
+				loadedOk[player] = false
+				warn(string.format("[Squishy Smash] Session lock for %s was taken by another server — this session stops saving.", player.Name))
+				return false
+			end
 			return true
 		end
 		warn(string.format("[Squishy Smash] DataStore save failed for %s (attempt %d/%d): %s", player.Name, attempt, MAX_RETRIES, tostring(err)))
@@ -600,18 +669,28 @@ function PlayerDataService.init()
 	stateSyncEvent = Remotes.get(Remotes.StateSync)
 
 	local function onAdded(player: Player)
-		local ok, data = loadData(player)
-		-- If the player left while we were loading, drop it.
+		local ok, data, acquired = loadData(player)
+		-- If the player left while we were loading, release anything we took.
 		if player.Parent == nil then
+			if ok and acquired then
+				profiles[player] = deserialize(data)
+				loadedOk[player] = true
+				saveData(player, true) -- free the lock for their next server
+				profiles[player] = nil
+				loadedOk[player] = nil
+			end
 			return
 		end
-		loadedOk[player] = ok
-		local profile = ok and deserialize(data) or newProfile()
+		local owned = ok and acquired
+		loadedOk[player] = owned
+		local profile = owned and deserialize(data) or newProfile()
 		profiles[player] = profile
 		setupLeaderstats(player, profile)
 		ready[player] = true
 		if not ok then
-			warn(string.format("[Squishy Smash] %s is playing on a temporary profile — progress will NOT be saved this session.", player.Name))
+			warn(string.format("[Squishy Smash] %s is playing on a temporary profile — DataStores are unreachable.", player.Name))
+		elseif not acquired then
+			warn(string.format("[Squishy Smash] %s's profile is in use by ANOTHER session — playing on a temporary profile here (the other session's save stays safe).", player.Name))
 		end
 		-- Push state now in case the client's RequestInitialState arrived before
 		-- the profile finished loading.
@@ -624,7 +703,7 @@ function PlayerDataService.init()
 	end
 
 	Players.PlayerRemoving:Connect(function(player)
-		saveData(player)
+		saveData(player, true) -- final save releases the session lock
 		profiles[player] = nil
 		loadedOk[player] = nil
 		ready[player] = nil
@@ -650,7 +729,7 @@ function PlayerDataService.init()
 		local remaining = #players
 		for _, player in ipairs(players) do
 			task.spawn(function()
-				saveData(player)
+				saveData(player, true) -- shutdown flush also releases the locks
 				remaining -= 1
 			end)
 		end
