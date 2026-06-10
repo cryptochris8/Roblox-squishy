@@ -44,6 +44,8 @@ imported to Roblox, wired into SquishyModelFactory. Chris approved free rein.
       Wave-1 assets were all moderationState=Approved at creation — this is a
       velocity flag, not content. Stash holds only soft_dumpling (loaded
       pre-flag).
+      PROBE LOG: 01:50 still 403 (both LoadAsset and an Open Cloud metadata
+      GET). Continuing hourly single-probe checks.
 - [ ] RESUME PLAN: wait >=60 min of zero Roblox asset traffic; probe ONE
       LoadAsset (old decal 78485349787050). When clear:
       1) resolve the 24 uploaded ids into ServerStorage.MeshBodies (chunks of 8;

@@ -19,6 +19,7 @@ Remotes.ResetProgress = "ResetProgress"              -- OWNER ONLY: wipe my prof
 Remotes.OwnerDebug = "OwnerDebug"                    -- OWNER ONLY: playtest triggers (start event/surge)
 Remotes.BuyCosmetic = "BuyCosmetic"                  -- id: buy a boutique item with Sparkle Coins
 Remotes.EquipCosmetic = "EquipCosmetic"              -- (type, id?): wear an owned item / take it off
+Remotes.RedeemCode = "RedeemCode"                    -- text: try a storybook magic word
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -39,6 +40,7 @@ local ALL_EVENTS = {
 	Remotes.OwnerDebug,
 	Remotes.BuyCosmetic,
 	Remotes.EquipCosmetic,
+	Remotes.RedeemCode,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,

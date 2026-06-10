@@ -38,6 +38,22 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
 
 ### Build log
+- **2026-06-10 (freshness + storybook tie-ins):** Three returning-player features
+  in one pass. (1) **Sparkle Bits everywhere** — 8 new hidden bits per new land
+  tied to the spread-world landmarks (the pier's end, behind the lighthouse, the
+  stargazing circle, the firefly meadow...): 26 total, all-found bonus 300, daily
+  refresh covers them all. (2) **Friend of the Week** — a cozy visiting tent by
+  the Pudding Hills travel hub where one of the 8 event friends (Boblet, Dimpa,
+  Moshi...) visits each UTC week and can be **befriended for a known 400-coin
+  price** (doc 09's non-random direct-buy; never a gamble) with the full
+  card-reveal celebration + a server-wide shout-out; the sign counts down the
+  visit. The HUD "Friends N/48" now counts launch friends only so event friends
+  can't overflow it. (3) **Magic Words** — storybook promo codes (server-side
+  table so the client can't datemine the list): SPLOINK, THUP, PMF, EVERYSQUISH,
+  LOSTSPARKLE → one-time coin gifts via a kid-simple 🎟️ panel; redemptions
+  persisted per profile. All verified in Studio play: bit pickup at the pier
+  (+25, pill 1/26), all five code paths (normalize/dup/junk/grants, +700 exact),
+  and a real walk-up-press-E befriend of Steamy (−400 exact, discovered, reveal).
 - **2026-06-09 (the spread-out world — pillar 2 for real):** Chris called out
   that friends felt lumped together — and the numbers agreed (12 pads in an
   ~80×80 box on each 320×320 land). Every land now spreads its 12 friends from

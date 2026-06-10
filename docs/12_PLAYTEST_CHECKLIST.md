@@ -39,6 +39,11 @@ where they get stuck or light up matters more than what they say.*
 - [ ] Do duplicates → **✨Sparkly / 🌈Rainbow** feel exciting (not "a miss")?
 - [ ] Do **daily quests** + the **🔥 streak** make them want to return tomorrow?
 
+## Fresh reasons to return (new!)
+- [ ] **Sparkle Bits** now hide in ALL THREE lands (26 total) — do they hunt beyond Pudding Hills?
+- [ ] **⭐ Friend of the Week** (the tent by the travel hub): do they save up the 400 coins? Does "a new friend visits next week" land as exciting?
+- [ ] **🎟️ Magic Words**: tell them ONE code from the book (try SPLOINK) — do they want to hunt the book for more?
+
 ## The Sparkle Boutique (the new coin sink)
 - [ ] Do they find the ✨ **Sparkle Boutique** stall near spawn on their own?
 - [ ] Is the shop readable? (Prices, "Tap to wear", "Wearing ✓" — watch the 6-year-old.)

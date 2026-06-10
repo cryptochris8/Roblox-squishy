@@ -24,10 +24,10 @@ GameConfig.TutorialRewardCoins = 100
 GameConfig.FirstShardWakeGoal = 8
 GameConfig.FirstShardRewardCoins = 150
 
--- Hidden Sparkle Bits: cozy exploration collectibles tucked around Pudding Hills.
+-- Hidden Sparkle Bits: cozy exploration collectibles tucked around all 3 lands.
 -- Walk up to one to collect it; finding every bit gives a bonus.
 GameConfig.SparkleBitCoins = 25        -- Sparkle Coins for finding one
-GameConfig.SparkleBitAllBonus = 200    -- bonus for finding every hidden bit
+GameConfig.SparkleBitAllBonus = 300    -- bonus for finding every hidden bit (26 across the world)
 GameConfig.SparkleBitPickupRadius = 7  -- how close (studs) you walk to collect one
 GameConfig.SparkleBitClaimRange = 18   -- server-side sanity range for a valid pickup
 

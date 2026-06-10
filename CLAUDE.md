@@ -65,7 +65,8 @@ src/ReplicatedStorage/Shared/
   SquishyData.lua          query helpers (getById/getByPack/getByZone/getByRarity/getLaunchRoster)
   GameConfig.lua           kid-friendly tunables (Joy, tutorial, First Shard goal, Sparkle Bits, streak)
   SoundConfig.lua          background music + squish/Happy-Pop sound ids
-  SparkleBitConfig.lua     the 10 hidden Sparkle Bit spots (shared: client renderer + server validator)
+  SparkleBitConfig.lua     the 26 hidden Sparkle Bit spots across all 3 lands (shared: client renderer + server validator)
+  WeeklyConfig.lua         Friend of the Week: UTC week index + the coin price of befriending the visitor
   VariantConfig.lua        duplicate→variant tiers (Sparkly/Rainbow): names, colours, bonus coins
   DailyQuestConfig.lua     rotating daily-quest templates + forDay(dayIndex)
   ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain
@@ -90,6 +91,8 @@ src/ServerScriptService/Server/   (server-authoritative)
   GroupEventService.lua    "Everybody Squish!": every ~7min golden friends appear at the busiest land; shared goal -> +coins for all online
   LeaderboardService.lua   OrderedDataStore boards ("Top Friend Finders" / "Joy Champions") on physical signs at the Pudding Hills travel hub
   BoutiqueService.lua      the Sparkle Boutique stall (Pudding Hills, near spawn): validated coin-only buy/equip of buddy cosmetics; auto-wear on purchase
+  WeeklyService.lua        Friend of the Week: a visiting tent by the travel hub; one of the 8 event friends rotates in weekly; Befriend = known coin price (never random), full card reveal
+  CodeService.lua          storybook "magic words" (promo codes; table is SERVER-side only): one-time coin gifts, normalized input, per-player redemption persisted
   SquishyModelFactory.lua  every friend's real 3D shape: ~17 part-built archetypes (dumpling/bun/cube/bunny/bat/ghost...) + hand-tuned skins for all 48 launch friends (+8 weekly); HatOffset attr; applyGolden()
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
@@ -99,12 +102,13 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   FinaleUI.lua             the "Restore the Sparkle" celebration (shown when all 3 shards are recovered)
   SocialUI.lua             shared-world HUD: Surge meter pill (left column) + "Everybody Squish" banner with countdowns
   BoutiqueUI.lua           the Sparkle Boutique shop panel (price/owned/"Wearing ✓" states, gentle buy confirm)
+  CodesUI.lua              the "Magic Words" panel (type a storybook code; feedback arrives as a toast)
 ```
 
 ### Contract (server <-> client)
 
 - Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
-  `ClaimDailyCapsule`, `BuyCosmetic`, `EquipCosmetic`, `ResetProgress` (owner-only),
+  `ClaimDailyCapsule`, `BuyCosmetic`, `EquipCosmetic`, `RedeemCode`, `ResetProgress` (owner-only),
   `OwnerDebug` (owner-only: "startEvent"/"startSurge" demo triggers, with HUD
   buttons next to Reset); s->c `StateSync`, `SocialSync` (surge meter + event
   slices, with seconds-remaining), `OpenBoutique`, `SquishResult`, `CapsuleResult`,

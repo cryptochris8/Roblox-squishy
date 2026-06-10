@@ -28,6 +28,8 @@ local SurgeService = require(script.Parent.SurgeService)
 local GroupEventService = require(script.Parent.GroupEventService)
 local LeaderboardService = require(script.Parent.LeaderboardService)
 local BoutiqueService = require(script.Parent.BoutiqueService)
+local WeeklyService = require(script.Parent.WeeklyService)
+local CodeService = require(script.Parent.CodeService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -43,6 +45,8 @@ SurgeService.init()
 GroupEventService.init()
 LeaderboardService.init()
 BoutiqueService.init()
+WeeklyService.init()
+CodeService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()

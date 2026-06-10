@@ -60,6 +60,7 @@ export type Profile = {
 	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean } },
 	SparkleRestored: boolean,
 	Cosmetics: { Owned: { [string]: boolean }, Equipped: { [string]: string } },
+	RedeemedCodes: { [string]: boolean },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -97,6 +98,7 @@ local function newProfile(): Profile
 		DailyQuests = { day = 0, progress = {}, claimed = {} },
 		SparkleRestored = false,
 		Cosmetics = { Owned = {}, Equipped = {} },
+		RedeemedCodes = {},
 	}
 end
 
@@ -134,6 +136,7 @@ local function serialize(p: Profile)
 		DailyQuests = p.DailyQuests,
 		SparkleRestored = p.SparkleRestored,
 		Cosmetics = p.Cosmetics,
+		RedeemedCodes = p.RedeemedCodes,
 	}
 end
 
@@ -216,6 +219,15 @@ local function deserialize(data: any): Profile
 			end
 		end
 		p.Cosmetics = { Owned = owned, Equipped = equipped }
+	end
+	if type(data.RedeemedCodes) == "table" then
+		local codes = {}
+		for code, used in pairs(data.RedeemedCodes) do
+			if type(code) == "string" and used == true then
+				codes[code] = true
+			end
+		end
+		p.RedeemedCodes = codes
 	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
@@ -547,6 +559,19 @@ end
 function PlayerDataService.getEquippedCosmetics(player: Player): { [string]: string }
 	local p = profiles[player]
 	return (p and p.Cosmetics.Equipped) or {}
+end
+
+-- ── Storybook magic words (promo codes) ─────────────────────────────────────
+function PlayerDataService.hasRedeemedCode(player: Player, code: string): boolean
+	local p = profiles[player]
+	return (p ~= nil) and (p.RedeemedCodes[code] == true)
+end
+
+function PlayerDataService.markCodeRedeemed(player: Player, code: string)
+	local p = profiles[player]
+	if p then
+		p.RedeemedCodes[code] = true
+	end
 end
 
 function PlayerDataService.setTutorialDone(player: Player)

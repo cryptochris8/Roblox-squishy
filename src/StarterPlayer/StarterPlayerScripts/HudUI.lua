@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local UiTheme = require(script.Parent.UiTheme)
 local SparkleBitConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SparkleBitConfig"))
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
+local SquishyData = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SquishyData"))
 
 local HudUI = {}
 
@@ -144,6 +145,30 @@ local function dailyButton(parent, onClaimDaily)
 	btn.Activated:Connect(function()
 		if onClaimDaily then
 			onClaimDaily()
+		end
+	end)
+end
+
+-- The little "magic word" door (storybook promo codes).
+local function codesButton(parent, onOpenCodes)
+	local btn = Instance.new("TextButton")
+	btn.Name = "CodesButton"
+	btn.AnchorPoint = Vector2.new(0, 1)
+	btn.Position = UDim2.new(0, 18, 1, -132)
+	btn.Size = UDim2.fromOffset(214, 40)
+	btn.BackgroundColor3 = Color3.fromRGB(190, 160, 235)
+	btn.BorderSizePixel = 0
+	btn.Font = UiTheme.HeaderFont
+	btn.TextSize = 17
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Text = "🎟️ Magic Words"
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	UiTheme.corner(20, btn)
+	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
+	btn.Activated:Connect(function()
+		if onOpenCodes then
+			onOpenCodes()
 		end
 	end)
 end
@@ -304,7 +329,7 @@ local function bookButton(parent, onOpenBook)
 	end)
 end
 
-function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug)
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug, onOpenCodes)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
@@ -318,6 +343,7 @@ function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetPr
 	bookButton(screen, onOpenBook)
 	dailyButton(screen, onClaimDaily)
 	dailyQuestsButton(screen, onOpenDaily)
+	codesButton(screen, onOpenCodes)
 
 	-- These tools only ever appear for the place owner (you) — never the kids.
 	if game.CreatorType == Enum.CreatorType.User and Players.LocalPlayer.UserId == game.CreatorId then
@@ -331,7 +357,18 @@ function HudUI.update(state)
 		return
 	end
 	coinLabel.Text = tostring(state.coins or 0)
-	friendsLabel.Text = "Friends " .. (state.discoveredCount or 0) .. "/48"
+	-- count LAUNCH friends only (event friends live in the Book's Events tab,
+	-- so this pill can never read 49/48)
+	local launchCount = 0
+	if type(state.discovered) == "table" then
+		for id in pairs(state.discovered) do
+			local def = SquishyData.getById(id)
+			if def and def.ReleaseType == "launch" then
+				launchCount += 1
+			end
+		end
+	end
+	friendsLabel.Text = "Friends " .. launchCount .. "/48"
 
 	if bitsLabel then
 		local found = 0
