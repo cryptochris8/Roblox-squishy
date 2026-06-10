@@ -22,6 +22,8 @@ local SquishService = {}
 SquishService.onHappyPop = nil :: ((Player, any) -> ())?
 -- Set by Main: a GOLDEN friend (an "Everybody Squish!" event friend) Happy Popped.
 SquishService.onGoldenPop = nil :: ((Player, any, Model) -> ())?
+-- Set by Main: any squish at all (the First Day list watches the very first one).
+SquishService.onSquish = nil :: ((Player) -> ())?
 -- Set by Main: what to multiply coin awards by right now (Sparkle Surge = 2).
 SquishService.coinMultiplier = nil :: (() -> number)?
 
@@ -128,6 +130,9 @@ function SquishService.handleSquish(player: Player, model: Model)
 	end
 
 	PlayerDataService.incSquish(player)
+	if SquishService.onSquish then
+		SquishService.onSquish(player)
+	end
 
 	local joy = math.min(1, (model:GetAttribute("Joy") or 0) + GameConfig.JoyPerSquish)
 	model:SetAttribute("Joy", joy)

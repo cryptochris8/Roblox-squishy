@@ -31,6 +31,7 @@ local BoutiqueService = require(script.Parent.BoutiqueService)
 local WeeklyService = require(script.Parent.WeeklyService)
 local CodeService = require(script.Parent.CodeService)
 local RoomService = require(script.Parent.RoomService)
+local FirstDayService = require(script.Parent.FirstDayService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -49,6 +50,7 @@ BoutiqueService.init()
 WeeklyService.init()
 CodeService.init()
 RoomService.init()
+FirstDayService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -83,6 +85,14 @@ end
 -- During a Sparkle Surge, every coin award doubles.
 SquishService.coinMultiplier = SurgeService.coinMultiplier
 
+-- The First Day list watches its five signals.
+SquishService.onSquish = function(player)
+	FirstDayService.check(player)
+end
+RoomService.onVisited = function(player)
+	FirstDayService.noteRoomVisit(player)
+end
+
 -- Golden friends belong to the "Everybody Squish!" event.
 SquishService.onGoldenPop = function(player, def, model)
 	GroupEventService.noteGoldenPop(player, def, model)
@@ -91,6 +101,7 @@ end
 -- Equipping/unequipping a buddy spawns or removes the floating companion.
 CollectionService.onBuddyChanged = function(player, defId)
 	BuddyService.setBuddy(player, defId)
+	FirstDayService.check(player)
 end
 
 -- Boutique purchases/outfit changes re-dress the buddy on the spot.
@@ -104,6 +115,7 @@ end
 -- Daily-quest tracking: a capsule open (and any new discovery), and Sparkle Bits.
 -- A NEW discovery is also a show-off moment for the rest of the server.
 CapsuleService.onOpened = function(player, isNew, def)
+	FirstDayService.check(player)
 	DailyService.noteEvent(player, "capsule")
 	if isNew then
 		DailyService.noteEvent(player, "discover")
@@ -157,6 +169,7 @@ end
 local requestState = Remotes.get(Remotes.RequestInitialState)
 requestState.OnServerEvent:Connect(function(player)
 	DailyService.onJoin(player)
+	FirstDayService.check(player)
 	PlayerDataService.sync(player)
 	TutorialService.welcome(player)
 	QuestService.checkReveal(player)
@@ -175,6 +188,21 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 		GroupEventService.startNow()
 	elseif action == "startSurge" then
 		SurgeService.startNow()
+	elseif action == "restoreRoom610" then
+		-- One-time restitution: an old pre-Room server's leave-save dropped the
+		-- owner's furniture + buddy on 2026-06-10. Owner-gated; idempotent.
+		local profile = PlayerDataService.get(player)
+		if profile then
+			for _, id in ipairs({ "lamp_mushroom", "rug_rainbow", "window_sunny", "plant_sprout" }) do
+				profile.Room.Owned[id] = true
+			end
+			if profile.Discovered["marshmallow_puff"] and profile.EquippedBuddyId == nil then
+				profile.EquippedBuddyId = "marshmallow_puff"
+				BuddyService.setBuddy(player, "marshmallow_puff")
+			end
+			FirstDayService.check(player)
+			PlayerDataService.sync(player)
+		end
 	end
 end)
 

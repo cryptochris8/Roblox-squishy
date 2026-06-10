@@ -816,6 +816,63 @@ function WorldService.build()
 		mound.Parent = folder
 	end
 
+	-- ── Welcome boards: three little picture signs on the spawn pad's north
+	-- edge, facing arriving players. Icons first, words tiny — the storybook
+	-- "how to play" a 6-year-old can read at a glance. ──────────────────────
+	local boardSpecs = {
+		{ pos = Vector3.new(-8, 0, 27.5), icon = "👆", line = "Squish sleepy friends!", color = Color3.fromRGB(255, 170, 195) },
+		{ pos = Vector3.new(0, 0, 26), icon = "🪙", line = "Earn Sparkle Coins!", color = Color3.fromRGB(255, 210, 120) },
+		{ pos = Vector3.new(8, 0, 27.5), icon = "🎁", line = "Collect new friends!", color = Color3.fromRGB(180, 200, 255) },
+	}
+	for i, spec in ipairs(boardSpecs) do
+		local face = CFrame.lookAt(Vector3.new(spec.pos.X, 0, spec.pos.Z), Vector3.new(0, 0, 36))
+		local post = part({
+			Name = "WelcomePost" .. i, Size = Vector3.new(0.5, 2.6, 0.5),
+			Color = Color3.fromRGB(244, 230, 214),
+		})
+		post.CFrame = face + Vector3.new(0, 1.3, 0)
+		post.Parent = folder
+		local panel = part({
+			Name = "WelcomeBoard" .. i, Size = Vector3.new(4.6, 3.4, 0.4),
+			Color = Color3.fromRGB(255, 250, 243),
+		})
+		panel.CFrame = face + Vector3.new(0, 4.1, 0)
+		panel.Parent = folder
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = Enum.NormalId.Front
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = 60
+		gui.LightInfluence = 0
+		gui.Brightness = 1.1
+		gui.Parent = panel
+		local bg = Instance.new("Frame")
+		bg.Size = UDim2.fromScale(1, 1)
+		bg.BackgroundColor3 = spec.color
+		bg.BorderSizePixel = 0
+		bg.Parent = gui
+		local icon = Instance.new("TextLabel")
+		icon.BackgroundTransparency = 1
+		icon.Size = UDim2.new(1, 0, 0.62, 0)
+		icon.Position = UDim2.fromScale(0, 0.05)
+		icon.Font = Enum.Font.FredokaOne
+		icon.TextScaled = true
+		icon.Text = i .. " " .. spec.icon
+		icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+		icon.TextStrokeColor3 = Color3.fromRGB(120, 90, 110)
+		icon.TextStrokeTransparency = 0.6
+		icon.Parent = bg
+		local line = Instance.new("TextLabel")
+		line.BackgroundTransparency = 1
+		line.Size = UDim2.new(1, -12, 0.3, 0)
+		line.Position = UDim2.new(0, 6, 0.66, 0)
+		line.Font = Enum.Font.FredokaOne
+		line.TextScaled = true
+		line.TextWrapped = true
+		line.Text = spec.line
+		line.TextColor3 = Color3.fromRGB(96, 74, 96)
+		line.Parent = bg
+	end
+
 	-- Player spawn.
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "PlayerSpawn"

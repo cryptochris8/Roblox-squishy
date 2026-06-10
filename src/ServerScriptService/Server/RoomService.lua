@@ -20,6 +20,9 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local RoomService = {}
 
+-- Set by Main: someone visited their room (the First Day list celebrates it).
+RoomService.onVisited = nil :: ((Player) -> ())?
+
 local toastEvent: RemoteEvent
 local openCatalogEvent: RemoteEvent
 
@@ -357,6 +360,9 @@ function RoomService.visitRoom(player: Player)
 	local origin = roomOrigin(room.index)
 	char:PivotTo(CFrame.new(origin + Vector3.new(0, 3.5, RoomConfig.RoomSize.Z / 2 - 5)))
 	toastEvent:FireClient(player, "Welcome to YOUR Squishy Room! Walk to a glowing spot to decorate it.")
+	if RoomService.onVisited then
+		RoomService.onVisited(player)
+	end
 end
 
 -- Bring them back to where they entered from (or the Pudding Hills spawn).

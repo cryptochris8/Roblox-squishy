@@ -80,9 +80,12 @@ export type Profile = {
 	Cosmetics: { Owned: { [string]: boolean }, Equipped: { [string]: string } },
 	RedeemedCodes: { [string]: boolean },
 	Room: { Owned: { [string]: boolean }, Placed: { [string]: string } },
+	FirstDayPaid: { [string]: boolean },
 }
 
 local profiles: { [Player]: Profile } = {}
+-- the table each profile was loaded from (unknown keys round-trip through saves)
+local rawData: { [Player]: any } = {}
 -- loadedOk[player] == false means the load *errored* (DataStore unreachable), so
 -- we must NOT save over what might be good saved data. nil/true means safe to save.
 local loadedOk: { [Player]: boolean } = {}
@@ -119,6 +122,7 @@ local function newProfile(): Profile
 		Cosmetics = { Owned = {}, Equipped = {} },
 		RedeemedCodes = {},
 		Room = { Owned = {}, Placed = {} },
+		FirstDayPaid = {},
 	}
 end
 
@@ -136,9 +140,19 @@ local function todayIndex(): number
 	return math.floor(os.time() / 86400)
 end
 
--- Turn a live Profile into a plain, DataStore-safe table.
-local function serialize(p: Profile)
-	return {
+-- Turn a live Profile into a plain, DataStore-safe table. `raw` is the table
+-- this profile was LOADED from: every key we don't recognize is carried through
+-- untouched, so a server running OLD code can never strip fields that newer
+-- code added (the bug that ate Room furniture on 2026-06-10: an old pre-Room
+-- server's leave-save dropped the whole field).
+local function serialize(p: Profile, raw: any)
+	local out: any = {}
+	if type(raw) == "table" then
+		for k, v in pairs(raw) do
+			out[k] = v
+		end
+	end
+	local known = {
 		version = DATA_VERSION,
 		SparkleCoins = p.SparkleCoins,
 		TotalSquishes = p.TotalSquishes,
@@ -158,7 +172,12 @@ local function serialize(p: Profile)
 		Cosmetics = p.Cosmetics,
 		RedeemedCodes = p.RedeemedCodes,
 		Room = p.Room,
+		FirstDayPaid = p.FirstDayPaid,
 	}
+	for k, v in pairs(known) do
+		out[k] = v
+	end
+	return out
 end
 
 -- Rebuild a Profile from saved data, filling any missing fields with fresh
@@ -269,6 +288,15 @@ local function deserialize(data: any): Profile
 		end
 		p.Room = { Owned = owned, Placed = placed }
 	end
+	if type(data.FirstDayPaid) == "table" then
+		local paid = {}
+		for id, v in pairs(data.FirstDayPaid) do
+			if type(id) == "string" and v == true then
+				paid[id] = true
+			end
+		end
+		p.FirstDayPaid = paid
+	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
 		if type(data.DailyQuests.progress) == "table" then
@@ -367,7 +395,7 @@ local function saveData(player: Player, releasing: boolean?): boolean
 		return false
 	end
 	local key = keyFor(player)
-	local payload = serialize(p)
+	local payload = serialize(p, rawData[player])
 	for attempt = 1, MAX_RETRIES do
 		local lostLock = false
 		local ok, err = pcall(function()
@@ -481,6 +509,8 @@ function PlayerDataService.snapshot(player: Player)
 			owned = p.Room.Owned,
 			placed = p.Room.Placed,
 		},
+		-- My First Day checklist: which steps have been paid out
+		firstDay = p.FirstDayPaid,
 	}
 end
 
@@ -617,6 +647,7 @@ function PlayerDataService.resetProfile(player: Player)
 	end
 	local fresh = newProfile()
 	profiles[player] = fresh
+	rawData[player] = {} -- a reset really does start over (drop carried keys too)
 	refreshLeaderstats(player, fresh)
 	PlayerDataService.sync(player)
 end
@@ -701,9 +732,11 @@ function PlayerDataService.init()
 		if player.Parent == nil then
 			if ok and acquired then
 				profiles[player] = deserialize(data)
+				rawData[player] = type(data) == "table" and data or {}
 				loadedOk[player] = true
 				saveData(player, true) -- free the lock for their next server
 				profiles[player] = nil
+				rawData[player] = nil
 				loadedOk[player] = nil
 			end
 			return
@@ -712,6 +745,7 @@ function PlayerDataService.init()
 		loadedOk[player] = owned
 		local profile = owned and deserialize(data) or newProfile()
 		profiles[player] = profile
+		rawData[player] = (owned and type(data) == "table") and data or {}
 		setupLeaderstats(player, profile)
 		ready[player] = true
 		if not ok then
@@ -732,6 +766,7 @@ function PlayerDataService.init()
 	Players.PlayerRemoving:Connect(function(player)
 		saveData(player, true) -- final save releases the session lock
 		profiles[player] = nil
+		rawData[player] = nil
 		loadedOk[player] = nil
 		ready[player] = nil
 	end)
