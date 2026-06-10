@@ -59,8 +59,8 @@ where they get stuck or light up matters more than what they say.*
 ## Known limitations — expected, don't treat as bugs
 - ✅ **All 48 cards now have real trading-card art** (this earlier gap is closed).
 - ✅ **Co-op events + leaderboards are IN** (Phase C) — see "Together moments" above.
-- Friends + buddies are **placeholder squishy balls with faces** (no 3D meshes yet).
-- **No purchases** (by design — capsules are free).
+- ✅ **Every friend now has a real 3D shape** (dumplings, bats, ghosts, flans...) — watch whether the girls recognize friends by silhouette and which shapes they love.
+- **No purchases** (by design — capsules are free; the Boutique uses earned coins).
 - Distant lands take a second to **stream in** after you travel (normal).
 - The first natural **Everybody Squish** fires ~3 minutes into a server (then ~every 7); use the owner 🌟 Event button if you don't want to wait.
 

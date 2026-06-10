@@ -15,17 +15,12 @@ local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local CosmeticsConfig = require(Shared:WaitForChild("CosmeticsConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local SquishyModelFactory = require(script.Parent.SquishyModelFactory)
 
 local BuddyService = {}
 
--- Soft pastel body color per rarity (matches the world squishies).
-local RARITY_COLORS = {
-	common = Color3.fromRGB(255, 196, 212),
-	rare = Color3.fromRGB(176, 196, 255),
-	epic = Color3.fromRGB(214, 176, 255),
-	legendary = Color3.fromRGB(255, 226, 150),
-	mythic = Color3.fromRGB(255, 210, 170),
-}
+-- World friends are ~4 studs; a buddy is the same shape at companion size.
+local BUDDY_SCALE = 0.62
 local EYE_COLOR = Color3.fromRGB(64, 48, 64)
 
 local buddies: { [Player]: Model } = {}
@@ -303,7 +298,10 @@ local function applyCosmetics(model: Model, body: BasePart, equipped: { [string]
 	if hat then
 		local builder = HAT_BUILDERS[hat.id]
 		if builder then
-			builder(model, body.CFrame * CFrame.new(0, 1.25, 0), hat)
+			-- each shape says where its hat sits (the factory's HatOffset is
+			-- unscaled, relative to the Body centre)
+			local hatY = (model:GetAttribute("HatOffset") or 2.0) * model:GetScale()
+			builder(model, body.CFrame * CFrame.new(0, hatY, 0), hat)
 		end
 	end
 	local trail = equipped.trail and CosmeticsConfig.get(equipped.trail)
@@ -317,22 +315,21 @@ local function applyCosmetics(model: Model, body: BasePart, equipped: { [string]
 end
 
 local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { [string]: string }): Model
-	local model = Instance.new("Model")
+	-- The buddy IS the friend's real shape, just companion-sized.
+	local model = SquishyModelFactory.build(def)
 	model.Name = "Buddy"
-
-	local body = Instance.new("Part")
-	body.Name = "Body"
-	body.Shape = Enum.PartType.Ball
-	body.Size = Vector3.new(2.6, 2.6, 2.6)
-	body.Anchored = true
-	body.CanCollide = false
-	body.CanQuery = false -- never blocks clicks/raycasts (so squishing still works)
-	body.CanTouch = false
-	body.Massless = true
-	body.Material = Enum.Material.SmoothPlastic
-	body.Color = RARITY_COLORS[def.Rarity] or RARITY_COLORS.common
-	body.Parent = model
-	model.PrimaryPart = body
+	model:ScaleTo(BUDDY_SCALE)
+	-- A buddy must never block clicks, raycasts, or physics (so squishing the
+	-- world friends through it still works).
+	for _, p in ipairs(model:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.CanCollide = false
+			p.CanQuery = false
+			p.CanTouch = false
+			p.Massless = true
+		end
+	end
+	local body = model.PrimaryPart :: BasePart
 
 	addFace(body)
 	addVariantAura(body, variantLevel)

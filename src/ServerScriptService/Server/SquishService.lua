@@ -14,6 +14,7 @@ local SquishyData = require(Shared:WaitForChild("SquishyData"))
 local SocialConfig = require(Shared:WaitForChild("SocialConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local SquishyModelFactory = require(script.Parent.SquishyModelFactory)
 
 local SquishService = {}
 
@@ -31,15 +32,6 @@ local activeByPad: { [number]: Model } = {} -- pad index -> the squishy currentl
 local objectCounter = 0
 local rng = Random.new()
 
--- Soft pastel body color per rarity (kid-friendly, never harsh).
-local RARITY_COLORS = {
-	common = Color3.fromRGB(255, 196, 212),
-	rare = Color3.fromRGB(176, 196, 255),
-	epic = Color3.fromRGB(214, 176, 255),
-	legendary = Color3.fromRGB(255, 226, 150),
-	mythic = Color3.fromRGB(255, 210, 170),
-}
-
 local function pickDefForPack(packId: string)
 	local pool = SquishyData.getByPack(packId)
 	if #pool > 0 then
@@ -52,32 +44,21 @@ local function buildSquishy(def, cf: CFrame): Model
 	objectCounter += 1
 	local objectId = "sq_" .. objectCounter
 
-	local model = Instance.new("Model")
-	model.Name = def.DisplayName
+	-- The friend's real shape comes from the factory (a dumpling looks like a
+	-- dumpling). A little size variety so a cluster feels hand-placed, not cloned.
+	local model = SquishyModelFactory.build(def)
+	model:ScaleTo(rng:NextNumber(0.92, 1.12))
+	model:PivotTo(cf)
 
-	-- A little size variety so a cluster of friends feels hand-placed, not cloned.
-	local scale = rng:NextNumber(0.92, 1.12)
-
-	local body = Instance.new("Part")
-	body.Name = "Body"
-	body.Shape = Enum.PartType.Ball
-	body.Size = Vector3.new(4 * scale, 4 * scale, 4 * scale)
-	body.Anchored = true
-	body.CanCollide = false
-	body.Material = Enum.Material.SmoothPlastic
-	body.Color = RARITY_COLORS[def.Rarity] or RARITY_COLORS.common
-	body.CFrame = cf
-	body.Parent = model
-
-	model.PrimaryPart = body
 	model:SetAttribute("ObjectId", objectId)
 	model:SetAttribute("DefId", def.Id)
 	model:SetAttribute("Joy", 0)
 	model:SetAttribute("Sleepy", true)
 
+	-- On the MODEL, so ears, wings, and toppings are all squishable.
 	local click = Instance.new("ClickDetector")
 	click.MaxActivationDistance = 32
-	click.Parent = body
+	click.Parent = model
 	click.MouseClick:Connect(function(player)
 		SquishService.handleSquish(player, model)
 	end)
@@ -86,34 +67,13 @@ local function buildSquishy(def, cf: CFrame): Model
 	return model
 end
 
--- Spawns a temporary GOLDEN friend for an "Everybody Squish!" event: dressed in
--- gold with its own sparkle, worth extra coins, and never tied to a pad (so it
+-- Spawns a temporary GOLDEN friend for an "Everybody Squish!" event: its whole
+-- shape glimmers gold, worth extra coins, and never tied to a pad (so it
 -- doesn't respawn — the event owns its life). Returns the model.
 function SquishService.spawnGolden(packId: string, cf: CFrame): Model
 	local model = buildSquishy(pickDefForPack(packId), cf)
 	model:SetAttribute("Golden", true)
-
-	local body = model.PrimaryPart
-	if body then
-		body.Color = Color3.fromRGB(255, 213, 110)
-		body.Reflectance = 0.12
-
-		local glow = Instance.new("ParticleEmitter")
-		glow.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-		glow.LightEmission = 0.9
-		glow.Color = ColorSequence.new(Color3.fromRGB(255, 226, 140), Color3.fromRGB(255, 246, 214))
-		glow.Size = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 1.4), NumberSequenceKeypoint.new(1, 0),
-		})
-		glow.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.2), NumberSequenceKeypoint.new(1, 1),
-		})
-		glow.Lifetime = NumberRange.new(0.8, 1.4)
-		glow.Rate = 10
-		glow.Speed = NumberRange.new(1.5, 3.5)
-		glow.SpreadAngle = Vector2.new(180, 180)
-		glow.Parent = body
-	end
+	SquishyModelFactory.applyGolden(model)
 	return model
 end
 

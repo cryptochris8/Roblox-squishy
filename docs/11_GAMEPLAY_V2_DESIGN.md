@@ -38,6 +38,19 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
 
 ### Build log
+- **2026-06-09 (real 3D shapes — goodbye placeholder balls):** SquishyModelFactory
+  gives every friend a part-built body: ~17 squishy archetypes (dumpling, bun,
+  mochi, cube, puff, rice ball, flan, blob, orb, pad, capsule, drop, pop-ball,
+  bunny, bat, ghost, kitty, critter) hand-tuned per friend with name-true
+  palettes — Strawberry Dumpling is strawberry-pink with a calyx knot, Frost Gel
+  Cube is icy glass with a frost cap, Moon Bat Blob has wedge ears, wings, and a
+  little neon moon. Buddies are the same shapes at companion scale (boutique hats
+  sit at each shape's HatOffset). ClickDetectors moved to the model so ears are
+  squishable; golden event friends recolor every part. SquishFx animations were
+  reworked for multi-part models: whole-model breathing bob, a squish-spring via
+  uniform scale, and a swell-and-fade pop. Verified in Studio: click-pop works,
+  goldens glimmer fully, buddy wears its hat on the new shape, and all three
+  lands' crowds read distinct at a glance.
 - **2026-06-09 (Sparkle Boutique — cosmetics + the first coin sink):** A cute
   striped stall near the Pudding Hills spawn sells buddy cosmetics for EARNED
   Sparkle Coins (never Robux): 6 part-built hats (party hat, star clip, bow,

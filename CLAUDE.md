@@ -90,6 +90,7 @@ src/ServerScriptService/Server/   (server-authoritative)
   GroupEventService.lua    "Everybody Squish!": every ~7min golden friends appear at the busiest land; shared goal -> +coins for all online
   LeaderboardService.lua   OrderedDataStore boards ("Top Friend Finders" / "Joy Champions") on physical signs at the Pudding Hills travel hub
   BoutiqueService.lua      the Sparkle Boutique stall (Pudding Hills, near spawn): validated coin-only buy/equip of buddy cosmetics; auto-wear on purchase
+  SquishyModelFactory.lua  every friend's real 3D shape: ~17 part-built archetypes (dumpling/bun/cube/bunny/bat/ghost...) + hand-tuned skins for all 48 launch friends (+8 weekly); HatOffset attr; applyGolden()
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
   UiTheme / HudUI / CollectionBookUI / CapsuleRevealUI / ToastUI / SquishFx
@@ -123,12 +124,12 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
 
 ### Not in MVP yet (deliberately)
 
-Real 3D character meshes (buddies + world friends use placeholder squishy balls
-with faces for now); gifting/trading (needs a ProfileStore session-lock migration
-first); and any monetization (Phase D — no Game Passes / Developer Products;
-**Sparkle Capsules stay FREE by design**, to avoid the Paid Random Items policy
-that restricts our 6–9 audience). *(The earlier card-art gap is closed — all 48
-friends have real trading-card art; Phase C co-op/social shipped 2026-06-09.)*
+Gifting/trading (needs a ProfileStore session-lock migration first) and any
+monetization (Phase D — no Game Passes / Developer Products; **Sparkle Capsules
+stay FREE by design**, to avoid the Paid Random Items policy that restricts our
+6–9 audience). *(Earlier gaps now closed: all 48 friends have real trading-card
+art; Phase C co-op/social shipped 2026-06-09; and every friend has a real
+part-built 3D shape via SquishyModelFactory — no more placeholder balls.)*
 
 ### Build status
 

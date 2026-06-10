@@ -7,6 +7,7 @@
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -183,13 +184,19 @@ local function attachFx(model, objectId, body)
 		face.setSleepy()
 	end
 
-	-- Gentle idle "breathing" float so sleepy friends feel alive. Tweens CFrame
-	-- only (the squash tween uses Size), so the two never fight.
-	TweenService:Create(body, TweenInfo.new(1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-		CFrame = body.CFrame * CFrame.new(0, 0.4, 0),
-	}):Play()
-
-	entries[objectId] = { body = body, fill = fill, zzz = zzz, face = face, baseSize = body.Size }
+	-- The breathing bob and squish-spring run in one Heartbeat loop (see init),
+	-- moving the WHOLE model so ears, wings, and drips ride along.
+	entries[objectId] = {
+		model = model,
+		body = body,
+		fill = fill,
+		zzz = zzz,
+		face = face,
+		baseScale = model:GetScale(),
+		basePivot = model:GetPivot(),
+		phase = (string.byte(objectId, #objectId) or 0) * 0.7,
+		squashAt = nil,
+	}
 end
 
 local function register(model)
@@ -220,22 +227,32 @@ local function register(model)
 	end)
 end
 
-local function squash(body, baseSize)
-	if not body or not body.Parent then
-		return
+-- The whole-model pop: swell up while every part fades out (the server keeps
+-- the model alive long enough for this to finish).
+local function popModel(entry)
+	local model = entry.model
+	local parts = {}
+	for _, p in ipairs(model:GetDescendants()) do
+		if p:IsA("BasePart") then
+			parts[#parts + 1] = { p = p, t0 = p.Transparency }
+		end
 	end
-	local squished = Vector3.new(baseSize.X * 1.22, baseSize.Y * 0.72, baseSize.Z * 1.22)
-	local t1 = TweenService:Create(body, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = squished,
-	})
-	t1.Completed:Connect(function()
-		if body and body.Parent then
-			TweenService:Create(body, TweenInfo.new(0.28, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-				Size = baseSize,
-			}):Play()
+	task.spawn(function()
+		local start = os.clock()
+		while model.Parent do
+			local k = math.min(1, (os.clock() - start) / 0.3)
+			model:ScaleTo(entry.baseScale * (1 + 0.5 * k))
+			for _, q in ipairs(parts) do
+				if q.p.Parent then
+					q.p.Transparency = q.t0 + (1 - q.t0) * k
+				end
+			end
+			if k >= 1 then
+				break
+			end
+			task.wait()
 		end
 	end)
-	t1:Play()
 end
 
 local function sparkle(body, count, color)
@@ -255,16 +272,6 @@ local function sparkle(body, count, color)
 	emitter.Parent = body
 	emitter:Emit(count)
 	Debris:AddItem(emitter, 1)
-end
-
-local function pop(body, baseSize)
-	if not body or not body.Parent then
-		return
-	end
-	TweenService:Create(body, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = baseSize * 1.6,
-		Transparency = 1,
-	}):Play()
 end
 
 -- A short positional sound on the friend (3D, so it plays where the squish happens).
@@ -321,19 +328,18 @@ function SquishFx.handle(result)
 		entry.face.setAwake()
 	end
 
-	squash(body, entry.baseSize)
-
 	if result.popped then
 		local def = SquishyData.getById(result.defId)
 		local color = def and UiTheme.rarityColor(def.Rarity) or nil
 		sparkle(body, 26, color)
-		pop(body, entry.baseSize)
 		playSound(body, SoundConfig.HappyPop, 0.6, 1.1)
 		if result.byUserId == localPlayer.UserId and result.coins then
 			floatingCoins(body, result.coins)
 		end
-		entries[result.objectId] = nil
+		entries[result.objectId] = nil -- leave the anim loop before the pop swell
+		popModel(entry)
 	else
+		entry.squashAt = os.clock() -- the Heartbeat loop plays the squish-spring
 		sparkle(body, 6, Color3.fromRGB(255, 240, 205))
 		playSound(body, SoundConfig.Squish, 0.7, 1.0)
 	end
@@ -349,6 +355,30 @@ function SquishFx.init()
 		local id = model:GetAttribute("ObjectId")
 		if type(id) == "string" then
 			entries[id] = nil
+		end
+	end)
+
+	-- One loop animates every friend: a gentle breathing bob (whole model, so
+	-- ears and drips ride along) and the squish-spring when someone squishes.
+	RunService.Heartbeat:Connect(function()
+		local now = os.clock()
+		for _, e in pairs(entries) do
+			if e.model.Parent and e.body.Parent then
+				if e.squashAt then
+					local t = now - e.squashAt
+					if t >= 0.45 then
+						e.squashAt = nil
+						e.model:ScaleTo(e.baseScale)
+					elseif t < 0.07 then
+						e.model:ScaleTo(e.baseScale * (1 - (t / 0.07) * 0.16))
+					else
+						local k = (t - 0.07) / 0.38
+						e.model:ScaleTo(e.baseScale * (1 - 0.16 * (1 - k) * math.cos(k * 7)))
+					end
+				end
+				local bob = math.sin(now * 1.9 + e.phase) * 0.22
+				e.model:PivotTo(e.basePivot * CFrame.new(0, bob, 0))
+			end
 		end
 	end)
 end
