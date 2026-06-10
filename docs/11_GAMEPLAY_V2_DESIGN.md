@@ -38,6 +38,21 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — needs your decisions:** cosmetics, passes, Friend-of-the-Week shop, (later) subscription — only once it's genuinely fun + retentive. *Requires your pricing/business calls + Robux product setup + publishing.*
 
 ### Build log
+- **2026-06-09 (the spread-out world — pillar 2 for real):** Chris called out
+  that friends felt lumped together — and the numbers agreed (12 pads in an
+  ~80×80 box on each 320×320 land). Every land now spreads its 12 friends from
+  a 3-pad starter cluster at the spawn out to radius ~90, each pocket anchored
+  to a landmark worth visiting: Pudding Hills grew a cottage village lane, a
+  windmill field, a fenced flower garden, and a picnic clearing; Goo Coast got
+  a candy-striped lighthouse, beach huts, umbrellas + towels, driftwood, a
+  beached rowboat, and a rocky cove (one friend naps at the END of the pier);
+  Moonlit Hollow got three mushroom cottages, a stargazing stone circle, and
+  lantern posts. Wayfinding for the 6-year-old: caramel paths (Pudding),
+  boardwalk planks (Goo), and glowing stepping stones (Moonlit) lead from each
+  spawn to every pocket, and sleepy zZz labels now beckon from 90 studs (was
+  70). Verified in Studio: 12 friends per land spread 6→92 studs, all
+  structures present, paths readable at kid's-eye level, and the Everybody
+  Squish event fired naturally at the busiest land mid-playtest.
 - **2026-06-09 (real 3D shapes — goodbye placeholder balls):** SquishyModelFactory
   gives every friend a part-built body: ~17 squishy archetypes (dumpling, bun,
   mochi, cube, puff, rice ball, flan, blob, orb, pad, capsule, drop, pop-ball,

@@ -75,7 +75,7 @@ src/ReplicatedStorage/Shared/
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
   PlayerDataService.lua    per-player profile (coins, discovered, variants, sparkle bits, shard quest, daily/streak) + leaderstats; DataStore load/save/autosave + BindToClose flush
-  WorldService.lua         builds all 3 lands, bespoke each — Pudding Hills (river/orchard/cottage/treats), Goo Coast (goo sea/pier/tide-pools/sandcastle), Moonlit Hollow (moonpool/mushroom grove/log/fireflies); each with its own pads, capsule, guide, shard pedestal + travel hub
+  WorldService.lua         builds all 3 lands, bespoke each — Pudding Hills (river/orchard/cottage VILLAGE/windmill/garden/picnic/treats), Goo Coast (goo sea/pier/tide-pools/sandcastle/lighthouse/huts/cove), Moonlit Hollow (moonpool/mushroom grove/mushroom cottages/stargazing circle/lanterns/log/fireflies); 12 friend pads per land SPREAD radius ~10-90 (3-pad starter cluster at spawn, pockets behind/beside landmarks) + wayfinding paths (caramel ribbons / boardwalk planks / glowing stepping stones); each land has its own capsule, guide, shard pedestal + travel hub
   SquishService.lua        spawns each land's pack friends on its pads; squish -> Joy -> Happy Pop -> coins -> respawn
   CapsuleService.lua       per-land Sparkle Capsule (tryOpen(player, capsuleKey, free)): weighted rarity, discover, duplicate→variant; onOpened hook
   CollectionService.lua    Equip Buddy (validated, toggles on/off)

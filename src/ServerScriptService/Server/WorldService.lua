@@ -46,6 +46,76 @@ local function floatingLabel(text: string, color: Color3, parent: BasePart, heig
 	label.Parent = gui
 end
 
+-- A soft walking path: flat ribbon segments through the waypoints. These guide
+-- little explorers from the spawn out to the far pockets of each land (the
+-- 6-year-old should always have a trail to follow).
+local function ribbonPath(folder: Instance, pts: { Vector3 }, width: number, color: Color3)
+	for i = 1, #pts - 1 do
+		local a, b = pts[i], pts[i + 1]
+		local dir = b - a
+		local seg = part({
+			Name = "Path",
+			Size = Vector3.new(dir.Magnitude + width, 0.25, width),
+			Color = color,
+			CanCollide = false,
+			CanQuery = false,
+		})
+		seg.CFrame = CFrame.new((a + b) / 2 + Vector3.new(0, 0.13, 0)) * CFrame.Angles(0, math.atan2(-dir.Z, dir.X), 0)
+		seg.Parent = folder
+	end
+end
+
+-- Glowing stepping stones (Moonlit's night-friendly version of a path).
+local function steppingStones(folder: Instance, pts: { Vector3 }, colors: { Color3 })
+	local idx = 0
+	for i = 1, #pts - 1 do
+		local a, b = pts[i], pts[i + 1]
+		local dist = (b - a).Magnitude
+		local steps = math.max(1, math.floor(dist / 4.5))
+		for s = 0, steps do
+			idx += 1
+			local stone = part({
+				Name = "Stone",
+				Shape = Enum.PartType.Cylinder,
+				Size = Vector3.new(0.25, 1.9, 1.9),
+				Color = colors[(idx % #colors) + 1],
+				Material = Enum.Material.Neon,
+				Transparency = 0.35,
+				CanCollide = false,
+				CanQuery = false,
+			})
+			stone.CFrame = CFrame.new(a:Lerp(b, s / steps) + Vector3.new(0, 0.14, 0)) * CFrame.Angles(0, 0, math.rad(90))
+			stone.Parent = folder
+		end
+	end
+end
+
+-- A cozy cottage (body + dome roof + door + glowing window), used to grow the
+-- Pudding Hills village. Scale ~0.75-1 keeps them snug next to the original.
+local function buildCottage(folder: Instance, base: Vector3, scale: number, bodyColor: Color3, roofColor: Color3)
+	local body = part({
+		Name = "CottageBody", Size = Vector3.new(18, 13, 15) * scale,
+		Position = base + Vector3.new(0, 6.5 * scale, 0), Color = bodyColor,
+	})
+	body.Parent = folder
+	local roof = part({
+		Name = "CottageRoof", Shape = Enum.PartType.Ball, Size = Vector3.new(20, 11, 17) * scale,
+		Position = base + Vector3.new(0, 14 * scale, 0), Color = roofColor, CanCollide = false,
+	})
+	roof.Parent = folder
+	local door = part({
+		Name = "CottageDoor", Size = Vector3.new(4.5, 7, 0.6) * scale,
+		Position = base + Vector3.new(0, 3.5 * scale, 7.6 * scale), Color = Color3.fromRGB(196, 150, 120),
+	})
+	door.Parent = folder
+	local window = part({
+		Name = "CottageWindow", Size = Vector3.new(3.6, 3.6, 0.6) * scale,
+		Position = base + Vector3.new(5.5 * scale, 8 * scale, 7.6 * scale),
+		Color = Color3.fromRGB(255, 232, 180), Material = Enum.Material.Neon, Transparency = 0.25,
+	})
+	window.Parent = folder
+end
+
 -- ── Reusable builders for the lands beyond Pudding Hills ────────────────────
 -- These build the shared gameplay infrastructure (ground, dunes, pads, capsule,
 -- guide, shard pedestal, landing pad) for a land, themed by colour. Each new land
@@ -136,12 +206,28 @@ local function buildTravelHub(folder: Instance, center: Vector3, currentZoneName
 	return travelPads
 end
 
--- Goo Coast's own coastal pad layout (a curving shore + tide pools + the pier),
--- deliberately different from Pudding Hills so the land feels its own.
+-- Goo Coast's spread-out shore: a starter trio by the spawn, then friends out
+-- at the pier's end, the tide pools, the sandcastle, the lighthouse, the beach
+-- huts, the rocky cove, the driftwood, and deep in the southern dunes.
 local GOO_PAD_OFFSETS = {
-	Vector3.new(-40, 2, 30), Vector3.new(-20, 2, 38), Vector3.new(2, 2, 40), Vector3.new(24, 2, 36), Vector3.new(42, 2, 28),
-	Vector3.new(-30, 2, 6), Vector3.new(34, 2, 10), Vector3.new(-8, 2, -6),
-	Vector3.new(10, 2, -18), Vector3.new(-20, 2, -26), Vector3.new(28, 2, -24), Vector3.new(0, 2, -36),
+	-- starter cluster by the spawn + guide
+	Vector3.new(-10, 2, 26), Vector3.new(12, 2, 22), Vector3.new(0, 2, 10),
+	-- at the very end of the pier, over the goo sea (y sits on the planks)
+	Vector3.new(0, 3.8, -40),
+	-- behind the sandcastle
+	Vector3.new(-52, 2, 52),
+	-- soaking in the tide pools
+	Vector3.new(-34, 2, 12), Vector3.new(36, 2, 16),
+	-- beside the lighthouse (far west shore)
+	Vector3.new(-70, 2, 10),
+	-- behind the beach huts (south-east)
+	Vector3.new(46, 2, 62),
+	-- in the rocky cove (far east)
+	Vector3.new(68, 2, 14),
+	-- behind the driftwood on the wet sand
+	Vector3.new(-45, 2, 3),
+	-- deep in the southern dunes
+	Vector3.new(-18, 2, 84),
 }
 
 -- Goo Coast: a bespoke seafoam coast — a glossy gooey sea with a wooden pier out
@@ -242,6 +328,120 @@ local function buildGooCoast()
 		TweenService:Create(bubble, TweenInfo.new(rng:NextNumber(2, 3.5), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Position = pos + Vector3.new(0, 2.5, 0) }):Play()
 	end
 
+	-- ── The spread-out shore: lighthouse, beach huts, umbrellas, driftwood,
+	-- a rowboat, and a rocky cove, so the whole beach is worth wandering ─────
+	-- A small candy-striped lighthouse anchors the far western shore.
+	local lhBase = center + Vector3.new(-76, 0, 0)
+	local lhColors = { Color3.fromRGB(255, 250, 245), Color3.fromRGB(248, 150, 170) }
+	for i = 0, 2 do
+		local ring = part({
+			Name = "LighthouseRing", Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(4.6, 5.4 - i * 0.7, 5.4 - i * 0.7),
+			Color = lhColors[(i % 2) + 1],
+		})
+		ring.CFrame = CFrame.new(lhBase + Vector3.new(0, 2.3 + i * 4.6, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		ring.Parent = folder
+	end
+	local lamp = part({
+		Name = "LighthouseLamp", Shape = Enum.PartType.Ball, Size = Vector3.new(3.2, 3.2, 3.2),
+		Position = lhBase + Vector3.new(0, 15.6, 0), Color = Color3.fromRGB(255, 232, 160),
+		Material = Enum.Material.Neon, CanCollide = false,
+	})
+	lamp.Parent = folder
+	local lampLight = Instance.new("PointLight")
+	lampLight.Color = Color3.fromRGB(255, 226, 150)
+	lampLight.Brightness = 2
+	lampLight.Range = 40
+	lampLight.Parent = lamp
+
+	-- Striped beach huts on the south-eastern sand.
+	for hi, hut in ipairs({ { Vector3.new(44, 0, 58), Color3.fromRGB(150, 220, 224) }, { Vector3.new(-2, 0, 68), Color3.fromRGB(255, 190, 200) } }) do
+		local hutBase, hutColor = hut[1] + center, hut[2]
+		local cabin = part({
+			Name = "HutBody" .. hi, Size = Vector3.new(8, 8, 7),
+			Position = hutBase + Vector3.new(0, 4, 0), Color = Color3.fromRGB(255, 250, 244),
+		})
+		cabin.Parent = folder
+		local roof = part({
+			Name = "HutRoof" .. hi, Shape = Enum.PartType.Ball, Size = Vector3.new(9.4, 4.6, 8.4),
+			Position = hutBase + Vector3.new(0, 8.8, 0), Color = hutColor, CanCollide = false,
+		})
+		roof.Parent = folder
+		local hutDoor = part({
+			Name = "HutDoor" .. hi, Size = Vector3.new(3, 5.4, 0.5),
+			Position = hutBase + Vector3.new(0, 2.7, -3.6), Color = hutColor,
+		})
+		hutDoor.Parent = folder
+	end
+
+	-- Beach umbrellas with towels.
+	for ui, u in ipairs({ { Vector3.new(-18, 0, 54), Color3.fromRGB(255, 190, 120) }, { Vector3.new(24, 0, 48), Color3.fromRGB(170, 200, 255) } }) do
+		local uBase, uColor = u[1] + center, u[2]
+		local pole = part({
+			Name = "UmbrellaPole" .. ui, Size = Vector3.new(0.5, 7, 0.5),
+			Position = uBase + Vector3.new(0, 3.5, 0), Color = Color3.fromRGB(250, 245, 240), CanCollide = false,
+		})
+		pole.Parent = folder
+		local canopy = part({
+			Name = "UmbrellaTop" .. ui, Shape = Enum.PartType.Ball, Size = Vector3.new(8, 3, 8),
+			Position = uBase + Vector3.new(0, 7, 0), Color = uColor, CanCollide = false,
+		})
+		canopy.Parent = folder
+		local towel = part({
+			Name = "Towel" .. ui, Size = Vector3.new(4, 0.18, 7),
+			Position = uBase + Vector3.new(4.4, 0.1, 0.5), Color = uColor, CanCollide = false, CanQuery = false,
+		})
+		towel.Parent = folder
+	end
+
+	-- Driftwood + a beached rowboat on the wet sand by the goo sea.
+	for di, d in ipairs({ { Vector3.new(-40, 0, -2), 24 }, { Vector3.new(36, 0, -4), -18 } }) do
+		local wood = part({
+			Name = "Driftwood" .. di, Shape = Enum.PartType.Cylinder, Size = Vector3.new(9, 1.6, 1.6),
+			Color = Color3.fromRGB(214, 190, 160),
+		})
+		wood.CFrame = CFrame.new(d[1] + center + Vector3.new(0, 0.8, 0)) * CFrame.Angles(0, math.rad(d[2]), math.rad(90))
+		wood.Parent = folder
+	end
+	local boatBase = center + Vector3.new(-22, 0, -6)
+	local hullBottom = part({
+		Name = "BoatHull", Shape = Enum.PartType.Ball, Size = Vector3.new(5, 2.2, 8.5),
+		Color = Color3.fromRGB(196, 150, 110),
+	})
+	hullBottom.CFrame = CFrame.new(boatBase + Vector3.new(0, 1.0, 0)) * CFrame.Angles(0, math.rad(30), 0)
+	hullBottom.Parent = folder
+	local boatSeat = part({
+		Name = "BoatSeat", Size = Vector3.new(4.2, 0.5, 1.2),
+		Color = Color3.fromRGB(226, 186, 140), CanCollide = false,
+	})
+	boatSeat.CFrame = CFrame.new(boatBase + Vector3.new(0, 1.9, 0)) * CFrame.Angles(0, math.rad(30), 0)
+	boatSeat.Parent = folder
+
+	-- A little rocky cove on the far eastern shore.
+	for ri, rock in ipairs({ { Vector3.new(64, 0, 8), 5.5 }, { Vector3.new(72, 0, 16), 4.4 }, { Vector3.new(70, 0, 6), 3.2 } }) do
+		local stone = part({
+			Name = "CoveRock" .. ri, Shape = Enum.PartType.Ball,
+			Size = Vector3.new(rock[2], rock[2] * 0.8, rock[2]),
+			Position = rock[1] + center + Vector3.new(0, rock[2] * 0.25, 0),
+			Color = Color3.fromRGB(196, 186, 210),
+		})
+		stone.Parent = folder
+	end
+	local arch = part({
+		Name = "CoveArch", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.2, 7, 7),
+		Color = Color3.fromRGB(206, 196, 220), CanCollide = false,
+	})
+	arch.CFrame = CFrame.new(center + Vector3.new(68, 5, 12)) * CFrame.Angles(math.rad(90), 0, 0)
+	arch.Parent = folder
+
+	-- Boardwalk plank paths along the shore (spawn -> pier, west to the
+	-- lighthouse, east to the cove).
+	local plankColor = Color3.fromRGB(226, 196, 150)
+	ribbonPath(folder, { center + Vector3.new(0, 0, 30), center + Vector3.new(0, 0, 16) }, 4, plankColor)
+	ribbonPath(folder, { center + Vector3.new(-8, 0, 26), center + Vector3.new(-40, 0, 16), center + Vector3.new(-66, 0, 6) }, 3, plankColor)
+	ribbonPath(folder, { center + Vector3.new(8, 0, 26), center + Vector3.new(40, 0, 18), center + Vector3.new(60, 0, 14) }, 3, plankColor)
+	ribbonPath(folder, { center + Vector3.new(-6, 0, 34), center + Vector3.new(-44, 0, 48) }, 3, plankColor) -- to the sandcastle
+
 	-- gameplay infrastructure: own coastal pads + themed capsule/guide + shard + travel
 	local pads = {}
 	for _, off in ipairs(GOO_PAD_OFFSETS) do
@@ -267,13 +467,25 @@ local function buildGooCoast()
 	}
 end
 
--- Moonlit Hollow's own glade pad layout (around the moonpool, in the mushroom
--- grove, and by the cozy log) — different from the other lands.
+-- Moonlit Hollow's spread-out glade: a starter trio by the spawn, then friends
+-- between the giant mushrooms, around the moonpool rim, behind the cozy log, by
+-- the little mushroom cottages, at the stargazing circle, and out in the
+-- firefly meadow.
 local MOON_PAD_OFFSETS = {
-	Vector3.new(-14, 2, -4), Vector3.new(14, 2, -8), Vector3.new(-4, 2, -24),
-	Vector3.new(-40, 2, 14), Vector3.new(-30, 2, 32), Vector3.new(-48, 2, -2),
-	Vector3.new(34, 2, 18), Vector3.new(44, 2, 2), Vector3.new(28, 2, 36),
-	Vector3.new(6, 2, 30), Vector3.new(-10, 2, 42), Vector3.new(18, 2, -32),
+	-- starter cluster by the spawn + guide
+	Vector3.new(-8, 2, 24), Vector3.new(12, 2, 20), Vector3.new(0, 2, 6),
+	-- tucked in the giant mushroom grove (west)
+	Vector3.new(-52, 2, 8), Vector3.new(-40, 2, 30),
+	-- behind the cozy log (east)
+	Vector3.new(46, 2, 26),
+	-- on the moonpool rim
+	Vector3.new(-18, 2, -26), Vector3.new(18, 2, -28),
+	-- beside the mushroom cottages
+	Vector3.new(-62, 2, 68), Vector3.new(68, 2, -14),
+	-- at the stargazing circle (far north-east)
+	Vector3.new(40, 2, -76),
+	-- out in the firefly meadow (south-east)
+	Vector3.new(28, 2, 64),
 }
 
 -- Moonlit Hollow: a bespoke twilight glade — a still reflective moonpool under a
@@ -354,6 +566,101 @@ local function buildMoonlitHollow()
 		})
 		flower.Parent = folder
 	end
+
+	-- ── The spread-out glade: mushroom cottages, a stargazing circle, and
+	-- lantern-lit stepping-stone paths (night-friendly wayfinding) ───────────
+	-- Three tiny mushroom cottages with round doors and warm windows.
+	for ci, cot in ipairs({
+		{ Vector3.new(-54, 0, 60), Color3.fromRGB(235, 120, 140) },
+		{ Vector3.new(62, 0, -8), Color3.fromRGB(150, 200, 255) },
+		{ Vector3.new(-20, 0, -64), Color3.fromRGB(190, 130, 255) },
+	}) do
+		local cBase, capColor = cot[1] + center, cot[2]
+		local stem = part({
+			Name = "MushroomHouse" .. ci, Shape = Enum.PartType.Cylinder, Size = Vector3.new(7, 7.5, 7.5),
+			Color = Color3.fromRGB(248, 240, 230),
+		})
+		stem.CFrame = CFrame.new(cBase + Vector3.new(0, 3.5, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		stem.Parent = folder
+		local cap = part({
+			Name = "MushroomHouseCap" .. ci, Shape = Enum.PartType.Ball, Size = Vector3.new(11, 6, 11),
+			Position = cBase + Vector3.new(0, 8.4, 0), Color = capColor, CanCollide = false,
+		})
+		cap.Parent = folder
+		for di = 1, 3 do
+			local a = math.rad(di * 110 + ci * 40)
+			local dot = part({
+				Name = "CapDot", Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 1.1, 1.6),
+				Position = cBase + Vector3.new(math.cos(a) * 3.4, 9.6, math.sin(a) * 3.4),
+				Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+			})
+			dot.Parent = folder
+		end
+		local door = part({
+			Name = "RoundDoor" .. ci, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 4.2, 4.2),
+			Color = Color3.fromRGB(150, 116, 92),
+		})
+		door.CFrame = CFrame.new(cBase + Vector3.new(0, 2.2, -3.6)) * CFrame.Angles(0, math.rad(90), 0)
+		door.Parent = folder
+		local windowGlow = part({
+			Name = "CottageWindow" .. ci, Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 1.6, 0.5),
+			Position = cBase + Vector3.new(2.4, 4.4, -3.5), Color = Color3.fromRGB(255, 226, 150),
+			Material = Enum.Material.Neon, CanCollide = false,
+		})
+		windowGlow.Parent = folder
+	end
+
+	-- The stargazing circle: a ring of mossy stones around a blanket, far
+	-- north-east where the sky is widest.
+	local starC = center + Vector3.new(48, 0, -70)
+	for i = 1, 6 do
+		local a = math.rad(i * 60)
+		local stone = part({
+			Name = "StarStone", Shape = Enum.PartType.Ball, Size = Vector3.new(2.6, 1.8, 2.6),
+			Position = starC + Vector3.new(math.cos(a) * 7, 0.7, math.sin(a) * 7),
+			Color = Color3.fromRGB(170, 165, 205),
+		})
+		stone.Parent = folder
+	end
+	local blanket = part({
+		Name = "StarBlanket", Size = Vector3.new(7, 0.2, 7),
+		Position = starC + Vector3.new(0, 0.12, 0), Color = Color3.fromRGB(120, 110, 180),
+		CanCollide = false, CanQuery = false,
+	})
+	blanket.Parent = folder
+
+	-- Lantern posts along the ways (warm pools of light for little explorers).
+	for _, lp in ipairs({
+		Vector3.new(0, 0, 16), Vector3.new(-28, 0, -2), Vector3.new(-48, 0, 34),
+		Vector3.new(22, 0, 28), Vector3.new(52, 0, 8), Vector3.new(16, 0, -44),
+	}) do
+		local lBase = lp + center
+		local post = part({
+			Name = "LanternPost", Size = Vector3.new(0.6, 5.5, 0.6),
+			Position = lBase + Vector3.new(0, 2.75, 0), Color = Color3.fromRGB(120, 100, 110),
+		})
+		post.Parent = folder
+		local lantern = part({
+			Name = "Lantern", Shape = Enum.PartType.Ball, Size = Vector3.new(1.5, 1.8, 1.5),
+			Position = lBase + Vector3.new(0, 5.9, 0), Color = Color3.fromRGB(255, 226, 150),
+			Material = Enum.Material.Neon, CanCollide = false,
+		})
+		lantern.Parent = folder
+		local glow = Instance.new("PointLight")
+		glow.Color = Color3.fromRGB(255, 220, 160)
+		glow.Brightness = 1.3
+		glow.Range = 17
+		glow.Parent = lantern
+	end
+
+	-- Glowing stepping-stone paths from the spawn to every pocket.
+	local stoneColors = { Color3.fromRGB(186, 164, 230), Color3.fromRGB(150, 226, 210) }
+	steppingStones(folder, { center + Vector3.new(0, 0, 30), center + Vector3.new(0, 0, -2) }, stoneColors) -- to the moonpool
+	steppingStones(folder, { center + Vector3.new(-12, 0, -6), center + Vector3.new(-44, 0, 8) }, stoneColors) -- to the grove
+	steppingStones(folder, { center + Vector3.new(-48, 0, 22), center + Vector3.new(-52, 0, 52) }, stoneColors) -- grove to cottage
+	steppingStones(folder, { center + Vector3.new(10, 0, 28), center + Vector3.new(40, 0, 24) }, stoneColors) -- to the cozy log
+	steppingStones(folder, { center + Vector3.new(50, 0, 16), center + Vector3.new(58, 0, 0) }, stoneColors) -- log to cottage
+	steppingStones(folder, { center + Vector3.new(12, 0, -34), center + Vector3.new(42, 0, -64) }, stoneColors) -- to the stargazing circle
 
 	-- drifting fireflies
 	local fField = part({ Name = "Fireflies", Size = Vector3.new(180, 1, 180), Position = center + Vector3.new(0, 4, 0), Transparency = 1, CanCollide = false, CanQuery = false })
@@ -577,14 +884,25 @@ function WorldService.build()
 	guidePrompt.Parent = guideBody
 	guideModel.Parent = folder
 
-	-- Spawn pads where sleepy squishy friends appear — spread across Pudding Hills
-	-- (west, east-by-the-orchard, central, and deeper north) so the world is a place
-	-- to explore, not one click-cluster.
+	-- Spawn pads where sleepy squishy friends appear — TRULY spread now: a small
+	-- starter cluster by the guide so the first minute is easy, then pockets at
+	-- every landmark (village, orchard, windmill field, garden, picnic, far east)
+	-- so finding friends is exploring, not standing in one click-cluster.
 	local padPositions = {
-		Vector3.new(-10, 2, 2), Vector3.new(9, 2, -2), Vector3.new(2, 2, 9),
-		Vector3.new(-34, 2, 2), Vector3.new(-28, 2, -18), Vector3.new(-40, 2, 8),
-		Vector3.new(30, 2, -12), Vector3.new(40, 2, 4), Vector3.new(22, 2, -22),
-		Vector3.new(-6, 2, -30), Vector3.new(14, 2, -34), Vector3.new(-20, 2, -38),
+		-- starter cluster (visible from spawn, by the guide + capsule)
+		Vector3.new(-8, 2, 6), Vector3.new(10, 2, 2), Vector3.new(2, 2, -8),
+		-- the cottage village lane (south-west)
+		Vector3.new(-66, 2, 32), Vector3.new(-80, 2, 44),
+		-- under the orchard trees (north-east, by the shard pedestal)
+		Vector3.new(44, 2, -34), Vector3.new(56, 2, -48),
+		-- the windmill field, deep across the river (north-west)
+		Vector3.new(-16, 2, -68), Vector3.new(8, 2, -52),
+		-- beside the flower garden (north-west)
+		Vector3.new(-34, 2, -46),
+		-- the picnic clearing (east, past the boutique)
+		Vector3.new(68, 2, 22),
+		-- the far eastern rise, on the way to the Goo Coast gate
+		Vector3.new(84, 2, -8),
 	}
 	local pads = {}
 	for i, pos in ipairs(padPositions) do
@@ -941,6 +1259,103 @@ function WorldService.build()
 	floatingLabel("Goo Coast", Color3.fromRGB(40, 150, 150), arch, 4)
 	gate.PrimaryPart = arch
 	gate.Parent = folder
+
+	-- ── The spread-out valley: a village lane, windmill field, flower garden,
+	-- and picnic clearing, so friends have places to hide behind/beside ──────
+	-- Two more cottages make a lane with the original (a tiny storybook village).
+	buildCottage(folder, Vector3.new(-74, 0, 40), 0.8, Color3.fromRGB(255, 232, 214), Color3.fromRGB(186, 224, 196))
+	buildCottage(folder, Vector3.new(-58, 0, 52), 0.72, Color3.fromRGB(244, 234, 255), Color3.fromRGB(206, 186, 240))
+
+	-- A windmill on the far north-western field (the valley's storybook skyline).
+	local windmillBase = Vector3.new(-20, 0, -75)
+	local tower = part({
+		Name = "WindmillTower", Shape = Enum.PartType.Cylinder, Size = Vector3.new(13, 5.5, 5.5),
+		Color = Color3.fromRGB(255, 240, 222),
+	})
+	tower.CFrame = CFrame.new(windmillBase + Vector3.new(0, 6.5, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	tower.Parent = folder
+	local cap = part({
+		Name = "WindmillCap", Shape = Enum.PartType.Ball, Size = Vector3.new(6.4, 4.4, 6.4),
+		Position = windmillBase + Vector3.new(0, 14, 0), Color = Color3.fromRGB(244, 150, 150), CanCollide = false,
+	})
+	cap.Parent = folder
+	local hub = part({
+		Name = "WindmillHub", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4),
+		Position = windmillBase + Vector3.new(0, 13, 3.1), Color = Color3.fromRGB(196, 150, 120), CanCollide = false,
+	})
+	hub.Parent = folder
+	for _, ang in ipairs({ 25, 115 }) do -- two crossed sails at a jaunty angle
+		local sail = part({
+			Name = "WindmillSail", Size = Vector3.new(13, 1.6, 0.4),
+			Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+		})
+		sail.CFrame = CFrame.new(windmillBase + Vector3.new(0, 13, 3.2)) * CFrame.Angles(0, 0, math.rad(ang))
+		sail.Parent = folder
+	end
+
+	-- A fenced flower garden north of the river.
+	local gardenC = Vector3.new(-28, 0, -56)
+	for i = 1, 10 do
+		local a = math.rad(i * 36)
+		local post = part({
+			Name = "FencePost", Size = Vector3.new(0.6, 2.4, 0.6),
+			Position = gardenC + Vector3.new(math.cos(a) * 8.5, 1.2, math.sin(a) * 6.5),
+			Color = Color3.fromRGB(244, 230, 214),
+		})
+		post.Parent = folder
+	end
+	local tulipColors = { Color3.fromRGB(255, 150, 170), Color3.fromRGB(255, 210, 120), Color3.fromRGB(190, 160, 240), Color3.fromRGB(255, 170, 140) }
+	for i = 1, 7 do
+		local a = math.rad(i * 51)
+		local r = (i % 2 == 0) and 4.4 or 2.2
+		local at = gardenC + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r)
+		local stem = part({
+			Name = "Stem", Size = Vector3.new(0.3, 1.7, 0.3), Position = at + Vector3.new(0, 0.85, 0),
+			Color = Color3.fromRGB(150, 208, 130), CanCollide = false,
+		})
+		stem.Parent = folder
+		local head = part({
+			Name = "Tulip", Shape = Enum.PartType.Ball, Size = Vector3.new(1.1, 1.3, 1.1),
+			Position = at + Vector3.new(0, 2.1, 0), Color = tulipColors[(i % #tulipColors) + 1], CanCollide = false,
+		})
+		head.Parent = folder
+	end
+
+	-- A picnic clearing east of the boutique.
+	local picnicC = Vector3.new(62, 0, 30)
+	for ix = 0, 1 do
+		for iz = 0, 1 do
+			local square = part({
+				Name = "Blanket", Size = Vector3.new(4, 0.2, 4),
+				Position = picnicC + Vector3.new(ix * 4 - 2, 0.12, iz * 4 - 2),
+				Color = ((ix + iz) % 2 == 0) and Color3.fromRGB(255, 170, 190) or Color3.fromRGB(255, 247, 240),
+				CanCollide = false, CanQuery = false,
+			})
+			square.Parent = folder
+		end
+	end
+	local basket = part({
+		Name = "Basket", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.6, 2.2, 2.2),
+		Color = Color3.fromRGB(196, 154, 116),
+	})
+	basket.CFrame = CFrame.new(picnicC + Vector3.new(0, 0.9, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	basket.Parent = folder
+	for _, off in ipairs({ Vector3.new(-7, 0, 4), Vector3.new(7, 0, -3) }) do
+		local bench = part({
+			Name = "LogBench", Shape = Enum.PartType.Cylinder, Size = Vector3.new(6, 1.8, 1.8),
+			Color = Color3.fromRGB(206, 170, 120),
+		})
+		bench.CFrame = CFrame.new(picnicC + off + Vector3.new(0, 0.9, 0)) * CFrame.Angles(0, math.rad(35), math.rad(90))
+		bench.Parent = folder
+	end
+
+	-- Caramel paths so every pocket has a readable trail from the spawn.
+	local pathColor = Color3.fromRGB(240, 196, 138)
+	ribbonPath(folder, { Vector3.new(-4, 0, 30), Vector3.new(-40, 0, 38), Vector3.new(-66, 0, 42) }, 3, pathColor) -- to the village
+	ribbonPath(folder, { Vector3.new(0, 0, 11), Vector3.new(-10, 0, -34), Vector3.new(-18, 0, -68) }, 3, pathColor) -- over the bridge to the windmill
+	ribbonPath(folder, { Vector3.new(-14, 0, -40), Vector3.new(-24, 0, -50) }, 2.4, pathColor) -- garden spur
+	ribbonPath(folder, { Vector3.new(6, 0, 8), Vector3.new(38, 0, -28) }, 3, pathColor) -- to the orchard + shard
+	ribbonPath(folder, { Vector3.new(10, 0, 32), Vector3.new(54, 0, 28) }, 3, pathColor) -- past the boutique to the picnic
 
 	local puddingHills = {
 		zone = "Pudding Hills",

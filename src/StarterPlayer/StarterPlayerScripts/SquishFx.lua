@@ -30,7 +30,7 @@ local function buildBillboard(body, def)
 	gui.Size = UDim2.fromOffset(150, 54)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, 3.6, 0)
 	gui.AlwaysOnTop = true
-	gui.MaxDistance = 70
+	gui.MaxDistance = 90 -- a distant zZz should beckon across the spread-out lands
 	gui.Parent = body
 
 	local name = Instance.new("TextLabel")

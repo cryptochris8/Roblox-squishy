@@ -20,10 +20,12 @@ where they get stuck or light up matters more than what they say.*
 - [ ] Does the **Happy Pop** (sparkles + coins) feel rewarding?
 - [ ] Does the **free first capsule** / **🎁 Free Daily Gift** get noticed + opened?
 
-## Each land (do all three)
-- [ ] **Pudding Hills** — cozy and readable? The river/bridge/orchard/cottage feel like a place?
-- [ ] **Goo Coast** — does it feel *different* (goo sea, pier, sandcastle)? Fun to explore?
-- [ ] **Moonlit Hollow** — magical, not scary? (Watch the 6-year-old — it must read "cozy night," never spooky.)
+## Each land (do all three) — now SPREAD OUT with places to explore
+- [ ] **Pudding Hills** — do they follow the caramel paths to the village lane / windmill / garden / picnic? Does finding a friend *behind* a cottage feel like a discovery?
+- [ ] **Goo Coast** — do they walk the pier to the friend at the END? Find the lighthouse? The cove?
+- [ ] **Moonlit Hollow** — do the lanterns + glowing stepping stones keep the 6-year-old oriented at night? Magical, never spooky?
+- [ ] Is the **starter cluster** (3 friends by each spawn) enough to make the first minute obvious?
+- [ ] Does walking between pockets feel like exploring or like a chore? (Watch the 8-year-olds for grind face.)
 - [ ] Do the **Sparkle Bits** (hidden collectibles) get found? Too easy / too hard?
 
 ## The quest + travel
