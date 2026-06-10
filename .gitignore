@@ -20,6 +20,11 @@ squishy_smash_roblox_claude_code_package.zip
 /DevPackages/
 wally.lock
 
+# Mesh pipeline bulk artifacts (regenerable; asset ids live in the manifests)
+tools/mesh_pipeline/output/
+tools/mesh_pipeline/crops/
+tools/mesh_pipeline/work/
+
 # Editor / OS noise
 .DS_Store
 Thumbs.db

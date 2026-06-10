@@ -587,10 +587,30 @@ local KEYWORD_ARCHETYPES = {
 
 local FALLBACK_BODY = C(255, 196, 212)
 
+-- Card-faithful mesh bodies (Meshy image-to-3D from the actual trading cards)
+-- live in ServerStorage.MeshBodies, one MeshPart per friend id, prepared by
+-- tools/mesh_pipeline (scaled to ~4 studs, face yawed to +Z via PivotOffset,
+-- textures in a SurfaceAppearance). When a friend has one, it wins; the
+-- part-built archetypes below remain the fallback for friends without.
+local meshBodies = game:GetService("ServerStorage"):FindFirstChild("MeshBodies")
+
 -- Build a friend's body. Always returns a Model whose PrimaryPart is "Body".
 function SquishyModelFactory.build(def): Model
 	local m = Instance.new("Model")
 	m.Name = (def and def.DisplayName) or "Squishy Friend"
+
+	local meshTemplate = meshBodies and def and meshBodies:FindFirstChild(def.Id)
+	if meshTemplate then
+		local body = meshTemplate:Clone()
+		body.Name = "Body"
+		body.Parent = m
+		m.PrimaryPart = body
+		m:SetAttribute("HatOffset", body.Size.Y / 2 + 0.2)
+		-- the card art bakes the face into the texture; SquishFx/BuddyService
+		-- skip their billboard faces when they see this
+		m:SetAttribute("BakedFace", true)
+		return m
+	end
 
 	local skin = def and SKINS[def.Id]
 	if not skin and def then
@@ -622,10 +642,16 @@ function SquishyModelFactory.build(def): Model
 end
 
 -- Dress a friend in event GOLD: every part glimmers gold (keeping glassy/neon
--- materials so shapes stay readable), plus the golden sparkle.
+-- materials so shapes stay readable), plus the golden sparkle. Mesh bodies drop
+-- their SurfaceAppearance first — a texture would hide the gold tint.
 function SquishyModelFactory.applyGolden(model: Model)
 	for _, p in ipairs(model:GetDescendants()) do
-		if p:IsA("BasePart") then
+		if p:IsA("SurfaceAppearance") then
+			p:Destroy()
+		elseif p:IsA("BasePart") then
+			if p:IsA("MeshPart") then
+				p.TextureID = ""
+			end
 			p.Color = C(255, 213, 110)
 			p.Reflectance = math.max(p.Reflectance, 0.12)
 		end

@@ -331,7 +331,11 @@ local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { 
 	end
 	local body = model.PrimaryPart :: BasePart
 
-	addFace(body)
+	-- mesh bodies have card-faithful faces baked in; only the part-built
+	-- archetypes need the billboard face
+	if model:GetAttribute("BakedFace") ~= true then
+		addFace(body)
+	end
 	addVariantAura(body, variantLevel)
 	applyCosmetics(model, body, equipped)
 

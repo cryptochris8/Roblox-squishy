@@ -1,0 +1,338 @@
+﻿{
+    "arcane_wobble_kitty":  {
+                                "taskId":  "019eafab-b94d-7a21-afc4-dff811a20ecd",
+                                "status":  "done",
+                                "fbx":  "output/arcane_wobble_kitty.fbx",
+                                "thumb":  "output/arcane_wobble_kitty_thumb.png",
+                                "credits":  30
+                            },
+    "aurora_stretch_cube":  {
+                                "taskId":  "019eafab-d533-7ddf-a198-3a38913ce063",
+                                "status":  "done",
+                                "fbx":  "output/aurora_stretch_cube.fbx",
+                                "thumb":  "output/aurora_stretch_cube_thumb.png",
+                                "credits":  30
+                            },
+    "blushy_bun_bunny":  {
+                             "taskId":  "019eafab-eab0-7df0-8d58-ddab977c7464",
+                             "status":  "done",
+                             "fbx":  "output/blushy_bun_bunny.fbx",
+                             "thumb":  "output/blushy_bun_bunny_thumb.png",
+                             "credits":  30
+                         },
+    "bubble_blob":  {
+                        "taskId":  "019eafac-03d0-7590-9ff2-e2d07651cdfe",
+                        "status":  "done",
+                        "fbx":  "output/bubble_blob.fbx",
+                        "thumb":  "output/bubble_blob_thumb.png",
+                        "credits":  30
+                    },
+    "candy_fang_creature":  {
+                                "taskId":  "019eafad-e6b6-7a46-a435-a1608a7261b8",
+                                "status":  "done",
+                                "fbx":  "output/candy_fang_creature.fbx",
+                                "thumb":  "output/candy_fang_creature_thumb.png",
+                                "credits":  30
+                            },
+    "celestial_dumpling_core":  {
+                                    "taskId":  "019eafae-72d4-7183-bbbd-8d1ec16aed4b",
+                                    "status":  "done",
+                                    "fbx":  "output/celestial_dumpling_core.fbx",
+                                    "thumb":  "output/celestial_dumpling_core_thumb.png",
+                                    "credits":  30
+                                },
+    "cosmic_jelly_pad":  {
+                             "taskId":  "019eafae-8886-7a56-9f4a-56b9d626db71",
+                             "status":  "done",
+                             "fbx":  "output/cosmic_jelly_pad.fbx",
+                             "thumb":  "output/cosmic_jelly_pad_thumb.png",
+                             "credits":  30
+                         },
+    "cream_puff":  {
+                       "taskId":  "019eafaf-596c-7e6e-8b3c-f45457321a59",
+                       "status":  "done",
+                       "fbx":  "output/cream_puff.fbx",
+                       "thumb":  "output/cream_puff_thumb.png",
+                       "credits":  30
+                   },
+    "crystal_mochi":  {
+                          "taskId":  "019eafb0-42ad-7ee8-81ec-44e8f5787eb5",
+                          "status":  "done",
+                          "fbx":  "output/crystal_mochi.fbx",
+                          "thumb":  "output/crystal_mochi_thumb.png",
+                          "credits":  30
+                      },
+    "dream_eater_squish":  {
+                               "taskId":  "019eafb0-d573-7205-bdb1-e0de69b78656",
+                               "status":  "done",
+                               "fbx":  "output/dream_eater_squish.fbx",
+                               "thumb":  "output/dream_eater_squish_thumb.png",
+                               "credits":  30
+                           },
+    "frost_gel_cube":  {
+                           "taskId":  "019eafb0-fe81-7207-8f6a-e9981d740a99",
+                           "status":  "done",
+                           "fbx":  "output/frost_gel_cube.fbx",
+                           "thumb":  "output/frost_gel_cube_thumb.png",
+                           "credits":  30
+                       },
+    "galaxy_dumpling":  {
+                            "taskId":  "019eafb1-ce81-7a84-bf42-6a8cd357ca32",
+                            "status":  "done",
+                            "fbx":  "output/galaxy_dumpling.fbx",
+                            "thumb":  "output/galaxy_dumpling_thumb.png",
+                            "credits":  30
+                        },
+    "glitter_goo_ball":  {
+                             "taskId":  "019eafb3-570d-7f9c-b0f9-03e2035dd437",
+                             "status":  "done",
+                             "fbx":  "output/glitter_goo_ball.fbx",
+                             "thumb":  "output/glitter_goo_ball_thumb.png",
+                             "credits":  30
+                         },
+    "glow_ghost_puff":  {
+                            "taskId":  "019eafb3-70ba-76f0-aa6d-79e5b4becafa",
+                            "status":  "done",
+                            "fbx":  "output/glow_ghost_puff.fbx",
+                            "thumb":  "output/glow_ghost_puff_thumb.png",
+                            "credits":  30
+                        },
+    "golden_syrup_cube":  {
+                              "taskId":  "019eafb3-ee39-72c3-883b-e0e109839e91",
+                              "status":  "done",
+                              "fbx":  "output/golden_syrup_cube.fbx",
+                              "thumb":  "output/golden_syrup_cube_thumb.png",
+                              "credits":  30
+                          },
+    "goo_ball":  {
+                     "taskId":  "019eafb4-65a6-7713-8e81-98fc1e867558",
+                     "status":  "done",
+                     "fbx":  "output/goo_ball.fbx",
+                     "thumb":  "output/goo_ball_thumb.png",
+                     "credits":  30
+                 },
+    "jelly_bun":  {
+                      "taskId":  "019eafb5-939f-7aeb-8a21-578456574d87",
+                      "status":  "done",
+                      "fbx":  "output/jelly_bun.fbx",
+                      "thumb":  "output/jelly_bun_thumb.png",
+                      "credits":  30
+                  },
+    "jelly_pad":  {
+                      "taskId":  "019eafb5-a849-7fcf-ac18-c2796201e807",
+                      "status":  "done",
+                      "fbx":  "output/jelly_pad.fbx",
+                      "thumb":  "output/jelly_pad_thumb.png",
+                      "credits":  30
+                  },
+    "marshmallow_puff":  {
+                             "taskId":  "019eafb6-38a1-7afb-8764-34e1f9214071",
+                             "status":  "done",
+                             "fbx":  "output/marshmallow_puff.fbx",
+                             "thumb":  "output/marshmallow_puff_thumb.png",
+                             "credits":  30
+                         },
+    "moon_bat_blob":  {
+                          "taskId":  "019eafb6-4d7c-7321-aaea-202dd9ab4159",
+                          "status":  "done",
+                          "fbx":  "output/moon_bat_blob.fbx",
+                          "thumb":  "output/moon_bat_blob_thumb.png",
+                          "credits":  30
+                      },
+    "mythic_plush_familiar":  {
+                                  "taskId":  "019eafb7-df84-77be-b19c-3508cc3187ef",
+                                  "status":  "done",
+                                  "fbx":  "output/mythic_plush_familiar.fbx",
+                                  "thumb":  "output/mythic_plush_familiar_thumb.png",
+                                  "credits":  30
+                              },
+    "neon_dessert_blob":  {
+                              "taskId":  "019eafb7-f41f-7345-9282-45c24c1d6756",
+                              "status":  "done",
+                              "fbx":  "output/neon_dessert_blob.fbx",
+                              "thumb":  "output/neon_dessert_blob_thumb.png",
+                              "credits":  30
+                          },
+    "peach_mochi":  {
+                        "taskId":  "019eafb8-0da6-702e-bf5f-0953fc62e300",
+                        "status":  "done",
+                        "fbx":  "output/peach_mochi.fbx",
+                        "thumb":  "output/peach_mochi_thumb.png",
+                        "credits":  30
+                    },
+    "phantom_jelly_beast":  {
+                                "taskId":  "019eafb8-8878-77dd-9361-c442e897d137",
+                                "status":  "done",
+                                "fbx":  "output/phantom_jelly_beast.fbx",
+                                "thumb":  "output/phantom_jelly_beast_thumb.png",
+                                "credits":  30
+                            },
+    "plasma_goo_ball":  {
+                            "taskId":  "019eafba-501a-7839-8a9f-4576611a08f2",
+                            "status":  "done",
+                            "fbx":  "output/plasma_goo_ball.fbx",
+                            "thumb":  "output/plasma_goo_ball_thumb.png",
+                            "credits":  30
+                        },
+    "prism_stress_orb":  {
+                             "taskId":  "019eafba-6552-738a-84fe-47b626947edf",
+                             "status":  "done",
+                             "fbx":  "output/prism_stress_orb.fbx",
+                             "thumb":  "output/prism_stress_orb_thumb.png",
+                             "credits":  30
+                         },
+    "pudding_pop":  {
+                        "taskId":  "019eafba-f1d3-7399-9d00-690870148bdb",
+                        "status":  "done",
+                        "fbx":  "output/pudding_pop.fbx",
+                        "thumb":  "output/pudding_pop_thumb.png",
+                        "credits":  30
+                    },
+    "puff_ghost":  {
+                       "taskId":  "019eafbb-09ee-7853-a750-e6133e8ed526",
+                       "status":  "done",
+                       "fbx":  "output/puff_ghost.fbx",
+                       "thumb":  "output/puff_ghost_thumb.png",
+                       "credits":  30
+                   },
+    "rainbow_jelly_bun":  {
+                              "taskId":  "019eafbc-2110-73d3-86e7-6479da7446e2",
+                              "status":  "done",
+                              "fbx":  "output/rainbow_jelly_bun.fbx",
+                              "thumb":  "output/rainbow_jelly_bun_thumb.png",
+                              "credits":  30
+                          },
+    "rice_ball_squish":  {
+                             "taskId":  "019eafbc-ee56-73ec-be2a-528eaf877644",
+                             "status":  "done",
+                             "fbx":  "output/rice_ball_squish.fbx",
+                             "thumb":  "output/rice_ball_squish_thumb.png",
+                             "credits":  30
+                         },
+    "round_eared_creature":  {
+                                 "taskId":  "019eafbd-7618-78cb-9431-57617b7a20fc",
+                                 "status":  "done",
+                                 "fbx":  "output/round_eared_creature.fbx",
+                                 "thumb":  "output/round_eared_creature_thumb.png",
+                                 "credits":  30
+                             },
+    "shockwave_blob":  {
+                           "taskId":  "019eafbd-8ace-70b3-9bce-a5f6973caa6b",
+                           "status":  "done",
+                           "fbx":  "output/shockwave_blob.fbx",
+                           "thumb":  "output/shockwave_blob_thumb.png",
+                           "credits":  30
+                       },
+    "singularity_goo_core":  {
+                                 "taskId":  "019eafbe-a8ae-78f6-9b10-b89add0d0650",
+                                 "status":  "done",
+                                 "fbx":  "output/singularity_goo_core.fbx",
+                                 "thumb":  "output/singularity_goo_core_thumb.png",
+                                 "credits":  30
+                             },
+    "sleepy_slime_pet":  {
+                             "taskId":  "019eafbf-83d6-743c-9d59-e6e164de8a0b",
+                             "status":  "done",
+                             "fbx":  "output/sleepy_slime_pet.fbx",
+                             "thumb":  "output/sleepy_slime_pet_thumb.png",
+                             "credits":  30
+                         },
+    "soft_dumpling":  {
+                          "status":  "done",
+                          "credits":  30,
+                          "thumb":  "output/soft_dumpling_thumb.png",
+                          "taskId":  "019eaf9d-d15f-7e36-9d80-e38728eddd98",
+                          "fbx":  "output/soft_dumpling.fbx"
+                      },
+    "soft_fang_critter":  {
+                              "taskId":  "019eafbf-9929-743c-91b9-18150a5293d9",
+                              "status":  "done",
+                              "fbx":  "output/soft_fang_critter.fbx",
+                              "thumb":  "output/soft_fang_critter_thumb.png",
+                              "credits":  30
+                          },
+    "soft_stress_orb":  {
+                            "taskId":  "019eafc0-2992-7926-aefe-98622218da50",
+                            "status":  "done",
+                            "fbx":  "output/soft_stress_orb.fbx",
+                            "thumb":  "output/soft_stress_orb_thumb.png",
+                            "credits":  30
+                        },
+    "sparkle_mochi":  {
+                          "taskId":  "019eafc0-f5a7-7937-9f66-399537fc9261",
+                          "status":  "done",
+                          "fbx":  "output/sparkle_mochi.fbx",
+                          "thumb":  "output/sparkle_mochi_thumb.png",
+                          "credits":  30
+                      },
+    "squish_bat":  {
+                       "taskId":  "019eafc2-1081-714c-846a-a2ff0487be3c",
+                       "status":  "done",
+                       "fbx":  "output/squish_bat.fbx",
+                       "thumb":  "output/squish_bat_thumb.png",
+                       "credits":  30
+                   },
+    "squish_capsule":  {
+                           "taskId":  "019eafc2-9dde-7176-852f-70d657ec224f",
+                           "status":  "done",
+                           "fbx":  "output/squish_capsule.fbx",
+                           "thumb":  "output/squish_capsule_thumb.png",
+                           "credits":  30
+                       },
+    "star_eyed_bunny":  {
+                            "taskId":  "019eafc2-b194-7994-b2ae-a439efa5a3cb",
+                            "status":  "done",
+                            "fbx":  "output/star_eyed_bunny.fbx",
+                            "thumb":  "output/star_eyed_bunny_thumb.png",
+                            "credits":  30
+                        },
+    "sticky_pop_ball":  {
+                            "taskId":  "019eafc3-2251-799b-bebc-8cada2388590",
+                            "status":  "done",
+                            "fbx":  "output/sticky_pop_ball.fbx",
+                            "thumb":  "output/sticky_pop_ball_thumb.png",
+                            "credits":  30
+                        },
+    "strawberry_dumpling":  {
+                                "taskId":  "019eafc3-e5af-7484-a613-559a5a0f2ee3",
+                                "status":  "done",
+                                "fbx":  "output/strawberry_dumpling.fbx",
+                                "thumb":  "output/strawberry_dumpling_thumb.png",
+                                "credits":  30
+                            },
+    "stretch_cube":  {
+                         "taskId":  "019eafc5-2272-71c8-8376-4ac25615c4c2",
+                         "status":  "done",
+                         "fbx":  "output/stretch_cube.fbx",
+                         "thumb":  "output/stretch_cube_thumb.png",
+                         "credits":  30
+                     },
+    "syrup_cube":  {
+                       "taskId":  "019eafc5-3678-7dbe-939a-103ea85d636c",
+                       "status":  "done",
+                       "fbx":  "output/syrup_cube.fbx",
+                       "thumb":  "output/syrup_cube_thumb.png",
+                       "credits":  30
+                   },
+    "tiny_blob_monster":  {
+                              "taskId":  "019eafc5-4ba6-71d0-9d7d-7b957a91c362",
+                              "status":  "done",
+                              "fbx":  "output/tiny_blob_monster.fbx",
+                              "thumb":  "output/tiny_blob_monster_thumb.png",
+                              "credits":  30
+                          },
+    "wobble_drop":  {
+                        "taskId":  "019eafc6-156e-7a3b-99b1-d6d0421b4607",
+                        "status":  "done",
+                        "fbx":  "output/wobble_drop.fbx",
+                        "thumb":  "output/wobble_drop_thumb.png",
+                        "credits":  30
+                    },
+    "wobble_kitty":  {
+                         "taskId":  "019eafc6-dae8-74c6-9cae-530f23aeaedf",
+                         "status":  "done",
+                         "fbx":  "output/wobble_kitty.fbx",
+                         "thumb":  "output/wobble_kitty_thumb.png",
+                         "credits":  30
+                     }
+}

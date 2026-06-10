@@ -173,14 +173,21 @@ local function attachFx(model, objectId, body)
 	end
 	local def = SquishyData.getById(model:GetAttribute("DefId"))
 	local fill, zzz = buildBillboard(body, def)
-	local face = buildFace(body)
+	-- Card-faithful mesh bodies have their face baked into the texture — no
+	-- billboard face for them (the zZz + Joy bar still show sleepy/awake).
+	local face = nil
+	if model:GetAttribute("BakedFace") ~= true then
+		face = buildFace(body)
+	end
 	-- A re-streamed friend may already be mid-meter; show what the server knows.
 	local joy = math.clamp(model:GetAttribute("Joy") or 0, 0, 1)
 	fill.Size = UDim2.new(joy, 0, 1, 0)
 	if joy > 0 then
-		face.setAwake()
+		if face then
+			face.setAwake()
+		end
 		zzz.Visible = false
-	else
+	elseif face then
 		face.setSleepy()
 	end
 
