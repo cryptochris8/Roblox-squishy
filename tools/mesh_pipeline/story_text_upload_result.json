@@ -50,5 +50,25 @@
     "page_13":  {
                     "decalId":  "100773420778672",
                     "moderation":  "Approved"
+                },
+    "page_14":  {
+                    "decalId":  "130724611962927",
+                    "moderation":  "Approved"
+                },
+    "page_15":  {
+                    "decalId":  "80192599114049",
+                    "moderation":  "Approved"
+                },
+    "page_16":  {
+                    "decalId":  "116423328834559",
+                    "moderation":  "Approved"
+                },
+    "page_17":  {
+                    "decalId":  "109988557122377",
+                    "moderation":  "Approved"
+                },
+    "page_18":  {
+                    "decalId":  "117268828632011",
+                    "moderation":  "Approved"
                 }
 }

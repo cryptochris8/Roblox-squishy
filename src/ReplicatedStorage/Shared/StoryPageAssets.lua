@@ -1,25 +1,28 @@
 -- StoryPageAssets
--- pageId -> uploaded IMAGE asset id for each storybook spread (resolved from
--- the Decal uploads in Studio, same pipeline as the card art; provenance in
--- tools/mesh_pipeline/story_upload_result.json). Uploaded + resolved 2026-06-11.
+-- pageId -> uploaded IMAGE asset id for each storybook page. These are the
+-- TEXT EDITION pages (build_book2/out/pages_jpeg even pages: the printed book
+-- pages with the story typeset on the art), so finding pages = reading the
+-- book. Resolved from Decal uploads in Studio 2026-06-11; provenance in
+-- tools/mesh_pipeline/story_text_upload_result.json. (The earlier textless
+-- spread uploads remain in the inventory unused.)
 
 return {
-	page_01 = 138720387577191,
-	page_02 = 106386578844864,
-	page_03 = 86621029652563,
-	page_04 = 103669208911580,
-	page_05 = 113233270222451,
-	page_06 = 76870167639831,
-	page_07 = 86854481184996,
-	page_08 = 89797589962269,
-	page_09 = 112376992579214,
-	page_10 = 116471542770728,
-	page_11 = 88638151003605,
-	page_12 = 98793820167386,
-	page_13 = 122228256736591,
-	page_14 = 127245205238346,
-	page_15 = 77355204486571,
-	page_16 = 113562240594310,
-	page_17 = 105271061044105,
-	page_18 = 84166298050474,
+	page_01 = 97056124145656,
+	page_02 = 98702659364061,
+	page_03 = 93653071267413,
+	page_04 = 98862258744133,
+	page_05 = 138144753876927,
+	page_06 = 111290915930150,
+	page_07 = 110997613426480,
+	page_08 = 103269022111123,
+	page_09 = 130799570940400,
+	page_10 = 80334199216983,
+	page_11 = 119909764787151,
+	page_12 = 134886388071114,
+	page_13 = 87142215454638,
+	page_14 = 80834170760865,
+	page_15 = 113884137378201,
+	page_16 = 113072731959348,
+	page_17 = 85212504767168,
+	page_18 = 137024689143014,
 }
