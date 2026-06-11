@@ -38,6 +38,17 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **Phase D — Monetization — DECIDED 2026-06-10 (build queued after ProfileStore + Squishy Room):** Chris approved Game Passes + premium cosmetics alongside the retention engine. **Locked prices:** Extra Buddy Slot 99 R$, Coin Boost +25% 149 R$, Sparkle Club VIP 249 R$ (passes); premium boutique cosmetics 79–249 R$ as Developer Products. **No coin packs in v1** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed. Remaining manual step when built: Chris creates the products in Creator Hub and pastes ids into the config.
 
 ### Build log
+- **2026-06-11 (hidden story pages — the book inside the game):** All 18
+  watercolor spreads of The Lost Sparkle uploaded (cautious one-at-a-time
+  trickle, every page instantly Approved) and hidden as glowing parchments at
+  story-appropriate spots across the three lands (six per land). Walk-up
+  pickup (bits-style per-player rendering, server-validated), +25 coins per
+  page, full-set +300 bonus with a server-wide shout-out, and a 📖 Storybook
+  HUD button opening a page-turning viewer (real art; undiscovered pages show
+  "still hidden out there..."). Captions per page are config-ready for the
+  book's actual text whenever Chris pastes it (StoryPageConfig). The deepest
+  book↔game bridge yet: Magic Words sends kids book→game, pages send them
+  game→book.
 - **2026-06-10 (card-faithful 3D meshes — COMPLETE, all 48):** Every launch
   friend's trading-card art became its real in-game 3D body via the Meshy
   image-to-3D pipeline (tools/mesh_pipeline): 48/48 generated (zero rerolls

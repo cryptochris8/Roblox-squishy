@@ -149,6 +149,30 @@ local function dailyButton(parent, onClaimDaily)
 	end)
 end
 
+-- The Storybook shelf (hidden story pages found in the world).
+local function storybookButton(parent, onOpenStorybook)
+	local btn = Instance.new("TextButton")
+	btn.Name = "StorybookButton"
+	btn.AnchorPoint = Vector2.new(0, 1)
+	btn.Position = UDim2.new(0, 18, 1, -180)
+	btn.Size = UDim2.fromOffset(214, 40)
+	btn.BackgroundColor3 = Color3.fromRGB(240, 160, 40)
+	btn.BorderSizePixel = 0
+	btn.Font = UiTheme.HeaderFont
+	btn.TextSize = 17
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Text = "📖 Storybook"
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	UiTheme.corner(20, btn)
+	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
+	btn.Activated:Connect(function()
+		if onOpenStorybook then
+			onOpenStorybook()
+		end
+	end)
+end
+
 -- The little "magic word" door (storybook promo codes).
 local function codesButton(parent, onOpenCodes)
 	local btn = Instance.new("TextButton")
@@ -329,7 +353,7 @@ local function bookButton(parent, onOpenBook)
 	end)
 end
 
-function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug, onOpenCodes)
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug, onOpenCodes, onOpenStorybook)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
@@ -344,6 +368,7 @@ function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetPr
 	dailyButton(screen, onClaimDaily)
 	dailyQuestsButton(screen, onOpenDaily)
 	codesButton(screen, onOpenCodes)
+	storybookButton(screen, onOpenStorybook)
 
 	-- These tools only ever appear for the place owner (you) — never the kids.
 	if game.CreatorType == Enum.CreatorType.User and Players.LocalPlayer.UserId == game.CreatorId then

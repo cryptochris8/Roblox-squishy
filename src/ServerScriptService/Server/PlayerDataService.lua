@@ -81,6 +81,7 @@ export type Profile = {
 	RedeemedCodes: { [string]: boolean },
 	Room: { Owned: { [string]: boolean }, Placed: { [string]: string } },
 	FirstDayPaid: { [string]: boolean },
+	StoryPages: { [string]: boolean },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -123,6 +124,7 @@ local function newProfile(): Profile
 		RedeemedCodes = {},
 		Room = { Owned = {}, Placed = {} },
 		FirstDayPaid = {},
+		StoryPages = {},
 	}
 end
 
@@ -173,6 +175,7 @@ local function serialize(p: Profile, raw: any)
 		RedeemedCodes = p.RedeemedCodes,
 		Room = p.Room,
 		FirstDayPaid = p.FirstDayPaid,
+		StoryPages = p.StoryPages,
 	}
 	for k, v in pairs(known) do
 		out[k] = v
@@ -296,6 +299,15 @@ local function deserialize(data: any): Profile
 			end
 		end
 		p.FirstDayPaid = paid
+	end
+	if type(data.StoryPages) == "table" then
+		local pagesGot = {}
+		for id, v in pairs(data.StoryPages) do
+			if type(id) == "string" and v == true then
+				pagesGot[id] = true
+			end
+		end
+		p.StoryPages = pagesGot
 	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
@@ -511,6 +523,8 @@ function PlayerDataService.snapshot(player: Player)
 		},
 		-- My First Day checklist: which steps have been paid out
 		firstDay = p.FirstDayPaid,
+		-- the hidden storybook pages found so far
+		storyPages = p.StoryPages,
 	}
 end
 

@@ -22,6 +22,7 @@ Remotes.EquipCosmetic = "EquipCosmetic"              -- (type, id?): wear an own
 Remotes.RedeemCode = "RedeemCode"                    -- text: try a storybook magic word
 Remotes.VisitRoom = "VisitRoom"                      -- ("visit"/"leave"): hop to/from my Squishy Room
 Remotes.PlaceRoomItem = "PlaceRoomItem"              -- (slotId, itemId?): buy-if-needed + place / clear
+Remotes.CollectStoryPage = "CollectStoryPage"        -- id: I walked up to a hidden storybook page
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -32,6 +33,7 @@ Remotes.SparkleBitCollected = "SparkleBitCollected" -- a hidden Sparkle Bit was 
 Remotes.SparkleRestored = "SparkleRestored" -- all 3 shards recovered — the finale celebration
 Remotes.OpenBoutique = "OpenBoutique"   -- the Sparkle Boutique stall asked the client to open its shop
 Remotes.OpenRoomCatalog = "OpenRoomCatalog" -- a room slot asked the client to open the furniture picker
+Remotes.StoryPageCollected = "StoryPageCollected" -- a storybook page was found (opens the viewer)
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -46,10 +48,12 @@ local ALL_EVENTS = {
 	Remotes.RedeemCode,
 	Remotes.VisitRoom,
 	Remotes.PlaceRoomItem,
+	Remotes.CollectStoryPage,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
 	Remotes.OpenRoomCatalog,
+	Remotes.StoryPageCollected,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,
