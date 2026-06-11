@@ -7,6 +7,7 @@
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
@@ -88,6 +89,82 @@ local function steppingStones(folder: Instance, pts: { Vector3 }, colors: { Colo
 			stone.Parent = folder
 		end
 	end
+end
+
+-- A fluffy cloud-bush (the book's white ground-clouds with flowers peeking out).
+local function cloudBush(folder: Instance, at: Vector3, tint: Color3, flowerColor: Color3)
+	for i, off in ipairs({ Vector3.new(0, 0, 0), Vector3.new(2.6, -0.4, 1), Vector3.new(-2.2, -0.5, -0.8) }) do
+		local puff = part({
+			Name = "CloudBush", Shape = Enum.PartType.Ball,
+			Size = Vector3.new(5 - i, 3.4 - i * 0.5, 5 - i),
+			Position = at + off + Vector3.new(0, 1.2, 0),
+			Color = tint, CanCollide = false,
+		})
+		puff.Parent = folder
+	end
+	local stem = part({
+		Name = "CloudStem", Size = Vector3.new(0.25, 1.8, 0.25),
+		Position = at + Vector3.new(1, 3.2, 0.6), Color = Color3.fromRGB(150, 208, 130), CanCollide = false,
+	})
+	stem.Parent = folder
+	local bloom = part({
+		Name = "CloudBloom", Shape = Enum.PartType.Ball, Size = Vector3.new(1, 1.2, 1),
+		Position = at + Vector3.new(1, 4.4, 0.6), Color = flowerColor, CanCollide = false,
+	})
+	bloom.Parent = folder
+end
+
+-- A cherry-topped pudding mountain (the book's signature landmark): layered
+-- flan stack, cream drips, a snowy cream cap, and a giant glossy cherry.
+local function puddingMountain(folder: Instance, at: Vector3, scale: number)
+	local layers = {
+		{ y = 0, w = 36, h = 14, c = Color3.fromRGB(243, 184, 120) },
+		{ y = 9, w = 27, h = 11, c = Color3.fromRGB(250, 204, 138) },
+		{ y = 16.5, w = 19, h = 9, c = Color3.fromRGB(255, 222, 168) },
+	}
+	for i, L in ipairs(layers) do
+		local tier = part({
+			Name = "MountainTier" .. i, Shape = Enum.PartType.Ball,
+			Size = Vector3.new(L.w, L.h, L.w) * scale,
+			Position = at + Vector3.new(0, L.y * scale, 0),
+			Color = L.c,
+		})
+		tier.Parent = folder
+		-- cream drips spilling over each tier's edge
+		for d = 1, 5 do
+			local a = math.rad(d * 72 + i * 24)
+			local drip = part({
+				Name = "Drip", Shape = Enum.PartType.Ball,
+				Size = Vector3.new(4.5, 7, 4.5) * scale * (1 - i * 0.16),
+				Position = at + Vector3.new(math.cos(a) * L.w * 0.42 * scale, (L.y + L.h * 0.22) * scale, math.sin(a) * L.w * 0.42 * scale),
+				Color = Color3.fromRGB(255, 244, 224), CanCollide = false,
+			})
+			drip.Parent = folder
+		end
+	end
+	local cap = part({
+		Name = "CreamCap", Shape = Enum.PartType.Ball, Size = Vector3.new(12, 7, 12) * scale,
+		Position = at + Vector3.new(0, 22.5 * scale, 0), Color = Color3.fromRGB(255, 250, 240),
+	})
+	cap.Parent = folder
+	local stem = part({
+		Name = "CherryStem", Shape = Enum.PartType.Cylinder, Size = Vector3.new(4.5, 0.8, 0.8) * scale,
+		Color = Color3.fromRGB(120, 84, 60), CanCollide = false,
+	})
+	stem.CFrame = CFrame.new(at + Vector3.new(1 * scale, 29.5 * scale, 0)) * CFrame.Angles(0, 0, math.rad(75))
+	stem.Parent = folder
+	local cherry = part({
+		Name = "Cherry", Shape = Enum.PartType.Ball, Size = Vector3.new(7, 7, 7) * scale,
+		Position = at + Vector3.new(0, 26.5 * scale, 0), Color = Color3.fromRGB(214, 40, 70),
+		Reflectance = 0.12,
+	})
+	cherry.Parent = folder
+	local shine = part({
+		Name = "CherryShine", Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 2, 1.6) * scale,
+		Position = at + Vector3.new(-1.6 * scale, 28.2 * scale, -1.6 * scale),
+		Color = Color3.fromRGB(255, 255, 255), Transparency = 0.25, CanCollide = false,
+	})
+	shine.Parent = folder
 end
 
 -- A cozy cottage (body + dome roof + door + glowing window), used to grow the
@@ -314,6 +391,55 @@ local function buildGooCoast()
 		tower.Parent = folder
 		local coneTop = part({ Name = "CastleTop", Shape = Enum.PartType.Ball, Size = Vector3.new(5.4, 4, 5.4), Position = castleBase + off + Vector3.new(0, 12, 0), Color = Color3.fromRGB(255, 150, 170) })
 		coneTop.Parent = folder
+	end
+
+	-- ── Rolling goo waves (the book's cresting sea): translucent swells that
+	-- breathe up and down with foam caps, plus one tiny wave-rider statue ────
+	local waveSpots = {
+		Vector3.new(-44, 0, -70), Vector3.new(10, 0, -92), Vector3.new(52, 0, -64), Vector3.new(-12, 0, -56),
+	}
+	for i, off in ipairs(waveSpots) do
+		local pos = center + off
+		local swell = part({
+			Name = "GooWave" .. i, Shape = Enum.PartType.Ball,
+			Size = Vector3.new(22, 9, 14),
+			Position = pos + Vector3.new(0, -2.5, 0),
+			Color = Color3.fromRGB(110, 226, 210), Material = Enum.Material.Glass,
+			Transparency = 0.3, Reflectance = 0.15, CanCollide = false, CastShadow = false,
+		})
+		swell.Parent = folder
+		local foam = part({
+			Name = "WaveFoam" .. i, Shape = Enum.PartType.Ball,
+			Size = Vector3.new(16, 2.4, 9),
+			Position = pos + Vector3.new(0, 1.4, 0),
+			Color = Color3.fromRGB(240, 252, 250), Transparency = 0.15, CanCollide = false, CastShadow = false,
+		})
+		foam.Parent = folder
+		local lift = 2.4 + (i % 2)
+		local info = TweenInfo.new(2.8 + i * 0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+		TweenService:Create(swell, info, { Position = swell.Position + Vector3.new(0, lift, 0) }):Play()
+		TweenService:Create(foam, info, { Position = foam.Position + Vector3.new(0, lift, 0) }):Play()
+	end
+	-- the little wave-rider (straight from the book spread): a mini goo friend
+	-- balanced on the closest crest
+	local stash = game:GetService("ServerStorage"):FindFirstChild("MeshBodies")
+	local riderTemplate = stash and stash:FindFirstChild("goo_ball")
+	if riderTemplate then
+		local rider = riderTemplate:Clone()
+		rider.Name = "WaveRider"
+		rider.Size = rider.Size * 0.55
+		rider.CanQuery = false
+		rider.CanTouch = false
+		rider.CFrame = CFrame.new(center + waveSpots[4] + Vector3.new(0, 4.2, 0)) * CFrame.Angles(0, math.rad(160), math.rad(-12))
+		rider.Parent = folder
+		TweenService:Create(rider, TweenInfo.new(3.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			CFrame = rider.CFrame * CFrame.new(0, 2.6, 0) * CFrame.Angles(0, 0, math.rad(20)),
+		}):Play()
+	end
+
+	-- foam-white cloud-bushes on the sand
+	for i, off in ipairs({ Vector3.new(-58, 0, 44), Vector3.new(26, 0, 70), Vector3.new(60, 0, 34), Vector3.new(-26, 0, 62) }) do
+		cloudBush(folder, center + off, Color3.fromRGB(248, 252, 250), Color3.fromRGB(255, 190, 200))
 	end
 
 	-- drifting glossy bubbles for life
@@ -663,6 +789,91 @@ local function buildMoonlitHollow()
 	steppingStones(folder, { center + Vector3.new(10, 0, 28), center + Vector3.new(40, 0, 24) }, stoneColors) -- to the cozy log
 	steppingStones(folder, { center + Vector3.new(50, 0, 16), center + Vector3.new(58, 0, 0) }, stoneColors) -- log to cottage
 	steppingStones(folder, { center + Vector3.new(12, 0, -34), center + Vector3.new(42, 0, -64) }, stoneColors) -- to the stargazing circle
+
+	-- ── The storybook forest: gnarled (but friendly) trees ringing the glade,
+	-- dark border mounds with cozy lit windows, and the Sparkle-fall ─────────
+	local trunkColor = Color3.fromRGB(82, 70, 110)
+	local canopyColors2 = { Color3.fromRGB(170, 150, 210), Color3.fromRGB(150, 140, 200), Color3.fromRGB(190, 165, 225) }
+	for i = 1, 9 do
+		local a = (i / 9) * math.pi * 2 + rng:NextNumber(-0.2, 0.2)
+		local r = rng:NextNumber(72, 105)
+		local base = center + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r)
+		local lean = rng:NextNumber(-14, 14)
+		local h1, h2 = rng:NextNumber(6, 9), rng:NextNumber(4, 6)
+		local seg1 = part({
+			Name = "GnarlTrunk", Size = Vector3.new(2.2, h1, 2.2), Color = trunkColor,
+		})
+		seg1.CFrame = CFrame.new(base + Vector3.new(0, h1 / 2, 0)) * CFrame.Angles(0, 0, math.rad(lean))
+		seg1.Parent = folder
+		local topOfSeg1 = base + Vector3.new(-math.sin(math.rad(lean)) * h1, h1 * 0.92, 0)
+		local seg2 = part({
+			Name = "GnarlTrunk2", Size = Vector3.new(1.6, h2, 1.6), Color = trunkColor,
+		})
+		seg2.CFrame = CFrame.new(topOfSeg1 + Vector3.new(0, h2 / 2 - 0.5, 0)) * CFrame.Angles(math.rad(rng:NextNumber(-10, 10)), 0, math.rad(-lean * 1.6))
+		seg2.Parent = folder
+		local crown = topOfSeg1 + Vector3.new(math.sin(math.rad(lean * 1.4)) * h2, h2 - 0.5, 0)
+		for p = 1, 2 do
+			local d = rng:NextNumber(5, 8) - p
+			local puff = part({
+				Name = "GnarlCanopy", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d * 0.7, d),
+				Position = crown + Vector3.new(rng:NextNumber(-2, 2), p * 1.6, rng:NextNumber(-2, 2)),
+				Color = canopyColors2[(i % #canopyColors2) + 1], CanCollide = false,
+			})
+			puff.Parent = folder
+		end
+	end
+
+	-- dark border mounds with little glowing windows ("someone tiny lives there")
+	for i, m in ipairs({
+		{ Vector3.new(-95, 0, -75), 34 }, { Vector3.new(100, 0, 70), 40 }, { Vector3.new(95, 0, -95), 30 },
+	}) do
+		local at, d = center + m[1], m[2]
+		local mound = part({
+			Name = "BorderMound" .. i, Shape = Enum.PartType.Ball, Size = Vector3.new(d, d * 0.8, d),
+			Position = at + Vector3.new(0, -d * 0.28, 0), Color = Color3.fromRGB(96, 86, 132), CanCollide = false,
+		})
+		mound.Parent = folder
+		for w = 1, 3 do
+			local wa = math.rad(w * 34 - 70)
+			local win = part({
+				Name = "MoundWindow", Size = Vector3.new(1.3, 1.8, 0.6),
+				Position = at + Vector3.new(math.cos(wa) * d * 0.42, d * 0.12 + (w % 2) * 2.4, math.sin(wa) * d * 0.42),
+				Color = Color3.fromRGB(255, 226, 150), Material = Enum.Material.Neon, CanCollide = false,
+			})
+			win.Parent = folder
+		end
+	end
+
+	-- the Sparkle-fall: rare golden streaks falling across the night sky (the
+	-- book's opening page, forever happening gently over the Hollow)
+	local skyField = part({
+		Name = "SparkleFall", Size = Vector3.new(220, 1, 220),
+		Position = center + Vector3.new(0, 150, 0), Transparency = 1, CanCollide = false, CanQuery = false,
+	})
+	skyField.Parent = folder
+	local fall = Instance.new("ParticleEmitter")
+	fall.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	fall.LightEmission = 1
+	fall.LightInfluence = 0
+	fall.Color = ColorSequence.new(Color3.fromRGB(255, 230, 150), Color3.fromRGB(255, 244, 210))
+	fall.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 2.6), NumberSequenceKeypoint.new(1, 0),
+	})
+	fall.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.1), NumberSequenceKeypoint.new(0.85, 0.4), NumberSequenceKeypoint.new(1, 1),
+	})
+	fall.Lifetime = NumberRange.new(2.4, 3.2)
+	fall.Rate = 0.12 -- one streak every ~8 seconds: rare enough to feel magic
+	fall.Speed = NumberRange.new(42, 55)
+	fall.EmissionDirection = Enum.NormalId.Bottom
+	fall.SpreadAngle = Vector2.new(24, 24)
+	fall.Acceleration = Vector3.new(-6, -10, 0)
+	fall.Parent = skyField
+
+	-- lavender cloud-bushes in the glade
+	for i, off in ipairs({ Vector3.new(-30, 0, 52), Vector3.new(34, 0, 48), Vector3.new(-58, 0, -30), Vector3.new(56, 0, 38) }) do
+		cloudBush(folder, center + off, Color3.fromRGB(232, 226, 246), Color3.fromRGB(190, 160, 240))
+	end
 
 	-- drifting fireflies
 	local fField = part({ Name = "Fireflies", Size = Vector3.new(180, 1, 180), Position = center + Vector3.new(0, 4, 0), Transparency = 1, CanCollide = false, CanQuery = false })
@@ -1420,6 +1631,130 @@ function WorldService.build()
 	ribbonPath(folder, { Vector3.new(-14, 0, -40), Vector3.new(-24, 0, -50) }, 2.4, pathColor) -- garden spur
 	ribbonPath(folder, { Vector3.new(6, 0, 8), Vector3.new(38, 0, -28) }, 3, pathColor) -- to the orchard + shard
 	ribbonPath(folder, { Vector3.new(10, 0, 32), Vector3.new(54, 0, 28) }, 3, pathColor) -- past the boutique to the picnic
+
+	-- ── The Sparkle Wheel: a pastel rideable ferris wheel crowning the Market
+	-- Meadow — a skyline landmark that pulls little explorers east. Anchored
+	-- parts spun by a gentle server loop; Seat objects carry riders.
+	do
+		local hub = Vector3.new(46, 19, 2)
+		local wheelRadius = 13
+		-- A-frame legs + axle
+		for _, sz in ipairs({ -1, 1 }) do
+			for _, sx in ipairs({ -1, 1 }) do
+				local leg = part({
+					Name = "WheelLeg", Size = Vector3.new(1.4, 24, 1.4),
+					Color = Color3.fromRGB(255, 250, 240),
+				})
+				leg.CFrame = CFrame.new(hub + Vector3.new(sx * 5, -10.5, sz * 3.4)) * CFrame.Angles(math.rad(-sz * 9), 0, math.rad(sx * 13))
+				leg.Parent = folder
+			end
+		end
+		local axle = part({
+			Name = "WheelAxle", Shape = Enum.PartType.Cylinder, Size = Vector3.new(9, 2, 2),
+			Color = Color3.fromRGB(255, 201, 84),
+		})
+		axle.CFrame = CFrame.new(hub) * CFrame.Angles(0, 0, 0)
+		axle.Parent = folder
+
+		-- the spinning ring: spokes + rim segments in one model
+		local ring = Instance.new("Model")
+		ring.Name = "SparkleWheelRing"
+		local ringCenter = part({
+			Name = "RingCenter", Shape = Enum.PartType.Ball, Size = Vector3.new(3, 3, 3),
+			Color = Color3.fromRGB(255, 170, 195), CFrame = CFrame.new(hub),
+		})
+		ringCenter.Parent = ring
+		ring.PrimaryPart = ringCenter
+		local rimColors = { Color3.fromRGB(255, 170, 195), Color3.fromRGB(255, 210, 120), Color3.fromRGB(170, 200, 255), Color3.fromRGB(180, 230, 200) }
+		for i = 1, 8 do
+			local a = math.rad(i * 45)
+			local spoke = part({
+				Name = "Spoke", Size = Vector3.new(0.6, wheelRadius, 0.6),
+				Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+			})
+			spoke.CFrame = CFrame.new(hub) * CFrame.Angles(0, 0, a) * CFrame.new(0, wheelRadius / 2, 0)
+			spoke.Parent = ring
+		end
+		for i = 1, 16 do
+			local a1 = math.rad(i * 22.5)
+			local a2 = math.rad((i + 1) * 22.5)
+			local p1 = hub + Vector3.new(math.cos(a1) * wheelRadius, math.sin(a1) * wheelRadius, 0)
+			local p2 = hub + Vector3.new(math.cos(a2) * wheelRadius, math.sin(a2) * wheelRadius, 0)
+			local seg = part({
+				Name = "Rim", Size = Vector3.new((p2 - p1).Magnitude + 0.4, 0.8, 0.8),
+				Color = rimColors[(i % #rimColors) + 1], CanCollide = false,
+			})
+			seg.CFrame = CFrame.lookAt((p1 + p2) / 2, p2) * CFrame.Angles(0, math.rad(90), 0)
+			seg.Parent = ring
+		end
+		ring.Parent = folder
+
+		-- gondolas: pastel baskets with Seats, kept upright by the spin loop
+		local gondolas = {}
+		for i = 1, 6 do
+			local g = Instance.new("Model")
+			g.Name = "Gondola" .. i
+			local basket = part({
+				Name = "Basket", Size = Vector3.new(3.6, 2.2, 3),
+				Color = rimColors[(i % #rimColors) + 1],
+			})
+			basket.Parent = g
+			g.PrimaryPart = basket
+			local roof = part({
+				Name = "GondolaRoof", Shape = Enum.PartType.Ball, Size = Vector3.new(4.2, 2, 3.6),
+				Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+			})
+			roof.Parent = g
+			local seat = Instance.new("Seat")
+			seat.Name = "RideSeat"
+			seat.Size = Vector3.new(2.4, 0.4, 2)
+			seat.Color = Color3.fromRGB(255, 244, 224)
+			seat.TopSurface = Enum.SurfaceType.Smooth
+			seat.Anchored = true
+			seat.Parent = g
+			g.Parent = folder
+			gondolas[i] = g
+		end
+
+		-- the gentle spin (one rotation per minute)
+		local angle = 0
+		RunService.Heartbeat:Connect(function(dt)
+			angle = (angle + dt * math.pi * 2 / 60) % (math.pi * 2)
+			ring:PivotTo(CFrame.new(hub) * CFrame.Angles(0, 0, angle))
+			for i, g in ipairs(gondolas) do
+				local a = angle + math.rad(i * 60)
+				local pos = hub + Vector3.new(math.cos(a) * wheelRadius, math.sin(a) * wheelRadius, 0)
+				local basket = g.PrimaryPart
+				if basket then
+					basket.CFrame = CFrame.new(pos + Vector3.new(0, -2.2, 0))
+					local roof = g:FindFirstChild("GondolaRoof")
+					if roof then
+						roof.CFrame = CFrame.new(pos + Vector3.new(0, -0.6, 0))
+					end
+					local seat = g:FindFirstChild("RideSeat")
+					if seat then
+						seat.CFrame = CFrame.new(pos + Vector3.new(0, -1.2, 0))
+					end
+				end
+			end
+		end)
+		floatingLabel("🎡 Sparkle Wheel", Color3.fromRGB(225, 90, 150), axle, 16)
+	end
+
+	-- Cherry pudding mountains on the far ring (the book's signature skyline)
+	puddingMountain(folder, Vector3.new(-100, 0, -48), 1.15)
+	puddingMountain(folder, Vector3.new(98, 0, -68), 1)
+	puddingMountain(folder, Vector3.new(-58, 0, -112), 0.85)
+
+	-- cloud-bushes drifting through the meadows
+	local bushFlowers = { Color3.fromRGB(255, 150, 170), Color3.fromRGB(255, 210, 120), Color3.fromRGB(190, 160, 240) }
+	for i, at in ipairs({
+		Vector3.new(-24, 0, 26), Vector3.new(34, 0, 20), Vector3.new(-52, 0, -18),
+		Vector3.new(20, 0, -44), Vector3.new(64, 0, -28), Vector3.new(-72, 0, 18),
+		Vector3.new(8, 0, 44), Vector3.new(-44, 0, 48),
+	}) do
+		cloudBush(folder, at, Color3.fromRGB(255, 252, 248), bushFlowers[(i % #bushFlowers) + 1])
+	end
 
 	-- Travel Plaza: the hub lives out on the eastern rise (the road toward the
 	-- old Goo Coast gate), its own destination instead of spawn furniture.
