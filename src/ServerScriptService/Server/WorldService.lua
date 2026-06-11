@@ -628,8 +628,8 @@ local function buildMoonlitHollow()
 	local rng = Random.new(777)
 	local capColors = { Color3.fromRGB(190, 130, 255), Color3.fromRGB(130, 200, 255), Color3.fromRGB(255, 150, 220), Color3.fromRGB(160, 255, 220) }
 
-	-- twilight ground
-	local ground = part({ Name = "Ground", Size = Vector3.new(320, 4, 320), Position = center + Vector3.new(0, -2, 0), Color = Color3.fromRGB(122, 112, 160) })
+	-- twilight ground (a touch deeper, so the land's glow-props actually pop)
+	local ground = part({ Name = "Ground", Size = Vector3.new(320, 4, 320), Position = center + Vector3.new(0, -2, 0), Color = Color3.fromRGB(106, 96, 148) })
 	ground.Parent = folder
 
 	-- the Moonpool: a still, mirror-glossy pool, ringed by a soft glow
@@ -792,35 +792,120 @@ local function buildMoonlitHollow()
 
 	-- ── The storybook forest: gnarled (but friendly) trees ringing the glade,
 	-- dark border mounds with cozy lit windows, and the Sparkle-fall ─────────
-	local trunkColor = Color3.fromRGB(82, 70, 110)
-	local canopyColors2 = { Color3.fromRGB(170, 150, 210), Color3.fromRGB(150, 140, 200), Color3.fromRGB(190, 165, 225) }
-	for i = 1, 9 do
-		local a = (i / 9) * math.pi * 2 + rng:NextNumber(-0.2, 0.2)
-		local r = rng:NextNumber(72, 105)
+	-- proper twilight trees: tall cylinder trunks (slight lean), a branch stub,
+	-- and a BIG fluffy moonlit canopy — same recipe that makes the orchard read
+	-- as trees, recolored for night
+	local trunkColor = Color3.fromRGB(96, 80, 118)
+	local canopyColors2 = { Color3.fromRGB(150, 132, 205), Color3.fromRGB(126, 118, 188), Color3.fromRGB(172, 148, 222) }
+	for i = 1, 10 do
+		local a = (i / 10) * math.pi * 2 + rng:NextNumber(-0.2, 0.2)
+		local r = rng:NextNumber(68, 102)
 		local base = center + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r)
-		local lean = rng:NextNumber(-14, 14)
-		local h1, h2 = rng:NextNumber(6, 9), rng:NextNumber(4, 6)
-		local seg1 = part({
-			Name = "GnarlTrunk", Size = Vector3.new(2.2, h1, 2.2), Color = trunkColor,
+		local scale = rng:NextNumber(0.9, 1.35)
+		local trunkH = 10 * scale
+		local lean = rng:NextNumber(-8, 8)
+		local trunk = part({
+			Name = "MoonTrunk", Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(trunkH, 2.4 * scale, 2.4 * scale), Color = trunkColor,
 		})
-		seg1.CFrame = CFrame.new(base + Vector3.new(0, h1 / 2, 0)) * CFrame.Angles(0, 0, math.rad(lean))
-		seg1.Parent = folder
-		local topOfSeg1 = base + Vector3.new(-math.sin(math.rad(lean)) * h1, h1 * 0.92, 0)
-		local seg2 = part({
-			Name = "GnarlTrunk2", Size = Vector3.new(1.6, h2, 1.6), Color = trunkColor,
+		trunk.CFrame = CFrame.new(base + Vector3.new(0, trunkH / 2, 0)) * CFrame.Angles(0, 0, math.rad(90 + lean))
+		trunk.Parent = folder
+		local branch = part({
+			Name = "MoonBranch", Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(4.5 * scale, 1 * scale, 1 * scale), Color = trunkColor, CanCollide = false,
 		})
-		seg2.CFrame = CFrame.new(topOfSeg1 + Vector3.new(0, h2 / 2 - 0.5, 0)) * CFrame.Angles(math.rad(rng:NextNumber(-10, 10)), 0, math.rad(-lean * 1.6))
-		seg2.Parent = folder
-		local crown = topOfSeg1 + Vector3.new(math.sin(math.rad(lean * 1.4)) * h2, h2 - 0.5, 0)
-		for p = 1, 2 do
-			local d = rng:NextNumber(5, 8) - p
-			local puff = part({
-				Name = "GnarlCanopy", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d * 0.7, d),
-				Position = crown + Vector3.new(rng:NextNumber(-2, 2), p * 1.6, rng:NextNumber(-2, 2)),
-				Color = canopyColors2[(i % #canopyColors2) + 1], CanCollide = false,
+		branch.CFrame = CFrame.new(base + Vector3.new(1.8 * scale, trunkH * 0.62, 0)) * CFrame.Angles(0, 0, math.rad(38))
+		branch.Parent = folder
+		-- a generous 4-puff canopy (the bit that makes it read TREE)
+		local canopyColor = canopyColors2[(i % #canopyColors2) + 1]
+		local crownY = trunkH + 1.6 * scale
+		for _, puff in ipairs({
+			{ Vector3.new(0, 0, 0), 10 }, { Vector3.new(3.6, -1.2, 1.4), 7 },
+			{ Vector3.new(-3.2, -1, -1.6), 7 }, { Vector3.new(0.6, 3, 0), 6.5 },
+		}) do
+			local d = puff[2] * scale
+			local p = part({
+				Name = "MoonCanopy", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d * 0.85, d),
+				Position = base + Vector3.new(puff[1].X * scale, crownY + puff[1].Y * scale, puff[1].Z * scale),
+				Color = canopyColor, CanCollide = false,
 			})
-			puff.Parent = folder
+			p.Parent = folder
 		end
+		-- a few firefly-lit flecks nestled in the leaves
+		for f = 1, 2 do
+			local fleck = part({
+				Name = "CanopyFleck", Shape = Enum.PartType.Ball, Size = Vector3.new(0.7, 0.7, 0.7),
+				Position = base + Vector3.new(rng:NextNumber(-3, 3), crownY + rng:NextNumber(-1, 2.5), rng:NextNumber(-3, 3)),
+				Color = Color3.fromRGB(255, 234, 170), Material = Enum.Material.Neon, CanCollide = false, CastShadow = false,
+			})
+			fleck.Parent = folder
+		end
+	end
+
+	-- ── Midfield life (Moonlit felt empty between the pool and the ring) ────
+	-- crystal clusters: little glowing twilight gems
+	for i, spot in ipairs({
+		Vector3.new(-26, 0, 14), Vector3.new(30, 0, -12), Vector3.new(12, 0, 46),
+		Vector3.new(-44, 0, -18), Vector3.new(52, 0, 22), Vector3.new(-12, 0, -48),
+	}) do
+		local cc = { Color3.fromRGB(190, 150, 255), Color3.fromRGB(140, 220, 235), Color3.fromRGB(255, 170, 220) }
+		for s = 1, 3 do
+			local h = rng:NextNumber(1.6, 3.4)
+			local shard = part({
+				Name = "TwilightCrystal", Size = Vector3.new(0.9, h, 0.9),
+				Color = cc[(i + s) % #cc + 1], Material = Enum.Material.Neon, Transparency = 0.2,
+				CanCollide = false, CastShadow = false,
+			})
+			shard.CFrame = CFrame.new(center + spot + Vector3.new((s - 2) * 1.1, h / 2 - 0.2, rng:NextNumber(-0.8, 0.8)))
+				* CFrame.Angles(math.rad(rng:NextNumber(-14, 14)), 0, math.rad(rng:NextNumber(-14, 14)))
+			shard.Parent = folder
+		end
+	end
+	-- star puddles: tiny mirror pools catching the moon
+	for _, spot in ipairs({ Vector3.new(22, 0, 18), Vector3.new(-36, 0, 36), Vector3.new(44, 0, -34), Vector3.new(-18, 0, 58) }) do
+		local puddle = part({
+			Name = "StarPuddle", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.25, 7, 7),
+			Color = Color3.fromRGB(90, 96, 158), Material = Enum.Material.Glass,
+			Reflectance = 0.45, Transparency = 0.12, CanCollide = false,
+		})
+		puddle.CFrame = CFrame.new(center + spot + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		puddle.Parent = folder
+	end
+	-- mossy dream-rocks with glowing caps
+	for i, spot in ipairs({ Vector3.new(-52, 0, 44), Vector3.new(58, 0, -8), Vector3.new(8, 0, -38), Vector3.new(-30, 0, -56), Vector3.new(36, 0, 56) }) do
+		local d = rng:NextNumber(3.4, 6)
+		local rock = part({
+			Name = "DreamRock", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d * 0.7, d),
+			Position = center + spot + Vector3.new(0, d * 0.22, 0), Color = Color3.fromRGB(120, 112, 156),
+		})
+		rock.Parent = folder
+		local moss = part({
+			Name = "GlowMoss", Shape = Enum.PartType.Ball, Size = Vector3.new(d * 0.7, d * 0.3, d * 0.7),
+			Position = center + spot + Vector3.new(d * 0.12, d * 0.52, 0),
+			Color = Color3.fromRGB(150, 235, 200), Material = Enum.Material.Neon, Transparency = 0.35,
+			CanCollide = false, CastShadow = false,
+		})
+		moss.Parent = folder
+	end
+	-- two more lantern posts so the midfield glows at kid height
+	for _, lp2 in ipairs({ Vector3.new(-24, 0, 40), Vector3.new(34, 0, -36) }) do
+		local lBase = lp2 + center
+		local post = part({
+			Name = "LanternPost", Size = Vector3.new(0.6, 5.5, 0.6),
+			Position = lBase + Vector3.new(0, 2.75, 0), Color = Color3.fromRGB(120, 100, 110),
+		})
+		post.Parent = folder
+		local lantern = part({
+			Name = "Lantern", Shape = Enum.PartType.Ball, Size = Vector3.new(1.5, 1.8, 1.5),
+			Position = lBase + Vector3.new(0, 5.9, 0), Color = Color3.fromRGB(255, 226, 150),
+			Material = Enum.Material.Neon, CanCollide = false,
+		})
+		lantern.Parent = folder
+		local glow = Instance.new("PointLight")
+		glow.Color = Color3.fromRGB(255, 220, 160)
+		glow.Brightness = 1.3
+		glow.Range = 17
+		glow.Parent = lantern
 	end
 
 	-- dark border mounds with little glowing windows ("someone tiny lives there")
