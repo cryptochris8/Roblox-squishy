@@ -275,18 +275,42 @@ local function buildRoomShell(player: Player, index: number): (Folder, { [string
 	light.Range = 26
 	light.Parent = glow
 
-	-- the way home: a glowing door on the front wall
+	-- the way home: a glowing door on the front wall, with a doormat and a
+	-- big friendly sign (Chris got lost in his own room — never again)
 	local door = part({
 		Name = "HomeDoor", Size = Vector3.new(4.5, 7, 0.8),
 		Position = origin + Vector3.new(0, 3.5, size.Z / 2 - 0.6),
 		Color = C(255, 200, 120), Material = Enum.Material.Neon, Transparency = 0.2,
 	})
 	door.Parent = folder
+	local mat = part({
+		Name = "Doormat", Size = Vector3.new(5.5, 0.2, 3),
+		Position = origin + Vector3.new(0, 0.1, size.Z / 2 - 3),
+		Color = C(255, 170, 190), CanCollide = false, CanQuery = false,
+	})
+	mat.Parent = folder
+	local signGui = Instance.new("BillboardGui")
+	signGui.Name = "DoorSign"
+	signGui.Size = UDim2.fromOffset(230, 44)
+	signGui.StudsOffsetWorldSpace = Vector3.new(0, 5, 0)
+	signGui.AlwaysOnTop = true
+	signGui.MaxDistance = 60 -- visible from anywhere in the room
+	signGui.Parent = door
+	local signLbl = Instance.new("TextLabel")
+	signLbl.BackgroundTransparency = 1
+	signLbl.Size = UDim2.fromScale(1, 1)
+	signLbl.Font = Enum.Font.FredokaOne
+	signLbl.TextSize = 22
+	signLbl.TextColor3 = C(240, 160, 40)
+	signLbl.TextStrokeColor3 = C(255, 255, 255)
+	signLbl.TextStrokeTransparency = 0.2
+	signLbl.Text = "🚪 Back to Pudding Hills"
+	signLbl.Parent = signGui
 	local doorPrompt = Instance.new("ProximityPrompt")
 	doorPrompt.ObjectText = "Door"
 	doorPrompt.ActionText = "Back to Pudding Hills"
 	doorPrompt.HoldDuration = 0.2
-	doorPrompt.MaxActivationDistance = 10
+	doorPrompt.MaxActivationDistance = 14
 	doorPrompt.RequiresLineOfSight = false
 	doorPrompt.Parent = door
 	doorPrompt.Triggered:Connect(function(p)
@@ -359,7 +383,7 @@ function RoomService.visitRoom(player: Player)
 	room.entryCF = char:GetPivot()
 	local origin = roomOrigin(room.index)
 	char:PivotTo(CFrame.new(origin + Vector3.new(0, 3.5, RoomConfig.RoomSize.Z / 2 - 5)))
-	toastEvent:FireClient(player, "Welcome to YOUR Squishy Room! Walk to a glowing spot to decorate it.")
+	toastEvent:FireClient(player, "Welcome to YOUR Squishy Room! Decorate the glowing spots — the 🚪 door behind you goes home.")
 	if RoomService.onVisited then
 		RoomService.onVisited(player)
 	end
