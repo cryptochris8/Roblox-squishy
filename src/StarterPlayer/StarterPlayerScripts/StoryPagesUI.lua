@@ -135,10 +135,12 @@ local function buildViewer(playerGui)
 		overlay.Visible = false
 	end)
 
+	-- sized for the SQUARE book pages (story text is typeset on the art, so
+	-- the page gets nearly the whole panel)
 	local panel = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(660, 400),
+		Size = UDim2.fromOffset(540, 510),
 		BackgroundColor3 = UiTheme.Colors.Cream,
 		radius = 20,
 	})
@@ -148,8 +150,8 @@ local function buildViewer(playerGui)
 
 	pageImage = Instance.new("ImageLabel")
 	pageImage.AnchorPoint = Vector2.new(0.5, 0)
-	pageImage.Position = UDim2.new(0.5, 0, 0, 16)
-	pageImage.Size = UDim2.fromOffset(612, 260)
+	pageImage.Position = UDim2.new(0.5, 0, 0, 14)
+	pageImage.Size = UDim2.fromOffset(440, 440)
 	pageImage.BorderSizePixel = 0
 	pageImage.ScaleType = Enum.ScaleType.Fit
 	pageImage.Parent = panel
@@ -157,20 +159,20 @@ local function buildViewer(playerGui)
 
 	pageLabel = Instance.new("TextLabel")
 	pageLabel.BackgroundTransparency = 1
-	pageLabel.Position = UDim2.fromOffset(24, 284)
+	pageLabel.Position = UDim2.fromOffset(24, 462)
 	pageLabel.Size = UDim2.new(1, -48, 0, 26)
 	pageLabel.Font = UiTheme.HeaderFont
-	pageLabel.TextSize = 20
+	pageLabel.TextSize = 19
 	pageLabel.TextColor3 = UiTheme.Colors.CoinDeep
 	pageLabel.Text = ""
 	pageLabel.Parent = panel
 
 	captionLabel = Instance.new("TextLabel")
 	captionLabel.BackgroundTransparency = 1
-	captionLabel.Position = UDim2.fromOffset(24, 312)
-	captionLabel.Size = UDim2.new(1, -48, 0, 48)
+	captionLabel.Position = UDim2.fromOffset(24, 484)
+	captionLabel.Size = UDim2.new(1, -48, 0, 22)
 	captionLabel.Font = UiTheme.BodyFont
-	captionLabel.TextSize = 15
+	captionLabel.TextSize = 13
 	captionLabel.TextWrapped = true
 	captionLabel.TextColor3 = UiTheme.Colors.Ink
 	captionLabel.Text = ""

@@ -3,12 +3,16 @@
   ONE at a time with a moderation check after each (the post-strike rule).
   Resumable via story_upload_result.json. ASCII only (PS 5.1 mojibake rule).
 #>
-param([int] $GapSeconds = 150)
+param(
+  [int] $GapSeconds = 150,
+  [string] $SrcSubdir = 'work\story_pages',
+  [string] $ResultName = 'story_upload_result.json'
+)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Net.Http
 $root = $PSScriptRoot
-$srcDir = Join-Path $root 'work\story_pages'
-$resultPath = Join-Path $root 'story_upload_result.json'
+$srcDir = Join-Path $root $SrcSubdir
+$resultPath = Join-Path $root $ResultName
 $key = (Get-ItemProperty 'HKCU:\Environment' -Name ROBLOX_OPEN_CLOUD_KEY).ROBLOX_OPEN_CLOUD_KEY
 
 $client = New-Object System.Net.Http.HttpClient

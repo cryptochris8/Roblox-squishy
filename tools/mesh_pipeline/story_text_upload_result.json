@@ -1,0 +1,54 @@
+﻿{
+    "page_01":  {
+                    "decalId":  "78493047261406",
+                    "moderation":  "Approved"
+                },
+    "page_02":  {
+                    "decalId":  "114109832500082",
+                    "moderation":  "Approved"
+                },
+    "page_03":  {
+                    "decalId":  "138969339224596",
+                    "moderation":  "Approved"
+                },
+    "page_04":  {
+                    "decalId":  "111998593014472",
+                    "moderation":  "Approved"
+                },
+    "page_05":  {
+                    "decalId":  "133006726776255",
+                    "moderation":  "Approved"
+                },
+    "page_06":  {
+                    "decalId":  "138053564725996",
+                    "moderation":  "Approved"
+                },
+    "page_07":  {
+                    "decalId":  "139638465992779",
+                    "moderation":  "Approved"
+                },
+    "page_08":  {
+                    "decalId":  "93485795040726",
+                    "moderation":  "Approved"
+                },
+    "page_09":  {
+                    "decalId":  "88968399264704",
+                    "moderation":  "Approved"
+                },
+    "page_10":  {
+                    "decalId":  "131513326146975",
+                    "moderation":  "Approved"
+                },
+    "page_11":  {
+                    "decalId":  "82698872743467",
+                    "moderation":  "Approved"
+                },
+    "page_12":  {
+                    "decalId":  "114331316791658",
+                    "moderation":  "Approved"
+                },
+    "page_13":  {
+                    "decalId":  "100773420778672",
+                    "moderation":  "Approved"
+                }
+}
