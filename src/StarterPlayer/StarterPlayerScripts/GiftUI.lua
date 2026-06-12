@@ -15,6 +15,7 @@ local UiTheme = require(script.Parent.UiTheme)
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GiftConfig = require(Shared:WaitForChild("GiftConfig"))
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
+local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 
 local GiftUI = {}
 
@@ -464,6 +465,12 @@ function GiftUI.playReceived(info)
 		return
 	end
 	receivedLayer:ClearAllChildren()
+
+	local ding = Instance.new("Sound")
+	ding.SoundId = SoundConfig.Chime
+	ding.Volume = 0.5
+	ding.Parent = receivedLayer
+	ding:Play()
 
 	local box = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),

@@ -21,6 +21,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local CoasterConfig = require(Shared:WaitForChild("CoasterConfig"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 
 local CoasterService = {}
 
@@ -287,6 +288,8 @@ end
 -- ── the train ────────────────────────────────────────────────────────────────
 local train: Model
 local cars: { { model: Model, seats: { Seat }, bank: number } } = {}
+local whistle: Sound
+local chug: Sound
 
 local function buildTrain(folder: Folder)
 	train = Instance.new("Model")
@@ -394,6 +397,20 @@ local function buildTrain(folder: Folder)
 		cars[i] = { model = car, seats = seats, bank = 0 }
 	end
 	train.Parent = folder
+
+	-- the lead car sings: a friendly toot at departure, a soft chug while rolling
+	local leadBody = cars[1].model.PrimaryPart :: BasePart
+	whistle = Instance.new("Sound")
+	whistle.SoundId = SoundConfig.TrainWhistle
+	whistle.Volume = 0.5
+	whistle.RollOffMaxDistance = 160
+	whistle.Parent = leadBody
+	chug = Instance.new("Sound")
+	chug.SoundId = SoundConfig.TrainChug
+	chug.Looped = true
+	chug.Volume = 0.28
+	chug.RollOffMaxDistance = 120
+	chug.Parent = leadBody
 end
 
 -- ── the ride loop ────────────────────────────────────────────────────────────
@@ -452,6 +469,12 @@ local function update(dt: number)
 			state = "running"
 			setSeatsEnabled(false)
 			rideDist = 0
+			if whistle then
+				whistle:Play()
+			end
+			if chug then
+				chug:Play()
+			end
 		end
 	else
 		-- ease toward cruise, then brake so we stop exactly back at the station
@@ -471,6 +494,9 @@ local function update(dt: number)
 			dismountAll("🚂 Thanks for riding the Sparkle Express! Come back soon! 💝")
 			rideDist = 0
 			dist = 0
+			if chug then
+				chug:Stop()
+			end
 			return
 		end
 		speed += math.clamp(target - speed, -CoasterConfig.Accel * dt * 2, CoasterConfig.Accel * dt)

@@ -9,12 +9,14 @@ local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UiTheme = require(script.Parent.UiTheme)
 local VariantConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("VariantConfig"))
+local SoundConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SoundConfig"))
 
 local CapsuleRevealUI = {}
 
 -- `layer` holds the full-screen dim; `stage` holds the capsule/card and is
 -- wrapped in an auto-fit scale so the big reveal fits phone screens.
 local screen, layer, stage
+local chime: Sound? = nil
 local busy = false
 
 -- Safety net: even if a click is somehow swallowed, the reveal closes itself.
@@ -82,6 +84,9 @@ function CapsuleRevealUI.play(result, onClose)
 	busy = true
 	layer:ClearAllChildren()
 	stage:ClearAllChildren()
+	if chime then
+		chime:Play()
+	end
 
 	local variantLevel = result.variantLevel or 0
 	local variantUpgraded = result.variantUpgraded == true
@@ -351,6 +356,11 @@ function CapsuleRevealUI.mount(playerGui)
 	stage.BackgroundTransparency = 1
 	stage.Parent = screen
 	UiTheme.autoFit(stage, 560, 620)
+
+	chime = Instance.new("Sound")
+	chime.SoundId = SoundConfig.Chime
+	chime.Volume = 0.5
+	chime.Parent = screen
 end
 
 return CapsuleRevealUI

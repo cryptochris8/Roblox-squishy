@@ -24,8 +24,23 @@ local CollectionService = game:GetService("CollectionService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
+local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 
 local PlaygroundService = {}
+
+-- a one-shot 3D sound at a part (server-side, so everyone nearby hears it)
+local function playAt(at: BasePart, soundId: string, volume: number, speed: number?)
+	local s = Instance.new("Sound")
+	s.SoundId = soundId
+	s.Volume = volume
+	s.PlaybackSpeed = speed or 1
+	s.RollOffMaxDistance = 90
+	s.Parent = at
+	s:Play()
+	task.delay(6, function()
+		s:Destroy()
+	end)
+end
 
 local CREAM = Color3.fromRGB(255, 250, 240)
 local CARAMEL = Color3.fromRGB(240, 196, 138)
@@ -337,6 +352,7 @@ local function buildPuddingPlunge()
 				-- splash!
 				local rider = seat.Occupant
 				sparkleBurst(pool, spec.color, 18)
+				playAt(pool, SoundConfig.Splash, 0.55)
 				if rider then
 					rider.Sit = false
 					local t0 = os.clock()
@@ -391,6 +407,7 @@ local function buildBounceBog()
 	drum:SetAttribute("PartyVelocity", Vector3.new(0, 102, 0))
 	makeBouncy(drum, Vector3.new(0, 82, 0), function()
 		squash(drum, drumSize)
+		playAt(drum, SoundConfig.Boing, 0.5, 0.95 + math.random() * 0.15)
 		local now = os.clock()
 		table.insert(recentBounces, now)
 		for i = #recentBounces, 1, -1 do
@@ -637,6 +654,8 @@ local function buildMushroomHops()
 		makeBouncy(cap, flat * 24 + Vector3.new(0, 62 + (nxt.Y - at.Y) * 6, 0), function()
 			squash(cap, capSize)
 			sparkleBurst(cap, cap.Color, 8)
+			-- the pitch rises cap by cap up the trail (the delight is in the scale)
+			playAt(cap, SoundConfig.Boing, 0.45, 0.9 + i * 0.08)
 		end)
 	end
 end
@@ -744,6 +763,7 @@ local function buildSparklePopCannon()
 			count.Text = ""
 			sparkleBurst(rim, Color3.fromRGB(255, 226, 150), 30)
 			squash(barrel, barrel.Size)
+			playAt(rim, SoundConfig.Pop, 0.65, 0.9)
 			-- sparkle contrail on the flyer
 			local char = occupant.Parent :: Model?
 			local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -796,6 +816,10 @@ local function buildSparklePopCannon()
 				local rchar = rider.Parent :: Model?
 				if rchar and rchar.Parent then
 					rchar:PivotTo(CFrame.new(landAt + Vector3.new(0, 2, 0)))
+				end
+				local bullseye = model:FindFirstChild("Bullseye1") :: BasePart?
+				if bullseye then
+					playAt(bullseye, SoundConfig.Splash, 0.6)
 				end
 				sparkleBurst(rim, Color3.fromRGB(255, 190, 200), 8)
 			end
@@ -1034,6 +1058,7 @@ local function buildFireflyZipLine()
 		end
 		riding = true
 		flies.Rate = 22
+		playAt(lantern, SoundConfig.Whoosh, 0.5)
 		task.spawn(function()
 			task.wait(0.4)
 			-- glide down the samples at ~20 studs/s

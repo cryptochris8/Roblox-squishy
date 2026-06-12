@@ -2177,18 +2177,8 @@ function WorldService.build()
 		{ Transparency = 0.5, Size = Vector3.new(28, 28, 28) }
 	):Play()
 
-	-- Gentle background music (global, looping). The MCP can't pick audio, so paste a
-	-- track id into SoundConfig.Music (Studio -> Toolbox -> Audio) to enable it.
-	local soundCfg = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("SoundConfig"))
-	if soundCfg.Music and soundCfg.Music ~= "" then
-		local music = Instance.new("Sound")
-		music.Name = "PuddingHillsMusic"
-		music.SoundId = soundCfg.Music
-		music.Looped = true
-		music.Volume = soundCfg.MusicVolume or 0.3
-		music.Parent = game:GetService("SoundService")
-		music:Play()
-	end
+	-- Background music + per-land ambience are client-side now (SoundScape
+	-- crossfades each land's own track as you travel — ids in SoundConfig).
 
 	-- ── Phase A: quest landmarks ─────────────────────────────────────────────
 	-- The lost shard's resting place at the orchard's edge (book canon). Empty now;
