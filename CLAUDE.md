@@ -99,6 +99,7 @@ src/ServerScriptService/Server/   (server-authoritative)
   GiftService.lua          Gifting v1: 🎁 prompt on every player's character; give preset coins or SHARE a discovered friend (recipient gets discovery + reveal, GIVER KEEPS THEIRS); daily limit + range + cooldown validated server-side; shout-out on gift
   MonetizationService.lua  Phase D: pass ownership (join check w/ retries + PromptFinished instant grant + session cache feeding snapshot.passes), perks (x1.25 coins, +1 gift, VIP welcome), BuyPass/BuyPremium prompts, idempotent ProcessReceipt (grants into Cosmetics.Owned, auto-wears, saves BEFORE consuming the receipt; temp profiles -> NotProcessedYet), owner-only debugGrantPass
   CoasterService.lua       the Sparkle Express: closed Catmull-Rom spline (arc-length stepped), caramel ribbon track + supports + arches + station generated from it, anchored cars CFramed per Heartbeat w/ SeatWelds carrying riders (Persistent streaming), dwell/2-lap state machine, jump-off = sparkle-poof back to the platform
+  PlaygroundService.lua    Wave-1 playground: Pudding Plunge twin racing slides (open-spline ride rings + tower + splash pools), Bounce Bog (together-bonus trampoline), orchard 3-across + pier swing rows, Spoon Seesaw (occupancy rocker), Mushroom Hop Trail; bouncy parts = tagged SquishyBouncy + BounceVelocity attrs (server does juice only)
   SquishyModelFactory.lua  every friend's real 3D shape: ~17 part-built archetypes (dumpling/bun/cube/bunny/bat/ghost...) + hand-tuned skins for all 48 launch friends (+8 weekly); HatOffset attr; applyGolden()
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
@@ -110,6 +111,7 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   BoutiqueUI.lua           the Sparkle Boutique shop panel (price/owned/"Wearing ✓" states, gentle buy confirm)
   CodesUI.lua              the "Magic Words" panel (type a storybook code; feedback arrives as a toast)
   GiftUI.lua               the gift picker (coin presets + share-a-friend card grid, picture confirm, "N gifts left" pill) + the 🎁 "gift arrived" pop; hides your own GiftPrompt locally
+  BouncePads.lua           applies bounce launches for the LOCAL character (client owns its physics — server velocity writes don't stick); reads SquishyBouncy tags + BounceVelocity/PartyUntil attrs
 ```
 
 ### Contract (server <-> client)

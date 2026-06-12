@@ -36,6 +36,7 @@ local StoryPageService = require(script.Parent.StoryPageService)
 local GiftService = require(script.Parent.GiftService)
 local MonetizationService = require(script.Parent.MonetizationService)
 local CoasterService = require(script.Parent.CoasterService)
+local PlaygroundService = require(script.Parent.PlaygroundService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -63,6 +64,7 @@ MonetizationService.init()
 local world = WorldService.build()
 QuestService.init()
 CoasterService.init() -- the Sparkle Express needs the land (and its riders) in place
+PlaygroundService.init() -- slides, bounce bog, swings, seesaw, mushroom hops
 
 local zoneGroups = {}
 for _, z in ipairs(world.zones) do

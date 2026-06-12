@@ -27,6 +27,7 @@ local RoomUI = require(here:WaitForChild("RoomUI"))
 local FirstDayUI = require(here:WaitForChild("FirstDayUI"))
 local StoryPagesUI = require(here:WaitForChild("StoryPagesUI"))
 local GiftUI = require(here:WaitForChild("GiftUI"))
+local BouncePads = require(here:WaitForChild("BouncePads"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -85,6 +86,7 @@ end, function(passKey)
 end)
 CapsuleRevealUI.mount(playerGui)
 SquishFx.init()
+BouncePads.init()
 SparkleBits.init(function(msg)
 	ToastUI.show(msg)
 end)
@@ -137,6 +139,22 @@ end)
 Remotes.get(Remotes.GiftReceived).OnClientEvent:Connect(function(info)
 	GiftUI.playReceived(info)
 end)
+
+-- Bounce pads and slides launch the character; without this, hard landings can
+-- trip/ragdoll little avatars. SetStateEnabled doesn't replicate, so it must
+-- run here on the owning client, once per spawn. (No damage in this game —
+-- nothing wholesome is lost by never falling down.)
+local function softenLandings(character)
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	if humanoid then
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+	end
+end
+localPlayer.CharacterAdded:Connect(softenLandings)
+if localPlayer.Character then
+	task.spawn(softenLandings, localPlayer.Character)
+end
 
 print("[Squishy Smash] Client ready for " .. localPlayer.Name)
 
