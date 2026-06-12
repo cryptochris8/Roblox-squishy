@@ -73,7 +73,11 @@ where they get stuck or light up matters more than what they say.*
 - ✅ **All 48 cards now have real trading-card art** (this earlier gap is closed).
 - ✅ **Co-op events + leaderboards are IN** (Phase C) — see "Together moments" above.
 - ✅ **Every friend now has a real 3D shape** (dumplings, bats, ghosts, flans...) — watch whether the girls recognize friends by silhouette and which shapes they love.
-- **No purchases** (by design — capsules are free; the Boutique uses earned coins).
+- **Purchases exist now (Phase D)** but stay gentle: capsules are still free,
+  coins are never sold, and the Boutique's Robux shelves (👑 Premium Sparkles
+  + ✨ Sparkle Passes) are style/convenience only. Watch: do the R$ tags read
+  clearly as "ask a grown-up" money vs Sparkle Coins? Any pestering after
+  "Not now"? (Roblox's own purchase dialog is the final gate.)
 - Distant lands take a second to **stream in** after you travel (normal).
 - The first natural **Everybody Squish** fires ~3 minutes into a server (then ~every 7); use the owner 🌟 Event button if you don't want to wait.
 

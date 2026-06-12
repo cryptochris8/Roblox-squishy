@@ -35,9 +35,28 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **✅ Phase A — "The First Shard" (Pudding Hills) — DONE (2026-06-09):** spread world + hidden friends/secrets; the First Shard clue-quest (wake friends → shard appears at the orchard → recover → Goo Coast gate opens); quest HUD tracker; hidden Sparkle Bits exploration collectibles.
 - **✅ Phase B — Depth & return — DONE (2026-06-09):** Collection Book hub (silhouettes + completion % + per-zone counts); duplicate→variant (Sparkly/Rainbow) tier; free daily capsule; rotating daily quests + a gentle login streak; hidden Sparkle Bits refresh daily.
 - **✅ Phase C — Shared & social — DONE (2026-06-09, solo-verified):** the server-wide **Sparkle Surge** meter (every Happy Pop fills it; full = 60s of x2 coins for everyone); the **"Everybody Squish!"** golden-friend co-op event (~7min cadence at the busiest land, shared goal scaled by player count, everyone-online reward); cross-server **leaderboards** ("Top Friend Finders" / "Joy Champions") at the Pudding Hills hub; **show-off buddies** (owner-name tag + ✨/🌈 variant badge + particle aura) and server-wide discovery/shard/finale shout-outs. Everything scales 1→N players, so it was verifiable solo — *the 4-player family playtest is the real multiplayer validation.* (ProfileStore session-locking still pending before any gifting/trading.)
-- **Phase D — Monetization — DECIDED 2026-06-10 (build queued after ProfileStore + Squishy Room):** Chris approved Game Passes + premium cosmetics alongside the retention engine. **Locked prices:** Extra Buddy Slot 99 R$, Coin Boost +25% 149 R$, Sparkle Club VIP 249 R$ (passes); premium boutique cosmetics 79–249 R$ as Developer Products. **No coin packs in v1** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed. Remaining manual step when built: Chris creates the products in Creator Hub and pastes ids into the config.
+- **✅ Phase D — Monetization — DONE (2026-06-11, built against the LIVE products):** Chris created the 9 products in Creator Hub (guide: doc 13) and the build wired them end to end. Extra Buddy Slot 99 R$ / Coin Boost +25% 149 R$ / Sparkle Club VIP 249 R$ (passes) + 6 premium cosmetics 79–249 R$ (Developer Products), sold from the Boutique's 👑 Premium Sparkles and ✨ Sparkle Passes shelves. **No coin packs** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed.
 
 ### Build log
+- **2026-06-11 (Phase D — monetization, built on the live products):** The
+  ethical-monetization design became real code the same day Chris created the
+  products. MonetizationConfig carries the live ids; MonetizationService owns
+  pass ownership (join-time checks with retries, instant in-session grants on
+  purchase, session cache feeding the snapshot) and an idempotent
+  ProcessReceipt that grants premium cosmetics into the SAME owned/equipped
+  system as coin items, auto-wears them, saves the profile BEFORE consuming
+  the receipt, and hands temp-profile or unknown-product receipts back to
+  Roblox. Perks: a second floating companion (Extra Buddy Slot; renders only
+  while the pass is owned), exact +25% Happy-Pop coins stacking with Sparkle
+  Surge, and the VIP package (👑 crown on the buddy tag, golden aura, arrival
+  welcome, +1 daily gift). The Boutique grew Premium Sparkles + Sparkle
+  Passes shelves with R$ tags, owned/wearing states, and the same gentle
+  confirm (Roblox's official purchase dialog is always the final word).
+  Owner-only "grantPass:KEY" demo trigger for family-playtest show-and-tell.
+  Verified in Studio play with real pass queries (the creator owns his own
+  passes — handy), a full fake-receipt battery (grant/replay/unknown/
+  temp-profile paths), exact pop math (10 × 1.25 → 12), two companions, and
+  the crowned tag. Same session: gifting v1 shipped + the 9 product icons.
 - **2026-06-11 (hidden story pages — the book inside the game):** All 18
   watercolor spreads of The Lost Sparkle uploaded (cautious one-at-a-time
   trickle, every page instantly Approved) and hidden as glowing parchments at

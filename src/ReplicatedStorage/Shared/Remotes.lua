@@ -24,6 +24,8 @@ Remotes.VisitRoom = "VisitRoom"                      -- ("visit"/"leave"): hop t
 Remotes.PlaceRoomItem = "PlaceRoomItem"              -- (slotId, itemId?): buy-if-needed + place / clear
 Remotes.CollectStoryPage = "CollectStoryPage"        -- id: I walked up to a hidden storybook page
 Remotes.SendGift = "SendGift"                        -- (recipientUserId, kind, value): give coins / share a friend
+Remotes.BuyPremium = "BuyPremium"                    -- itemId: prompt a Robux purchase of a premium cosmetic
+Remotes.BuyPass = "BuyPass"                          -- passKey: prompt a Robux Game Pass purchase
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -53,6 +55,8 @@ local ALL_EVENTS = {
 	Remotes.PlaceRoomItem,
 	Remotes.CollectStoryPage,
 	Remotes.SendGift,
+	Remotes.BuyPremium,
+	Remotes.BuyPass,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,

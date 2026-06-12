@@ -16,6 +16,7 @@ local CosmeticsConfig = require(Shared:WaitForChild("CosmeticsConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local SquishyModelFactory = require(script.Parent.SquishyModelFactory)
+local MonetizationService = require(script.Parent.MonetizationService)
 
 local BuddyService = {}
 
@@ -23,7 +24,8 @@ local BuddyService = {}
 local BUDDY_SCALE = 0.62
 local EYE_COLOR = Color3.fromRGB(64, 48, 64)
 
-local buddies: { [Player]: Model } = {}
+-- up to two companions per player (slot 2 = the Extra Buddy Slot pass)
+local buddies: { [Player]: { [number]: Model } } = {}
 local buddyFolder: Folder
 
 local function roundFrame(parent: Instance, radius: number): Frame
@@ -109,6 +111,28 @@ local function addVariantAura(body: BasePart, variantLevel: number)
 	aura.Lifetime = NumberRange.new(0.9, 1.5)
 	aura.Rate = 7
 	aura.Speed = NumberRange.new(1, 2.5)
+	aura.SpreadAngle = Vector2.new(180, 180)
+	aura.Parent = body
+end
+
+-- The Sparkle Club VIP aura: a steady drift of golden sparkles, distinct from
+-- the variant auras so a VIP buddy reads at a glance.
+local function addVipAura(body: BasePart)
+	local aura = Instance.new("ParticleEmitter")
+	aura.Name = "VipAura"
+	aura.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	aura.LightEmission = 1
+	aura.Color = ColorSequence.new(Color3.fromRGB(255, 214, 90), Color3.fromRGB(255, 245, 200))
+	aura.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 0.8), NumberSequenceKeypoint.new(1, 0),
+	})
+	aura.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.2), NumberSequenceKeypoint.new(1, 1),
+	})
+	aura.Lifetime = NumberRange.new(1.1, 1.7)
+	aura.Rate = 6
+	aura.Speed = NumberRange.new(0.6, 1.6)
+	aura.Acceleration = Vector3.new(0, 1.2, 0) -- VIP gold drifts gently upward
 	aura.SpreadAngle = Vector2.new(180, 180)
 	aura.Parent = body
 end
@@ -209,6 +233,65 @@ local HAT_BUILDERS: { [string]: (Model, CFrame, any) -> () } = {
 			dot.CFrame = top * CFrame.new(off.X, off.Y - 0.3, off.Z)
 		end
 	end,
+	-- ── Premium hats (Phase D) ──────────────────────────────────────────────
+	hat_strawberry_beret = function(model, top, item)
+		-- a tilted berry-red beret with golden seeds and a leafy stem
+		local tilt = top * CFrame.new(0.16, 0.06, 0) * CFrame.Angles(0, 0, math.rad(-12))
+		local cap = prop(model, {
+			Name = "BeretCap", Shape = Enum.PartType.Ball, Size = Vector3.new(1.55, 0.72, 1.55),
+			Color = item.color,
+		})
+		cap.CFrame = tilt * CFrame.new(0, 0.16, 0)
+		for i, off in ipairs({
+			Vector3.new(0.45, 0.3, 0.18), Vector3.new(-0.38, 0.28, -0.3), Vector3.new(0.05, 0.38, -0.42),
+			Vector3.new(-0.15, 0.36, 0.4), Vector3.new(0.5, 0.26, -0.35),
+		}) do
+			local seed = prop(model, {
+				Name = "BerrySeed" .. i, Shape = Enum.PartType.Ball, Size = Vector3.new(0.13, 0.18, 0.13),
+				Color = item.color2,
+			})
+			seed.CFrame = tilt * CFrame.new(off.X, off.Y, off.Z)
+		end
+		local stem = prop(model, {
+			Name = "BerryStem", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.34, 0.12, 0.12),
+			Color = Color3.fromRGB(124, 176, 96),
+		})
+		stem.CFrame = tilt * CFrame.new(0, 0.6, 0) * CFrame.Angles(0, 0, math.rad(90))
+		local leaf = prop(model, {
+			Name = "BerryLeaf", Shape = Enum.PartType.Ball, Size = Vector3.new(0.34, 0.12, 0.2),
+			Color = Color3.fromRGB(148, 200, 116),
+		})
+		leaf.CFrame = tilt * CFrame.new(0.18, 0.72, 0)
+	end,
+	hat_unicorn_horn = function(model, top, item)
+		-- a slim golden spiral horn with a glowing tip
+		local lean = top * CFrame.Angles(0, 0, math.rad(6))
+		local radii = { 0.46, 0.32, 0.18 }
+		for i, r in ipairs(radii) do
+			local ring = prop(model, {
+				Name = "HornRing", Shape = Enum.PartType.Cylinder,
+				Size = Vector3.new(0.34, r * 2, r * 2),
+				Color = (i % 2 == 1) and item.color or item.color2,
+			})
+			ring.CFrame = lean * CFrame.new(0, (i - 1) * 0.32 + 0.1, 0) * CFrame.Angles(0, 0, math.rad(90))
+		end
+		local tip = prop(model, {
+			Name = "HornTip", Shape = Enum.PartType.Ball, Size = Vector3.new(0.16, 0.3, 0.16),
+			Color = Color3.fromRGB(255, 244, 200), Material = Enum.Material.Neon,
+		})
+		tip.CFrame = lean * CFrame.new(0, 1.12, 0)
+	end,
+	hat_golden_halo = function(model, top, item)
+		-- a floating ring of glowing gold beads
+		for i = 1, 8 do
+			local angle = (i / 8) * math.pi * 2
+			local bead = prop(model, {
+				Name = "HaloBead", Shape = Enum.PartType.Ball, Size = Vector3.new(0.22, 0.22, 0.22),
+				Color = item.color, Material = Enum.Material.Neon,
+			})
+			bead.CFrame = top * CFrame.new(math.cos(angle) * 0.66, 0.55, math.sin(angle) * 0.66)
+		end
+	end,
 	hat_crown = function(model, top, item)
 		local band = prop(model, {
 			Name = "CrownBand", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.42, 1.5, 1.5),
@@ -267,6 +350,30 @@ local function addTrail(body: BasePart, item)
 	elseif item.id == "trail_stars" then
 		trail.Color = ColorSequence.new(item.color)
 		trail.RotSpeed = NumberRange.new(-120, 120)
+	elseif item.id == "trail_comet" then
+		-- premium: a bright golden streak that races out behind the buddy
+		trail.Color = ColorSequence.new(item.color, Color3.fromRGB(255, 250, 230))
+		trail.LightEmission = 1
+		trail.Rate = 16
+		trail.Speed = NumberRange.new(2, 4)
+		trail.Lifetime = NumberRange.new(0.45, 0.85)
+		trail.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1.0), NumberSequenceKeypoint.new(1, 0),
+		})
+	elseif item.id == "trail_aurora" then
+		-- premium: slow northern-lights ribbons drifting upward
+		trail.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, item.color or Color3.fromRGB(140, 230, 200)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 180, 255)),
+			ColorSequenceKeypoint.new(1, item.color2 or Color3.fromRGB(190, 150, 255)),
+		})
+		trail.Rate = 12
+		trail.Lifetime = NumberRange.new(1.2, 1.8)
+		trail.Acceleration = Vector3.new(0, 0.8, 0)
+		trail.SpreadAngle = Vector2.new(60, 60)
+		trail.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(0.5, 0.95), NumberSequenceKeypoint.new(1, 0),
+		})
 	else -- hearts (and any future colour trail)
 		trail.Color = ColorSequence.new(item.color or Color3.fromRGB(255, 200, 220))
 	end
@@ -280,6 +387,51 @@ local function addBalloon(model: Model, body: BasePart, item)
 		Color = Color3.fromRGB(250, 245, 240),
 	})
 	string.CFrame = anchor * CFrame.new(-0.25, 1.05, 0) * CFrame.Angles(0, 0, math.rad(12))
+
+	if item.id == "balloon_rainbow_heart" then
+		-- premium: a heart of two lobes + a point, trailing rainbow sparkles
+		local at = anchor * CFrame.new(-0.5, 2.3, 0)
+		for _, sx in ipairs({ -1, 1 }) do
+			local lobe = prop(model, {
+				Name = "HeartLobe", Shape = Enum.PartType.Ball, Size = Vector3.new(0.85, 0.85, 0.7),
+				Color = item.color, Reflectance = 0.08,
+			})
+			lobe.CFrame = at * CFrame.new(sx * 0.3, 0.18, 0)
+		end
+		local point = prop(model, {
+			Name = "HeartPoint", Size = Vector3.new(0.95, 0.95, 0.62),
+			Color = item.color, Reflectance = 0.08,
+		})
+		point.CFrame = at * CFrame.new(0, -0.22, 0) * CFrame.Angles(0, 0, math.rad(45))
+		local shine = prop(model, {
+			Name = "BalloonShine", Shape = Enum.PartType.Ball, Size = Vector3.new(0.26, 0.34, 0.26),
+			Color = Color3.fromRGB(255, 255, 255), Transparency = 0.25,
+		})
+		shine.CFrame = at * CFrame.new(-0.5, 0.42, -0.18)
+		local rainbow = Instance.new("ParticleEmitter")
+		rainbow.Name = "HeartRainbow"
+		rainbow.Texture = SPARKLE_TEXTURE
+		rainbow.LightEmission = 0.9
+		rainbow.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 150, 160)),
+			ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 224, 130)),
+			ColorSequenceKeypoint.new(0.66, Color3.fromRGB(150, 230, 180)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 180, 255)),
+		})
+		rainbow.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 0.5), NumberSequenceKeypoint.new(1, 0),
+		})
+		rainbow.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.3), NumberSequenceKeypoint.new(1, 1),
+		})
+		rainbow.Lifetime = NumberRange.new(0.8, 1.3)
+		rainbow.Rate = 5
+		rainbow.Speed = NumberRange.new(0.5, 1.2)
+		rainbow.SpreadAngle = Vector2.new(180, 180)
+		rainbow.Parent = point
+		return
+	end
+
 	local balloon = prop(model, {
 		Name = "Balloon", Shape = Enum.PartType.Ball, Size = Vector3.new(1.25, 1.5, 1.25),
 		Color = item.color, Reflectance = 0.08,
@@ -314,7 +466,7 @@ local function applyCosmetics(model: Model, body: BasePart, equipped: { [string]
 	end
 end
 
-local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { [string]: string }): Model
+local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { [string]: string }, isVip: boolean, dressUp: boolean): Model
 	-- The buddy IS the friend's real shape, just companion-sized.
 	local model = SquishyModelFactory.build(def)
 	model.Name = "Buddy"
@@ -337,12 +489,19 @@ local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { 
 		addFace(body)
 	end
 	addVariantAura(body, variantLevel)
-	applyCosmetics(model, body, equipped)
+	if isVip then
+		addVipAura(body)
+	end
+	-- the boutique outfit rides the FIRST buddy only (one hat, one owner)
+	if dressUp then
+		applyCosmetics(model, body, equipped)
+	end
 
-	-- The show-off tag: whose buddy it is, plus the variant badge (✨/🌈), so kids
-	-- can spot each other's favourites across the play zone.
+	-- The show-off tag: whose buddy it is, plus the VIP crown and the variant
+	-- badge (✨/🌈), so kids can spot each other's favourites across the play zone.
 	local icon = VariantConfig.iconFor(variantLevel)
-	local tagText = (icon ~= "" and icon .. " " or "") .. owner.DisplayName .. "'s " .. def.DisplayName
+	local tagText = (if isVip then "👑 " else "")
+		.. (icon ~= "" and icon .. " " or "") .. owner.DisplayName .. "'s " .. def.DisplayName
 
 	local nameGui = Instance.new("BillboardGui")
 	nameGui.Name = "BuddyName"
@@ -367,52 +526,71 @@ local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { 
 	return model
 end
 
--- Where the buddy wants to be: behind, to the side, and a little above the owner.
-local function targetPosition(hrp: BasePart): Vector3
-	local cf = hrp.CFrame * CFrame.new(2.4, 0.6, 4.2)
+-- Where a buddy wants to be: behind, to one side (slot 1 right, slot 2 left),
+-- and a little above the owner.
+local function targetPosition(hrp: BasePart, slot: number): Vector3
+	local side = if slot == 2 then -2.4 else 2.4
+	local cf = hrp.CFrame * CFrame.new(side, 0.6, 4.2)
 	return cf.Position
 end
 
-local function clearBuddy(player: Player)
-	local m = buddies[player]
-	if m then
-		m:Destroy()
+local function clearBuddies(player: Player)
+	local slots = buddies[player]
+	if slots then
+		for _, m in pairs(slots) do
+			m:Destroy()
+		end
 		buddies[player] = nil
 	end
 end
 
--- Spawn (or replace) a player's buddy. Pass nil to remove it.
-function BuddyService.setBuddy(player: Player, defId: string?)
-	clearBuddy(player)
-	if not defId then
+-- Respawn a player's companions from their profile (both slots + VIP flair).
+-- The one entry point for every "the buddy changed" moment: equips, cosmetic
+-- changes, variant shine-ups, pass purchases.
+function BuddyService.refresh(player: Player)
+	clearBuddies(player)
+	local profile = PlayerDataService.get(player)
+	if not profile then
 		return
 	end
-	local def = SquishyData.getById(defId)
-	if not def then
-		return
-	end
-	local model = buildBuddy(def, player, PlayerDataService.getVariant(player, defId), PlayerDataService.getEquippedCosmetics(player))
-	model.Parent = buddyFolder
-	buddies[player] = model
-
-	-- Snap it next to the character right away so it doesn't fly in from origin.
+	local isVip = MonetizationService.ownsPass(player, "VIP")
 	local char = player.Character
 	local hrp = char and char:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if hrp then
-		model:PivotTo(CFrame.new(targetPosition(hrp)))
+	local ids: { [number]: string? } = { profile.EquippedBuddyId }
+	-- the second companion walks only while the Extra Buddy Slot pass is owned
+	-- (the equip itself persists, so it comes right back when the pass does)
+	if MonetizationService.ownsPass(player, "BuddySlot") then
+		ids[2] = profile.EquippedBuddyId2
+	end
+	local slots: { [number]: Model } = {}
+	for slot, defId in pairs(ids) do
+		local def = defId and SquishyData.getById(defId)
+		if def then
+			local model = buildBuddy(def, player, PlayerDataService.getVariant(player, defId),
+				PlayerDataService.getEquippedCosmetics(player), isVip, slot == 1)
+			model.Parent = buddyFolder
+			slots[slot] = model
+			-- Snap it next to the character right away so it doesn't fly in from origin.
+			if hrp then
+				model:PivotTo(CFrame.new(targetPosition(hrp, slot)))
+			end
+		end
+	end
+	if next(slots) then
+		buddies[player] = slots
 	end
 end
 
 local function update(dt: number)
-	for player, model in pairs(buddies) do
-		if not model.Parent then
-			buddies[player] = nil
-		else
-			local char = player.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart") :: BasePart?
-			if hrp then
-				local bob = math.sin(os.clock() * 4 + #player.Name) * 0.4
-				local goal = targetPosition(hrp) + Vector3.new(0, bob, 0)
+	for player, slots in pairs(buddies) do
+		local char = player.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart") :: BasePart?
+		for slot, model in pairs(slots) do
+			if not model.Parent then
+				slots[slot] = nil
+			elseif hrp then
+				local bob = math.sin(os.clock() * 4 + #player.Name + slot * 1.7) * 0.4
+				local goal = targetPosition(hrp, slot) + Vector3.new(0, bob, 0)
 				local current = model:GetPivot().Position
 				-- Snap if we somehow got far away (teleport / respawn), else ease.
 				local newPos = if (current - goal).Magnitude > 60
@@ -420,6 +598,9 @@ local function update(dt: number)
 					else current:Lerp(goal, math.clamp(dt * 8, 0, 1))
 				model:PivotTo(CFrame.new(newPos))
 			end
+		end
+		if next(slots) == nil then
+			buddies[player] = nil
 		end
 	end
 end
@@ -440,8 +621,7 @@ function BuddyService.init()
 		if player.Parent == nil then
 			return
 		end
-		local profile = PlayerDataService.get(player)
-		BuddyService.setBuddy(player, profile and profile.EquippedBuddyId or nil)
+		BuddyService.refresh(player)
 	end
 
 	local function onPlayer(player: Player)
@@ -458,7 +638,7 @@ function BuddyService.init()
 	for _, player in ipairs(Players:GetPlayers()) do
 		onPlayer(player)
 	end
-	Players.PlayerRemoving:Connect(clearBuddy)
+	Players.PlayerRemoving:Connect(clearBuddies)
 
 	RunService.Heartbeat:Connect(update)
 end

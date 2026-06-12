@@ -73,6 +73,7 @@ src/ReplicatedStorage/Shared/
   SocialConfig.lua         Phase C tunables: Sparkle Surge meter, Everybody Squish event, leaderboards
   CosmeticsConfig.lua      Sparkle Boutique catalog (hats/trails/balloons, coin prices, builder hints)
   GiftConfig.lua           Gifting v1 tunables: coin presets, daily gift limit, prompt/send ranges
+  MonetizationConfig.lua   Phase D: the LIVE Creator Hub ids (3 passes + 6 premium products), perk numbers, product<->item maps
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
@@ -95,6 +96,7 @@ src/ServerScriptService/Server/   (server-authoritative)
   WeeklyService.lua        Friend of the Week: a visiting tent by the travel hub; one of the 8 event friends rotates in weekly; Befriend = known coin price (never random), full card reveal
   CodeService.lua          storybook "magic words" (promo codes; table is SERVER-side only): one-time coin gifts, normalized input, per-player redemption persisted
   GiftService.lua          Gifting v1: 🎁 prompt on every player's character; give preset coins or SHARE a discovered friend (recipient gets discovery + reveal, GIVER KEEPS THEIRS); daily limit + range + cooldown validated server-side; shout-out on gift
+  MonetizationService.lua  Phase D: pass ownership (join check w/ retries + PromptFinished instant grant + session cache feeding snapshot.passes), perks (x1.25 coins, +1 gift, VIP welcome), BuyPass/BuyPremium prompts, idempotent ProcessReceipt (grants into Cosmetics.Owned, auto-wears, saves BEFORE consuming the receipt; temp profiles -> NotProcessedYet), owner-only debugGrantPass
   SquishyModelFactory.lua  every friend's real 3D shape: ~17 part-built archetypes (dumpling/bun/cube/bunny/bat/ghost...) + hand-tuned skins for all 48 launch friends (+8 weekly); HatOffset attr; applyGolden()
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
@@ -113,9 +115,10 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
 - Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
   `ClaimDailyCapsule`, `BuyCosmetic`, `EquipCosmetic`, `RedeemCode`, `VisitRoom`,
   `PlaceRoomItem`, `CollectStoryPage`, `SendGift` (recipientUserId, "coins"|"friend",
-  amount|defId), `ResetProgress` (owner-only),
-  `OwnerDebug` (owner-only: "startEvent"/"startSurge" demo triggers, with HUD
-  buttons next to Reset); s->c `StateSync`, `SocialSync` (surge meter + event
+  amount|defId), `BuyPremium` (itemId -> Robux product prompt), `BuyPass`
+  (passKey -> Game Pass prompt), `ResetProgress` (owner-only),
+  `OwnerDebug` (owner-only: "startEvent"/"startSurge"/"grantPass:KEY" demo
+  triggers, with HUD buttons next to Reset); s->c `StateSync`, `SocialSync` (surge meter + event
   slices, with seconds-remaining), `OpenBoutique`, `OpenRoomCatalog`,
   `StoryPageCollected`, `OpenGiftUI` (recipient + their discovered set + gifts
   left today), `GiftReceived` (coin gifts; friend shares arrive as a
@@ -123,7 +126,8 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   `SparkleBitCollected`, `SparkleRestored`, `Toast`.
 - The `StateSync` snapshot carries: coins, discovered (+count), variants,
   sparkleBits, shards (per-land {progress, collected}), tutorial, dailyCapsuleReady,
-  daily (streak + quests), sparkleRestored.
+  daily (streak + quests), sparkleRestored, equippedBuddyId(+2), cosmetics
+  (owned incl. premium / equipped), passes ({BuddySlot/CoinBoost/VIP: true}).
 - Input is server-side: `ClickDetector.MouseClick` (squish) and
   `ProximityPrompt.Triggered` (capsule + guide) fire on the server. Hidden Sparkle
   Bits are client-rendered per-player, but the pickup award is server-validated
@@ -134,14 +138,14 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   no id still falls back to a coloured placeholder. Upload pipeline + decal→image-id
   provenance: `tools/card_art/`.
 
-### Not in MVP yet (deliberately)
+### Not in the game (deliberately)
 
 Cross-server gifting (v1 is same-server walk-up only; a mailbox pattern can
 ride on the session locks later), TRADING of any kind (gifts only — sharing a
 friend never costs the giver theirs, so nobody can be talked out of their
-collection), and any monetization (Phase D — no Game Passes / Developer
-Products; **Sparkle Capsules stay FREE by design**, to avoid the Paid Random
-Items policy that restricts our 6–9 audience). *(Earlier gaps now closed: all 48 friends have real trading-card
+collection), and coin packs / paid randomness of any kind: **Sparkle Capsules
+stay FREE forever** (the Paid Random Items policy restricts our 6–9 audience),
+every friend stays earnable, and Phase D sells style & convenience only. *(Earlier gaps now closed: all 48 friends have real trading-card
 art; Phase C co-op/social shipped 2026-06-09; and every friend has a real
 part-built 3D shape via SquishyModelFactory — no more placeholder balls.)*
 
@@ -165,8 +169,16 @@ player-to-player kindness loop: a 🎁 prompt on every player — give preset
 Sparkle Coins or SHARE a discovered friend (recipient gets the discovery +
 a "💝 A gift from …!" card reveal; the giver keeps theirs), 5 gifts/day,
 picture confirm, server-validated end to end, same-server only. Solo-verified
-in Studio; the family playtest is its real multiplayer validation. Next:
-Phase D (monetization — needs pricing/business calls).
-See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap.
+in Studio; the family playtest is its real multiplayer validation. **Phase D
+(2026-06-11) is BUILT against the live Creator Hub products** (ids in
+MonetizationConfig): Extra Buddy Slot / Coin Boost +25% / Sparkle Club VIP
+passes + 6 premium cosmetics as Developer Products, sold from the Boutique's
+new 👑 Premium Sparkles + ✨ Sparkle Passes shelves. Verified in Studio play:
+pass checks live, x1.25 pop math exact, two companions walk, VIP crown/aura/
+welcome, ProcessReceipt grants/auto-wears/replays idempotently and refuses
+unknown products + temp profiles. The roadmap is now fully shipped — what's
+left is content/polish (pro marketing shoot, optional true-night lighting,
+cross-server gift mailbox someday).
+See `docs/11_GAMEPLAY_V2_DESIGN.md` for the build log.
 **Changes are synced to Studio + git but go live in the published game only after
 File → Publish (Alt+P), a creator-only action.**

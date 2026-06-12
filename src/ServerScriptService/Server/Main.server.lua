@@ -34,6 +34,7 @@ local RoomService = require(script.Parent.RoomService)
 local FirstDayService = require(script.Parent.FirstDayService)
 local StoryPageService = require(script.Parent.StoryPageService)
 local GiftService = require(script.Parent.GiftService)
+local MonetizationService = require(script.Parent.MonetizationService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -55,6 +56,7 @@ RoomService.init()
 FirstDayService.init()
 StoryPageService.init()
 GiftService.init()
+MonetizationService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -86,8 +88,11 @@ SquishService.onHappyPop = function(player, def)
 	SurgeService.notePop(player, def)
 end
 
--- During a Sparkle Surge, every coin award doubles.
-SquishService.coinMultiplier = SurgeService.coinMultiplier
+-- During a Sparkle Surge every coin award doubles, and Coin Boost pass owners
+-- earn +25% on top (the perks multiply: surge + boost = x2.5).
+SquishService.coinMultiplier = function(player)
+	return SurgeService.coinMultiplier() * MonetizationService.coinMultiplier(player)
+end
 
 -- The First Day list watches its five signals.
 SquishService.onSquish = function(player)
@@ -102,18 +107,24 @@ SquishService.onGoldenPop = function(player, def, model)
 	GroupEventService.noteGoldenPop(player, def, model)
 end
 
--- Equipping/unequipping a buddy spawns or removes the floating companion.
-CollectionService.onBuddyChanged = function(player, defId)
-	BuddyService.setBuddy(player, defId)
+-- Equipping/unequipping buddies respawns the floating companions.
+CollectionService.onBuddyChanged = function(player)
+	BuddyService.refresh(player)
 	FirstDayService.check(player)
 end
 
 -- Boutique purchases/outfit changes re-dress the buddy on the spot.
 BoutiqueService.onCosmeticsChanged = function(player)
-	local profile = PlayerDataService.get(player)
-	if profile and profile.EquippedBuddyId then
-		BuddyService.setBuddy(player, profile.EquippedBuddyId)
-	end
+	BuddyService.refresh(player)
+end
+
+-- Phase D: a premium cosmetic arrived (auto-worn) or a pass changed (VIP
+-- crown/aura, second slot) — the companions need a fresh look either way.
+MonetizationService.onPremiumGranted = function(player)
+	BuddyService.refresh(player)
+end
+MonetizationService.onPassesChanged = function(player)
+	BuddyService.refresh(player)
 end
 
 -- Daily-quest tracking: a capsule open (and any new discovery), and Sparkle Bits.
@@ -127,11 +138,11 @@ CapsuleService.onOpened = function(player, isNew, def)
 			shoutToOthers(player, "🎉 " .. player.DisplayName .. " discovered " .. def.DisplayName .. "!")
 		end
 	elseif def then
-		-- A duplicate may have shined up the friend they have equipped — respawn
-		-- the buddy so its ✨/🌈 badge and aura update right away.
+		-- A duplicate may have shined up a friend they have equipped — respawn
+		-- the buddies so the ✨/🌈 badge and aura update right away.
 		local profile = PlayerDataService.get(player)
-		if profile and profile.EquippedBuddyId == def.Id then
-			BuddyService.setBuddy(player, def.Id)
+		if profile and (profile.EquippedBuddyId == def.Id or profile.EquippedBuddyId2 == def.Id) then
+			BuddyService.refresh(player)
 		end
 	end
 end
@@ -192,6 +203,9 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 		GroupEventService.startNow()
 	elseif action == "startSurge" then
 		SurgeService.startNow()
+	elseif type(action) == "string" and action:sub(1, 10) == "grantPass:" then
+		-- session-only pass demo, e.g. "grantPass:VIP" (owner-gated above)
+		MonetizationService.debugGrantPass(player, action:sub(11))
 	elseif action == "restoreRoom610" then
 		-- One-time restitution: an old pre-Room server's leave-save dropped the
 		-- owner's furniture + buddy on 2026-06-10. Owner-gated; idempotent.
@@ -202,7 +216,7 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 			end
 			if profile.Discovered["marshmallow_puff"] and profile.EquippedBuddyId == nil then
 				profile.EquippedBuddyId = "marshmallow_puff"
-				BuddyService.setBuddy(player, "marshmallow_puff")
+				BuddyService.refresh(player)
 			end
 			FirstDayService.check(player)
 			PlayerDataService.sync(player)

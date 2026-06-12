@@ -67,6 +67,7 @@ export type Profile = {
 	Discovered: { [string]: boolean },
 	DiscoveredCount: number,
 	EquippedBuddyId: string?,
+	EquippedBuddyId2: string?, -- second companion (Extra Buddy Slot pass)
 	TutorialDone: boolean,
 	FirstCapsuleClaimed: boolean,
 	Shards: { [string]: { progress: number, collected: boolean } },
@@ -83,6 +84,7 @@ export type Profile = {
 	FirstDayPaid: { [string]: boolean },
 	StoryPages: { [string]: boolean },
 	Gifting: { Day: number, Sent: number },
+	PremiumReceipts: { [string]: boolean }, -- processed Robux receipt ids (idempotence)
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -111,6 +113,7 @@ local function newProfile(): Profile
 		Discovered = {},
 		DiscoveredCount = 0,
 		EquippedBuddyId = nil,
+		EquippedBuddyId2 = nil,
 		TutorialDone = false,
 		FirstCapsuleClaimed = false,
 		Shards = newShards(),
@@ -127,6 +130,7 @@ local function newProfile(): Profile
 		FirstDayPaid = {},
 		StoryPages = {},
 		Gifting = { Day = 0, Sent = 0 },
+		PremiumReceipts = {},
 	}
 end
 
@@ -163,6 +167,7 @@ local function serialize(p: Profile, raw: any)
 		TotalHappyPops = p.TotalHappyPops,
 		Discovered = p.Discovered,
 		EquippedBuddyId = p.EquippedBuddyId,
+		EquippedBuddyId2 = p.EquippedBuddyId2,
 		TutorialDone = p.TutorialDone,
 		FirstCapsuleClaimed = p.FirstCapsuleClaimed,
 		Shards = p.Shards,
@@ -179,6 +184,7 @@ local function serialize(p: Profile, raw: any)
 		FirstDayPaid = p.FirstDayPaid,
 		StoryPages = p.StoryPages,
 		Gifting = p.Gifting,
+		PremiumReceipts = p.PremiumReceipts,
 	}
 	for k, v in pairs(known) do
 		out[k] = v
@@ -211,6 +217,9 @@ local function deserialize(data: any): Profile
 	end
 	if type(data.EquippedBuddyId) == "string" then
 		p.EquippedBuddyId = data.EquippedBuddyId
+	end
+	if type(data.EquippedBuddyId2) == "string" then
+		p.EquippedBuddyId2 = data.EquippedBuddyId2
 	end
 	if type(data.Discovered) == "table" then
 		local discovered = {}
@@ -317,6 +326,15 @@ local function deserialize(data: any): Profile
 			Day = tonumber(data.Gifting.Day) or 0,
 			Sent = tonumber(data.Gifting.Sent) or 0,
 		}
+	end
+	if type(data.PremiumReceipts) == "table" then
+		local receipts = {}
+		for id, v in pairs(data.PremiumReceipts) do
+			if type(id) == "string" and v == true then
+				receipts[id] = true
+			end
+		end
+		p.PremiumReceipts = receipts
 	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
@@ -497,6 +515,9 @@ function PlayerDataService.snapshot(player: Player)
 		discovered = p.Discovered,
 		discoveredCount = p.DiscoveredCount,
 		equippedBuddyId = p.EquippedBuddyId,
+		equippedBuddyId2 = p.EquippedBuddyId2,
+		-- owned Game Passes (provided by MonetizationService once it has checked)
+		passes = if PlayerDataService.passProvider then PlayerDataService.passProvider(player) else {},
 		zone = GameConfig.ZoneName,
 		tutorial = {
 			popped = math.min(p.TotalHappyPops, GameConfig.TutorialPopGoal),
@@ -679,6 +700,40 @@ function PlayerDataService.setBuddy(player: Player, defId: string?)
 	local p = profiles[player]
 	if not p then return end
 	p.EquippedBuddyId = defId
+end
+
+function PlayerDataService.setBuddy2(player: Player, defId: string?)
+	local p = profiles[player]
+	if not p then return end
+	p.EquippedBuddyId2 = defId
+end
+
+-- ── Phase D: premium receipts + pass info ───────────────────────────────────
+-- Set by MonetizationService: snapshot asks it which Game Passes are owned.
+PlayerDataService.passProvider = nil :: ((Player) -> { [string]: boolean })?
+
+function PlayerDataService.hasProcessedReceipt(player: Player, purchaseId: string): boolean
+	local p = profiles[player]
+	return (p ~= nil) and (p.PremiumReceipts[purchaseId] == true)
+end
+
+function PlayerDataService.markReceiptProcessed(player: Player, purchaseId: string)
+	local p = profiles[player]
+	if p then
+		p.PremiumReceipts[purchaseId] = true
+	end
+end
+
+-- True only when this session OWNS the saved profile and can actually persist
+-- a purchase (Robux receipts must never be swallowed by a temp profile).
+function PlayerDataService.isSavable(player: Player): boolean
+	return dataStoreEnabled and loadedOk[player] == true
+end
+
+-- Synchronous save for moments that must not be lost (a Robux receipt is only
+-- marked processed once this returns true).
+function PlayerDataService.saveNow(player: Player): boolean
+	return saveData(player)
 end
 
 -- ── Sparkle Boutique cosmetics ──────────────────────────────────────────────

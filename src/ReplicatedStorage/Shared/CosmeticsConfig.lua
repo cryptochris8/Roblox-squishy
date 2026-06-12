@@ -14,7 +14,11 @@ export type Cosmetic = {
 	name: string,
 	icon: string,
 	type: string, -- "hat" | "trail" | "balloon"
-	price: number,
+	price: number?, -- Sparkle Coins (nil for premium items)
+	-- Phase D premium items: sold once for Robux (Developer Product ids live
+	-- in MonetizationConfig); ownership lands in the same Cosmetics.Owned set
+	premium: boolean?,
+	robux: number?,
 	-- builder hints (colors etc.) used by BuddyService's prop builders
 	color: Color3?,
 	color2: Color3?,
@@ -58,6 +62,26 @@ local catalog: { Cosmetic } = {
 		color = Color3.fromRGB(255, 150, 180) },
 	{ id = "balloon_gold", name = "Gold Balloon", icon = "💛", type = "balloon", price = 200,
 		color = Color3.fromRGB(255, 208, 100) },
+
+	-- ── Premium Sparkles (Phase D — Robux, one-time, style only) ────────────
+	{ id = "hat_strawberry_beret", name = "Strawberry Beret", icon = "🍓", type = "hat",
+		premium = true, robux = 79,
+		color = Color3.fromRGB(232, 64, 92), color2 = Color3.fromRGB(255, 226, 150) },
+	{ id = "balloon_rainbow_heart", name = "Rainbow Heart Balloon", icon = "💖", type = "balloon",
+		premium = true, robux = 99,
+		color = Color3.fromRGB(255, 110, 140) },
+	{ id = "hat_unicorn_horn", name = "Unicorn Horn", icon = "🦄", type = "hat",
+		premium = true, robux = 149,
+		color = Color3.fromRGB(255, 201, 84), color2 = Color3.fromRGB(240, 160, 40) },
+	{ id = "trail_comet", name = "Comet Trail", icon = "🌠", type = "trail",
+		premium = true, robux = 199,
+		color = Color3.fromRGB(255, 228, 140) },
+	{ id = "hat_golden_halo", name = "Golden Halo", icon = "😇", type = "hat",
+		premium = true, robux = 249,
+		color = Color3.fromRGB(255, 214, 90) },
+	{ id = "trail_aurora", name = "Aurora Ribbon", icon = "🌌", type = "trail",
+		premium = true, robux = 249,
+		color = Color3.fromRGB(140, 230, 200), color2 = Color3.fromRGB(190, 150, 255) },
 }
 CosmeticsConfig.Catalog = catalog
 
@@ -70,11 +94,23 @@ function CosmeticsConfig.get(id: string): Cosmetic?
 	return byId[id]
 end
 
--- Catalog items of one type, in catalog (cheap -> fancy) order.
+-- COIN items of one type, in catalog (cheap -> fancy) order. Premium items
+-- are excluded here — they render on the Boutique's own Premium shelf.
 function CosmeticsConfig.ofType(cosmeticType: string): { Cosmetic }
 	local list = {}
 	for _, item in ipairs(CosmeticsConfig.Catalog) do
-		if item.type == cosmeticType then
+		if item.type == cosmeticType and not item.premium then
+			list[#list + 1] = item
+		end
+	end
+	return list
+end
+
+-- The Premium shelf, in catalog (cheap -> fancy) order.
+function CosmeticsConfig.premiumItems(): { Cosmetic }
+	local list = {}
+	for _, item in ipairs(CosmeticsConfig.Catalog) do
+		if item.premium then
 			list[#list + 1] = item
 		end
 	end

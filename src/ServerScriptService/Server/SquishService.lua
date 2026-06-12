@@ -24,8 +24,9 @@ SquishService.onHappyPop = nil :: ((Player, any) -> ())?
 SquishService.onGoldenPop = nil :: ((Player, any, Model) -> ())?
 -- Set by Main: any squish at all (the First Day list watches the very first one).
 SquishService.onSquish = nil :: ((Player) -> ())?
--- Set by Main: what to multiply coin awards by right now (Sparkle Surge = 2).
-SquishService.coinMultiplier = nil :: (() -> number)?
+-- Set by Main: what to multiply this player's coin award by right now
+-- (Sparkle Surge x2 for everyone, Coin Boost pass x1.25 for its owner).
+SquishService.coinMultiplier = nil :: ((Player) -> number)?
 
 local squishiesFolder: Folder
 local squishResultEvent: RemoteEvent
@@ -146,7 +147,7 @@ function SquishService.handleSquish(player: Player, model: Model)
 			coins *= SocialConfig.EventGoldenCoinMultiplier
 		end
 		if SquishService.coinMultiplier then
-			coins = math.floor(coins * SquishService.coinMultiplier())
+			coins = math.floor(coins * SquishService.coinMultiplier(player))
 		end
 		PlayerDataService.addCoins(player, coins)
 		PlayerDataService.incHappyPop(player)

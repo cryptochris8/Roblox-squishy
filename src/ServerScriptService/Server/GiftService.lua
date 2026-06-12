@@ -20,6 +20,7 @@ local SquishyData = require(Shared:WaitForChild("SquishyData"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local DailyService = require(script.Parent.DailyService)
+local MonetizationService = require(script.Parent.MonetizationService)
 
 local GiftService = {}
 
@@ -48,7 +49,8 @@ local function openGiftFor(sender: Player, recipient: Player)
 	if not (PlayerDataService.isReady(sender) and PlayerDataService.isReady(recipient)) then
 		return
 	end
-	local remaining = GiftConfig.DailyGiftLimit - PlayerDataService.giftsSentToday(sender)
+	-- VIPs carry one extra daily gift (MonetizationService owns that math)
+	local remaining = MonetizationService.giftLimit(sender) - PlayerDataService.giftsSentToday(sender)
 	if remaining <= 0 then
 		toastEvent:FireClient(sender, "You've shared all your gifts for today — more tomorrow! 💝")
 		return
@@ -107,7 +109,7 @@ local function onSendGift(sender: Player, recipientUserId: any, kind: any, value
 		toastEvent:FireClient(sender, "You can't gift yourself — but you're still a great friend! 😄")
 		return
 	end
-	if PlayerDataService.giftsSentToday(sender) >= GiftConfig.DailyGiftLimit then
+	if PlayerDataService.giftsSentToday(sender) >= MonetizationService.giftLimit(sender) then
 		toastEvent:FireClient(sender, "You've shared all your gifts for today — more tomorrow! 💝")
 		return
 	end

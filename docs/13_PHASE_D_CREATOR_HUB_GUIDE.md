@@ -1,5 +1,10 @@
 # 13 — Phase D: Creating the Products in Creator Hub (Chris's step)
 
+> **✅ DONE (2026-06-11).** All 9 products were created, the IDs below are
+> wired into `MonetizationConfig.lua`, and the Phase D build shipped the same
+> day (see doc 11's build log). This guide stays as the reference for price
+> changes, icon swaps, or future products.
+
 This is the one Phase D step only the account owner can do: creating the Game
 Passes and Developer Products on the Creator Hub website. It takes about
 15 minutes. When you're done, paste the IDs into the table at the bottom (or
@@ -109,17 +114,17 @@ For each of the 6 cosmetics:
 
 ```
 GAME PASSES
-Extra Buddy Slot (99):       ____________
-Coin Boost (149):            ____________
-Sparkle Club VIP (249):      ____________
+Extra Buddy Slot (99):       _____1874460336_______
+Coin Boost (149):            ____1874900312________
+Sparkle Club VIP (249):      ___1875272322_________
 
 DEVELOPER PRODUCTS
-Strawberry Beret (79):       ____________
-Rainbow Heart Balloon (99):  ____________
-Unicorn Horn (149):          ____________
-Comet Trail (199):           ____________
-Golden Halo (249):           ____________
-Aurora Ribbon (249):         ____________
+Strawberry Beret (79):       ___3604067414_________
+Rainbow Heart Balloon (99):  ______3604067788______
+Unicorn Horn (149):          ___3604067990_________
+Comet Trail (199):           _____3604068204_______
+Golden Halo (249):           ____3604068473________
+Aurora Ribbon (249):         ______3604068682______
 ```
 
 ---

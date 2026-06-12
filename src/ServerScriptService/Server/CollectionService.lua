@@ -11,14 +11,15 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local MonetizationService = require(script.Parent.MonetizationService)
 
 local CollectionService = {}
 
 local toastEvent: RemoteEvent
 
--- Set by Main: notified with (player, defId | nil) whenever the equipped buddy
--- changes, so BuddyService can spawn / replace / remove the companion model.
-CollectionService.onBuddyChanged = nil :: ((Player, string?) -> ())?
+-- Set by Main: notified whenever the equipped buddies change, so BuddyService
+-- can respawn the companion models from the profile.
+CollectionService.onBuddyChanged = nil :: ((Player) -> ())?
 
 function CollectionService.equipBuddy(player: Player, defId: any)
 	if type(defId) ~= "string" then
@@ -32,19 +33,34 @@ function CollectionService.equipBuddy(player: Player, defId: any)
 		toastEvent:FireClient(player, "Discover " .. def.DisplayName .. " first to make them your buddy!")
 		return
 	end
-	-- Tapping the friend who's already your buddy puts them away again (toggle).
 	local profile = PlayerDataService.get(player)
-	local alreadyBuddy = profile ~= nil and profile.EquippedBuddyId == defId
-	local newId: string? = if alreadyBuddy then nil else (defId :: string)
-
-	PlayerDataService.setBuddy(player, newId)
-	if newId then
-		toastEvent:FireClient(player, def.DisplayName .. " is now your buddy!")
-	else
+	if not profile then
+		return
+	end
+	-- Tapping an equipped friend puts them away (either slot). Otherwise fill
+	-- the first free slot — owners of the Extra Buddy Slot pass have two.
+	local hasTwoSlots = MonetizationService.ownsPass(player, "BuddySlot")
+	if profile.EquippedBuddyId == defId then
+		PlayerDataService.setBuddy(player, nil)
 		toastEvent:FireClient(player, def.DisplayName .. " is having a little rest now.")
+	elseif profile.EquippedBuddyId2 == defId then
+		PlayerDataService.setBuddy2(player, nil)
+		toastEvent:FireClient(player, def.DisplayName .. " is having a little rest now.")
+	elseif profile.EquippedBuddyId == nil then
+		PlayerDataService.setBuddy(player, defId)
+		toastEvent:FireClient(player, def.DisplayName .. " is now your buddy!")
+	elseif hasTwoSlots and profile.EquippedBuddyId2 == nil then
+		PlayerDataService.setBuddy2(player, defId)
+		toastEvent:FireClient(player, def.DisplayName .. " joins the buddy team! 🧸🧸")
+	elseif hasTwoSlots then
+		PlayerDataService.setBuddy2(player, defId)
+		toastEvent:FireClient(player, def.DisplayName .. " tags in as your second buddy!")
+	else
+		PlayerDataService.setBuddy(player, defId)
+		toastEvent:FireClient(player, def.DisplayName .. " is now your buddy!")
 	end
 	if CollectionService.onBuddyChanged then
-		CollectionService.onBuddyChanged(player, newId)
+		CollectionService.onBuddyChanged(player)
 	end
 	PlayerDataService.sync(player)
 end

@@ -280,7 +280,7 @@ function CollectionBookUI.openDetail(def)
 		equip.Font = UiTheme.HeaderFont
 		equip.TextSize = 20
 		equip.TextColor3 = Color3.fromRGB(255, 255, 255)
-		local isBuddy = lastState and lastState.equippedBuddyId == def.Id
+		local isBuddy = lastState and (lastState.equippedBuddyId == def.Id or lastState.equippedBuddyId2 == def.Id)
 		equip.Text = isBuddy and "★ Your Buddy" or "Equip Buddy"
 		equip.Parent = parent
 		UiTheme.corner(24, equip)
@@ -449,7 +449,7 @@ function CollectionBookUI.update(state)
 	lastState = state
 	-- Keep an open detail card's Equip button honest with the authoritative state.
 	if openEquipBtn and openDetailDef then
-		openEquipBtn.Text = (state and state.equippedBuddyId == openDetailDef.Id) and "★ Your Buddy" or "Equip Buddy"
+		openEquipBtn.Text = (state and (state.equippedBuddyId == openDetailDef.Id or state.equippedBuddyId2 == openDetailDef.Id)) and "★ Your Buddy" or "Equip Buddy"
 	end
 	if root and root.Visible then
 		CollectionBookUI.refresh()
