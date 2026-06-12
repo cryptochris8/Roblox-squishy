@@ -126,6 +126,559 @@ local function cloudBush(folder: Instance, at: Vector3, tint: Color3, flowerColo
 	bloom.Parent = folder
 end
 
+-- ── Beauty-pass builders (2026-06-12: candy/dessert props from the theme
+-- research — skyline silhouettes, gentle offset-phase motion, night glow) ───
+
+-- Chain-tweens a part around a loop of points forever (sky drifters).
+local function driftLoop(p: BasePart, points: { Vector3 }, secsPerLeg: number, startIndex: number)
+	local idx = startIndex
+	local function nextLeg()
+		idx = (idx % #points) + 1
+		local tween = TweenService:Create(p, TweenInfo.new(secsPerLeg, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Position = points[idx],
+		})
+		tween.Completed:Connect(nextLeg)
+		tween:Play()
+	end
+	p.Position = points[(startIndex % #points) + 1]
+	nextLeg()
+end
+
+-- A macaron hot-air balloon drifting a slow, wide circuit overhead.
+local function macaronBalloon(folder: Instance, center: Vector3, radius: number, altitude: number, c1: Color3, c2: Color3, phase: number)
+	local rig = Instance.new("Model")
+	rig.Name = "MacaronBalloon"
+	local shellTop = part({
+		Name = "ShellTop", Shape = Enum.PartType.Ball, Size = Vector3.new(15, 9, 15),
+		Color = c1, CanCollide = false, CanQuery = false,
+	})
+	shellTop.Parent = rig
+	rig.PrimaryPart = shellTop
+	local cream = part({
+		Name = "Cream", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.2, 14.4, 14.4),
+		Color = Color3.fromRGB(255, 250, 240), CanCollide = false, CanQuery = false,
+	})
+	cream.Parent = rig
+	local shellBot = part({
+		Name = "ShellBot", Shape = Enum.PartType.Ball, Size = Vector3.new(15, 9, 15),
+		Color = c2, CanCollide = false, CanQuery = false,
+	})
+	shellBot.Parent = rig
+	local basket = part({
+		Name = "Basket", Size = Vector3.new(3.4, 2.6, 3.4),
+		Color = Color3.fromRGB(196, 154, 116), CanCollide = false, CanQuery = false,
+	})
+	basket.Parent = rig
+	rig.Parent = folder
+
+	-- the rig follows an invisible anchor part so one tween moves the lot
+	local anchor = part({
+		Name = "BalloonAnchor", Size = Vector3.new(1, 1, 1), Transparency = 1,
+		CanCollide = false, CanQuery = false,
+	})
+	anchor.Parent = folder
+	local points = {}
+	for i = 1, 4 do
+		local a = phase + (i / 4) * math.pi * 2
+		points[i] = center + Vector3.new(math.cos(a) * radius, altitude + (i % 2) * 4, math.sin(a) * radius)
+	end
+	driftLoop(anchor, points, 34, 1)
+	RunService.Heartbeat:Connect(function()
+		local at = anchor.Position
+		shellTop.Position = at + Vector3.new(0, 4, 0)
+		cream.CFrame = CFrame.new(at) * CFrame.Angles(0, 0, math.rad(90))
+		shellBot.Position = at - Vector3.new(0, 4, 0)
+		basket.Position = at - Vector3.new(0, 11, 0)
+	end)
+end
+
+-- The Soda-Falls Spring: the storybook SOURCE of the syrup river — a cream
+-- cliff with translucent honey falls and fizzing foam at the base.
+local function sodaFalls(folder: Instance, at: Vector3, faceToward: Vector3)
+	local face = CFrame.lookAt(Vector3.new(at.X, 0, at.Z), Vector3.new(faceToward.X, 0, faceToward.Z))
+	for i = 1, 3 do
+		local block = part({
+			Name = "FallsCliff" .. i, Size = Vector3.new(20 - i * 3, 7, 9 - i * 1.6),
+			Color = Color3.fromRGB(255, 238, 214),
+		})
+		block.CFrame = face * CFrame.new(0, i * 6 - 3, -(i - 1) * 2.4)
+		block.Parent = folder
+	end
+	for li, off in ipairs({ Vector3.new(-2.4, 0, 0), Vector3.new(2.6, 0, 0.6) }) do
+		local sheet = part({
+			Name = "FallsSheet" .. li, Size = Vector3.new(5.4, 14, 0.5),
+			Color = Color3.fromRGB(255, 226, 160), Material = Enum.Material.Glass,
+			Transparency = 0.35, CanCollide = false,
+		})
+		sheet.CFrame = face * CFrame.new(off.X, 8.4, 3.6 + off.Z)
+		sheet.Parent = folder
+	end
+	for f = 1, 6 do
+		local foam = part({
+			Name = "FallsFoam", Shape = Enum.PartType.Ball,
+			Size = Vector3.new(2.2 + (f % 3), 1.6, 2.2 + (f % 2)),
+			Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+		})
+		local fx = -4 + f * 1.6
+		foam.CFrame = face * CFrame.new(fx, 0.8, 4.6)
+		foam.Parent = folder
+		TweenService:Create(foam, TweenInfo.new(2 + f * 0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Position = foam.Position + Vector3.new(0, 0.7, 0),
+		}):Play()
+	end
+end
+
+-- A walk-through donut arch (ring of fat cylinders, pink icing on top half).
+local function donutArch(folder: Instance, at: Vector3, faceToward: Vector3)
+	local face = CFrame.lookAt(Vector3.new(at.X, 0, at.Z), Vector3.new(faceToward.X, 0, faceToward.Z))
+	local R = 9
+	local segs = 12
+	for i = 1, segs do
+		local a = (i / segs) * math.pi * 2
+		local y = R + math.sin(a) * R
+		local isTop = math.sin(a) > 0.15
+		local seg = part({
+			Name = "DonutSeg", Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(3.4, 4.2, 4.2),
+			Color = isTop and Color3.fromRGB(255, 170, 195) or Color3.fromRGB(243, 196, 138),
+			CanCollide = false,
+		})
+		seg.CFrame = face * CFrame.new(math.cos(a) * R, y + 1.2, 0) * CFrame.Angles(0, math.rad(90), 0)
+		seg.Parent = folder
+		if isTop and i % 2 == 0 then
+			local sprinkle = part({
+				Name = "DonutSprinkle", Size = Vector3.new(0.5, 1.6, 0.5),
+				Color = ({ Color3.fromRGB(150, 226, 234), Color3.fromRGB(255, 226, 130), Color3.fromRGB(190, 160, 240) })[(i / 2) % 3 + 1],
+				Material = Enum.Material.Neon, CanCollide = false,
+			})
+			sprinkle.CFrame = face * CFrame.new(math.cos(a) * R, y + 3.4, 0) * CFrame.Angles(0, 0, math.rad(30 * i))
+			sprinkle.Parent = folder
+		end
+	end
+end
+
+-- Candy-cane arch pairs along a path (Peppermint-Forest rhythm).
+local function candyCaneArch(folder: Instance, at: Vector3, faceToward: Vector3)
+	local face = CFrame.lookAt(Vector3.new(at.X, 0, at.Z), Vector3.new(faceToward.X, 0, faceToward.Z))
+	for _, sx in ipairs({ -1, 1 }) do
+		for seg = 0, 6 do
+			local cane = part({
+				Name = "CaneSeg", Shape = Enum.PartType.Cylinder,
+				Size = Vector3.new(1.5, 1.3, 1.3),
+				Color = (seg % 2 == 0) and Color3.fromRGB(255, 120, 140) or Color3.fromRGB(255, 250, 240),
+				CanCollide = false,
+			})
+			cane.CFrame = face * CFrame.new(sx * 4.2, 0.75 + seg * 1.4, 0) * CFrame.Angles(0, 0, math.rad(90))
+			cane.Parent = folder
+		end
+		-- the hook curls inward over the path
+		for h = 1, 4 do
+			local a = math.rad(h * 36)
+			local hook = part({
+				Name = "CaneHook", Shape = Enum.PartType.Cylinder,
+				Size = Vector3.new(1.4, 1.2, 1.2),
+				Color = (h % 2 == 0) and Color3.fromRGB(255, 120, 140) or Color3.fromRGB(255, 250, 240),
+				CanCollide = false,
+			})
+			hook.CFrame = face * CFrame.new(sx * (4.2 - math.sin(a) * 2.4), 9.8 + math.sin(a + math.rad(50)) * 1.4, 0)
+				* CFrame.Angles(0, 0, math.rad(90) + math.rad(sx * h * 24))
+			hook.Parent = folder
+		end
+	end
+end
+
+-- A gumball lamp post: a glass globe of mini gumballs, one Neon so it glows.
+local function gumballLamp(folder: Instance, at: Vector3)
+	local post = part({
+		Name = "GumballPost", Size = Vector3.new(0.7, 6, 0.7),
+		Color = Color3.fromRGB(255, 250, 240),
+	})
+	post.Position = at + Vector3.new(0, 3, 0)
+	post.Parent = folder
+	local globe = part({
+		Name = "GumballGlobe", Shape = Enum.PartType.Ball, Size = Vector3.new(4, 4, 4),
+		Color = Color3.fromRGB(235, 245, 250), Material = Enum.Material.Glass,
+		Transparency = 0.45, CanCollide = false,
+	})
+	globe.Position = at + Vector3.new(0, 7.4, 0)
+	globe.Parent = folder
+	local gumColors = { Color3.fromRGB(255, 150, 170), Color3.fromRGB(255, 210, 120), Color3.fromRGB(150, 220, 224), Color3.fromRGB(190, 160, 240) }
+	for g = 1, 7 do
+		local a = g * 0.9
+		local gum = part({
+			Name = "Gumball", Shape = Enum.PartType.Ball, Size = Vector3.new(1.1, 1.1, 1.1),
+			Color = gumColors[(g % #gumColors) + 1],
+			Material = (g == 1) and Enum.Material.Neon or Enum.Material.SmoothPlastic,
+			CanCollide = false,
+		})
+		gum.Position = at + Vector3.new(math.cos(a) * 0.9, 6.8 + (g % 3) * 0.8, math.sin(a) * 0.9)
+		gum.Parent = folder
+		if g == 1 then
+			local glow = Instance.new("PointLight")
+			glow.Color = Color3.fromRGB(255, 220, 180)
+			glow.Brightness = 1
+			glow.Range = 14
+			glow.Parent = gum
+		end
+	end
+end
+
+-- A glowing goo-fish: a translucent bell hovering over the sea, breathing.
+local function gooFish(folder: Instance, at: Vector3, tint: Color3, phase: number)
+	local bell = part({
+		Name = "GooFishBell", Shape = Enum.PartType.Ball, Size = Vector3.new(7, 6, 7),
+		Color = tint, Material = Enum.Material.Glass, Transparency = 0.35,
+		CanCollide = false, CanQuery = false, CastShadow = false,
+	})
+	bell.Position = at
+	bell.Parent = folder
+	local core = part({
+		Name = "GooFishCore", Shape = Enum.PartType.Ball, Size = Vector3.new(2.4, 2.4, 2.4),
+		Color = Color3.fromRGB(255, 250, 240), Material = Enum.Material.Neon,
+		Transparency = 0.2, CanCollide = false, CanQuery = false, CastShadow = false,
+	})
+	core.Position = at
+	core.Parent = folder
+	for tIdx = 1, 5 do
+		local a = (tIdx / 5) * math.pi * 2
+		local tendril = part({
+			Name = "GooFishTendril", Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(5, 0.35, 0.35),
+			Color = tint, Material = Enum.Material.Neon, Transparency = 0.4,
+			CanCollide = false, CanQuery = false, CastShadow = false,
+		})
+		tendril.CFrame = CFrame.new(at + Vector3.new(math.cos(a) * 1.8, -4.2, math.sin(a) * 1.8))
+			* CFrame.Angles(0, 0, math.rad(90)) * CFrame.Angles(math.rad(10), 0, 0)
+		tendril.Parent = folder
+		TweenService:Create(tendril, TweenInfo.new(3 + phase, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Position = tendril.Position + Vector3.new(0, 1.6, 0),
+		}):Play()
+	end
+	local info = TweenInfo.new(3.4 + phase, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	TweenService:Create(bell, info, { Position = at + Vector3.new(0, 2.2, 0), Size = Vector3.new(7.5, 5.6, 7.5) }):Play()
+	TweenService:Create(core, info, { Position = at + Vector3.new(0, 2.2, 0) }):Play()
+end
+
+-- A distant sherbet isle: a stacked ice-cream peak (borrowed scenery).
+local function sherbetIsle(folder: Instance, at: Vector3, scoopColor: Color3)
+	local widths = { 20, 16, 12, 8 }
+	for i, w in ipairs(widths) do
+		local tier = part({
+			Name = "IsleCone" .. i, Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(5, w, w),
+			Color = Color3.fromRGB(236, 200, 150),
+		})
+		tier.CFrame = CFrame.new(at + Vector3.new(0, i * 4.4 - 2, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		tier.Parent = folder
+	end
+	local scoop = part({
+		Name = "IsleScoop", Shape = Enum.PartType.Ball, Size = Vector3.new(15, 12, 15),
+		Color = scoopColor,
+	})
+	scoop.Position = at + Vector3.new(0, 22, 0)
+	scoop.Parent = folder
+	for d = 1, 5 do
+		local a = math.rad(d * 72)
+		local drip = part({
+			Name = "IsleDrip", Shape = Enum.PartType.Ball, Size = Vector3.new(3.4, 5, 3.4),
+			Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+		})
+		drip.Position = at + Vector3.new(math.cos(a) * 6.4, 18.5, math.sin(a) * 6.4)
+		drip.Parent = folder
+	end
+	local cherry = part({
+		Name = "IsleCherry", Shape = Enum.PartType.Ball, Size = Vector3.new(4, 4, 4),
+		Color = Color3.fromRGB(214, 40, 70), Reflectance = 0.12,
+	})
+	cherry.Position = at + Vector3.new(0, 29.5, 0)
+	cherry.Parent = folder
+end
+
+-- Rock-candy sea stacks: boulder clusters bristling with glass crystals.
+local function rockCandyStack(folder: Instance, at: Vector3)
+	for b = 1, 3 do
+		local d = 7 - b * 1.4
+		local rock = part({
+			Name = "CandyRock", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d * 0.8, d),
+			Color = Color3.fromRGB(196, 186, 210),
+		})
+		rock.Position = at + Vector3.new((b - 2) * 2.6, d * 0.3, (b % 2) * 2)
+		rock.Parent = folder
+	end
+	local crystalColors = { Color3.fromRGB(140, 230, 214), Color3.fromRGB(255, 170, 200) }
+	for c = 1, 6 do
+		local h = 2.5 + (c % 3) * 1.8
+		local crystal = part({
+			Name = "CandyCrystal", Size = Vector3.new(1, h, 1),
+			Color = crystalColors[(c % 2) + 1], Material = Enum.Material.Glass,
+			Transparency = 0.25, CanCollide = false,
+		})
+		crystal.CFrame = CFrame.new(at + Vector3.new(math.cos(c * 1.1) * 3, h / 2 + 1.4, math.sin(c * 1.1) * 3))
+			* CFrame.Angles(math.rad(math.sin(c) * 16), 0, math.rad(math.cos(c) * 16))
+		crystal.Parent = folder
+	end
+	local heart = part({
+		Name = "CandyHeart", Size = Vector3.new(1.4, 2, 1.4),
+		Color = Color3.fromRGB(255, 226, 150), Material = Enum.Material.Neon,
+		Transparency = 0.3, CanCollide = false,
+	})
+	heart.Position = at + Vector3.new(0, 2.4, 0)
+	heart.Parent = folder
+end
+
+-- The saltwater-taffy fountain: pastel ball-arcs leaping from a basin,
+-- slowly rotating — every plaza deserves a weenie.
+local function taffyFountain(folder: Instance, at: Vector3)
+	local basin = part({
+		Name = "TaffyBasin", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.4, 13, 13),
+		Color = Color3.fromRGB(255, 250, 240),
+	})
+	basin.CFrame = CFrame.new(at + Vector3.new(0, 0.7, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	basin.Parent = folder
+	local pool = part({
+		Name = "TaffyPool", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 11.4, 11.4),
+		Color = Color3.fromRGB(120, 224, 220), Material = Enum.Material.Glass,
+		Transparency = 0.25, Reflectance = 0.15, CanCollide = false,
+	})
+	pool.CFrame = CFrame.new(at + Vector3.new(0, 1.5, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	pool.Parent = folder
+	local pedestal = part({
+		Name = "TaffyPedestal", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.4, 2.4, 2.4),
+		Color = Color3.fromRGB(255, 250, 240),
+	})
+	pedestal.CFrame = CFrame.new(at + Vector3.new(0, 3, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	pedestal.Parent = folder
+
+	local arcModel = Instance.new("Model")
+	arcModel.Name = "TaffyArcs"
+	local pivot = part({
+		Name = "ArcPivot", Size = Vector3.new(1, 1, 1), Transparency = 1,
+		CanCollide = false, CanQuery = false,
+	})
+	pivot.Position = at + Vector3.new(0, 4.6, 0)
+	pivot.Parent = arcModel
+	arcModel.PrimaryPart = pivot
+	local taffyColors = { Color3.fromRGB(255, 170, 195), Color3.fromRGB(255, 226, 150), Color3.fromRGB(170, 200, 255) }
+	for arm = 1, 3 do
+		local armA = math.rad(arm * 120)
+		for b = 1, 5 do
+			local t = b / 5
+			local ball = part({
+				Name = "TaffyBall", Shape = Enum.PartType.Ball,
+				Size = Vector3.new(2 - t, 2 - t, 2 - t),
+				Color = taffyColors[arm], CanCollide = false, CanQuery = false,
+			})
+			ball.Position = at + Vector3.new(
+				math.cos(armA) * t * 4.4,
+				4.6 + math.sin(t * math.pi) * 3.4,
+				math.sin(armA) * t * 4.4
+			)
+			ball.Parent = arcModel
+		end
+	end
+	arcModel.Parent = folder
+	task.spawn(function()
+		local angle = 0
+		RunService.Heartbeat:Connect(function(dt)
+			angle += dt * math.pi * 2 / 22
+			arcModel:PivotTo(CFrame.new(at + Vector3.new(0, 4.6, 0)) * CFrame.Angles(0, angle, 0))
+		end)
+	end)
+end
+
+-- The crescent-moon swing: a sittable glowing crescent on ropes (book canon —
+-- the Hollow's moon is a crescent, and Candytopia says swings win photo ops).
+local function crescentSwing(folder: Instance, at: Vector3, faceToward: Vector3)
+	local face = CFrame.lookAt(Vector3.new(at.X, 0, at.Z), Vector3.new(faceToward.X, 0, faceToward.Z))
+	for _, sx in ipairs({ -1, 1 }) do
+		local post = part({
+			Name = "SwingPost", Size = Vector3.new(1, 14, 1),
+			Color = Color3.fromRGB(150, 132, 205),
+		})
+		post.CFrame = face * CFrame.new(sx * 6, 7, 0)
+		post.Parent = folder
+	end
+	local beam = part({
+		Name = "SwingBeam", Size = Vector3.new(13.4, 1, 1),
+		Color = Color3.fromRGB(150, 132, 205),
+	})
+	beam.CFrame = face * CFrame.new(0, 14.2, 0)
+	beam.Parent = folder
+
+	local swing = Instance.new("Model")
+	swing.Name = "CrescentSwing"
+	local pivotPart = part({
+		Name = "SwingPivot", Size = Vector3.new(1, 1, 1), Transparency = 1,
+		CanCollide = false, CanQuery = false,
+	})
+	pivotPart.CFrame = face * CFrame.new(0, 14.2, 0)
+	pivotPart.Parent = swing
+	swing.PrimaryPart = pivotPart
+	-- the crescent: an arc of glowing beads, fattest at the bottom
+	for i = 0, 8 do
+		local a = math.rad(200 + i * 17.5)
+		local d = 2.2 - math.abs(i - 4) * 0.3
+		local bead = part({
+			Name = "CrescentBead", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d, d),
+			Color = Color3.fromRGB(255, 234, 170), Material = Enum.Material.Neon,
+			CanCollide = false, CanQuery = false,
+		})
+		bead.CFrame = face * CFrame.new(math.cos(a) * 4.4, 8.6 + math.sin(a) * 4.4, 0)
+		bead.Parent = swing
+	end
+	local seat = Instance.new("Seat")
+	seat.Name = "SwingSeat"
+	seat.Size = Vector3.new(3, 0.4, 1.8)
+	seat.Color = Color3.fromRGB(255, 250, 240)
+	seat.Material = Enum.Material.SmoothPlastic
+	seat.Anchored = true
+	seat.CFrame = face * CFrame.new(0, 4.6, 0)
+	seat.Parent = swing
+	for _, sx in ipairs({ -1, 1 }) do
+		local rope = part({
+			Name = "SwingRope", Size = Vector3.new(0.22, 9.4, 0.22),
+			Color = Color3.fromRGB(236, 228, 244), CanCollide = false, CanQuery = false,
+		})
+		rope.CFrame = face * CFrame.new(sx * 3.4, 9.4, 0)
+		rope.Parent = swing
+	end
+	swing.Parent = folder
+	-- gentle pendulum around the beam
+	task.spawn(function()
+		local t = 0
+		local pivotCF = face * CFrame.new(0, 14.2, 0)
+		RunService.Heartbeat:Connect(function(dt)
+			t += dt
+			local a = math.sin(t * math.pi * 2 / 5) * math.rad(6)
+			swing:PivotTo(pivotCF * CFrame.Angles(0, 0, a) * CFrame.new(0, 0, 0))
+		end)
+	end)
+end
+
+-- Sagging starlight lantern strings between two posts (the village pulse).
+local function lanternString(folder: Instance, a: Vector3, b: Vector3, phase: number)
+	local span = (b - a).Magnitude
+	local count = math.max(5, math.floor(span / 6))
+	for i = 0, count do
+		local t = i / count
+		local sag = math.sin(t * math.pi) * -math.min(4, span * 0.08)
+		local pos = a:Lerp(b, t) + Vector3.new(0, sag, 0)
+		if i < count then
+			local nt = (i + 1) / count
+			local nsag = math.sin(nt * math.pi) * -math.min(4, span * 0.08)
+			local npos = a:Lerp(b, nt) + Vector3.new(0, nsag, 0)
+			local dir = npos - pos
+			local cable = part({
+				Name = "LanternCable", Shape = Enum.PartType.Cylinder,
+				Size = Vector3.new(dir.Magnitude + 0.2, 0.16, 0.16),
+				Color = Color3.fromRGB(120, 100, 110), CanCollide = false, CanQuery = false,
+			})
+			cable.CFrame = CFrame.lookAt((pos + npos) / 2, npos) * CFrame.Angles(0, math.rad(90), 0)
+			cable.Parent = folder
+		end
+		if i % 2 == 1 then
+			local bulb = part({
+				Name = "StringLantern", Shape = Enum.PartType.Ball, Size = Vector3.new(0.9, 1.1, 0.9),
+				Color = Color3.fromRGB(255, 226, 150), Material = Enum.Material.Neon,
+				CanCollide = false, CanQuery = false,
+			})
+			bulb.Position = pos - Vector3.new(0, 0.8, 0)
+			bulb.Parent = folder
+			TweenService:Create(bulb, TweenInfo.new(2.6 + phase + i * 0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+				Transparency = 0.45,
+			}):Play()
+		end
+	end
+end
+
+-- Aurora ribbons: long translucent slabs drifting high over the Hollow.
+local function auroraRibbons(folder: Instance, center: Vector3)
+	local colors = { Color3.fromRGB(140, 230, 200), Color3.fromRGB(170, 180, 255), Color3.fromRGB(220, 160, 240), Color3.fromRGB(150, 226, 210) }
+	for i = 1, 4 do
+		local ribbon = part({
+			Name = "Aurora" .. i, Size = Vector3.new(64, 0.4, 7),
+			Color = colors[i], Material = Enum.Material.Neon, Transparency = 0.55,
+			CanCollide = false, CanQuery = false, CastShadow = false,
+		})
+		local base = center + Vector3.new(-30 + i * 14, 72 + i * 6, -36 - i * 14)
+		ribbon.CFrame = CFrame.new(base) * CFrame.Angles(math.rad(14), math.rad(i * 24), math.rad(6))
+		ribbon.Parent = folder
+		local info = TweenInfo.new(9 + i * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+		TweenService:Create(ribbon, info, {
+			Position = base + Vector3.new(16, 3, 0),
+			Transparency = 0.75,
+		}):Play()
+	end
+end
+
+-- The cocoa campfire: a warm amber heart for the stargazing circle.
+local function cocoaCampfire(folder: Instance, at: Vector3)
+	for i = 1, 4 do
+		local a = math.rad(i * 90 + 45)
+		local log = part({
+			Name = "CampLog", Shape = Enum.PartType.Cylinder, Size = Vector3.new(4.6, 1.3, 1.3),
+			Color = Color3.fromRGB(150, 116, 92),
+		})
+		log.CFrame = CFrame.new(at + Vector3.new(math.cos(a) * 1.6, 0.6, math.sin(a) * 1.6))
+			* CFrame.Angles(0, a + math.rad(90), math.rad(90))
+		log.Parent = folder
+	end
+	for f = 1, 3 do
+		local flame = part({
+			Name = "CampFlame", Shape = Enum.PartType.Ball,
+			Size = Vector3.new(2.2 - f * 0.5, 2.8 - f * 0.5, 2.2 - f * 0.5),
+			Color = (f == 3) and Color3.fromRGB(255, 244, 200) or Color3.fromRGB(255, 190, 110),
+			Material = Enum.Material.Neon, Transparency = 0.15 + f * 0.1,
+			CanCollide = false, CanQuery = false, CastShadow = false,
+		})
+		flame.Position = at + Vector3.new(0, 1 + f * 0.7, 0)
+		flame.Parent = folder
+		TweenService:Create(flame, TweenInfo.new(0.9 + f * 0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Size = flame.Size * 1.18,
+		}):Play()
+	end
+	local glow = Instance.new("PointLight")
+	glow.Color = Color3.fromRGB(255, 196, 130)
+	glow.Brightness = 1.6
+	glow.Range = 22
+	local anchorFlame = folder:FindFirstChild("CampFlame")
+	if anchorFlame then
+		glow.Parent = anchorFlame
+	end
+	local embers = Instance.new("ParticleEmitter")
+	embers.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	embers.LightEmission = 1
+	embers.Color = ColorSequence.new(Color3.fromRGB(255, 210, 140), Color3.fromRGB(255, 170, 110))
+	embers.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 0),
+	})
+	embers.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1),
+	})
+	embers.Lifetime = NumberRange.new(1.2, 2)
+	embers.Rate = 4
+	embers.Speed = NumberRange.new(2, 4)
+	embers.EmissionDirection = Enum.NormalId.Top
+	if anchorFlame then
+		embers.Parent = anchorFlame
+	end
+	-- marshmallow sticks leaning on the logs
+	for _, sx in ipairs({ -1, 1 }) do
+		local stick = part({
+			Name = "MallowStick", Size = Vector3.new(0.25, 3.4, 0.25),
+			Color = Color3.fromRGB(206, 170, 120), CanCollide = false,
+		})
+		stick.CFrame = CFrame.new(at + Vector3.new(sx * 2.4, 1.4, -1.6)) * CFrame.Angles(0, 0, math.rad(sx * 35))
+		stick.Parent = folder
+		local mallow = part({
+			Name = "Mallow", Size = Vector3.new(0.8, 0.8, 0.8),
+			Color = Color3.fromRGB(255, 250, 240), CanCollide = false,
+		})
+		mallow.Position = at + Vector3.new(sx * 3.2, 2.6, -1.6)
+		mallow.Parent = folder
+	end
+end
+
 -- A cherry-topped pudding mountain (the book's signature landmark): layered
 -- flan stack, cream drips, a snowy cream cap, and a giant glossy cherry.
 local function puddingMountain(folder: Instance, at: Vector3, scale: number)
@@ -581,6 +1134,24 @@ local function buildGooCoast()
 	ribbonPath(folder, { center + SP(Vector3.new(-6, 0, 34)), center + SP(Vector3.new(-44, 0, 48)) }, 3, plankColor) -- to the sandcastle
 	ribbonPath(folder, { center + SP(Vector3.new(20, 0, 32)), center + SP(Vector3.new(44, 0, 56)) }, 3, plankColor) -- on to the beach huts
 
+	-- ── Beauty pass (2026-06-12): sea life + horizon + plaza ────────────────
+	local fishTints = { Color3.fromRGB(140, 230, 214), Color3.fromRGB(255, 190, 200), Color3.fromRGB(180, 220, 255) }
+	for i, off in ipairs({
+		Vector3.new(-40, 10, -100), Vector3.new(40, 12, -120), Vector3.new(0, 9, -70),
+		Vector3.new(60, 11, -95), Vector3.new(-55, 13, -60),
+	}) do
+		gooFish(folder, center + off, fishTints[(i % #fishTints) + 1], i * 0.7)
+	end
+	sherbetIsle(folder, center + Vector3.new(-85, 0, -128), Color3.fromRGB(255, 170, 195))
+	sherbetIsle(folder, center + Vector3.new(95, 0, -118), Color3.fromRGB(170, 200, 255))
+	rockCandyStack(folder, center + Vector3.new(88, 0, 30))
+	rockCandyStack(folder, center + Vector3.new(110, 0, -4))
+	taffyFountain(folder, center + Vector3.new(55, 0, -28))
+	for _, lampAt in ipairs({ Vector3.new(-30, 0, 24), Vector3.new(30, 0, 26), Vector3.new(-70, 0, 30) }) do
+		gumballLamp(folder, center + lampAt)
+	end
+	macaronBalloon(folder, center, 70, 100, Color3.fromRGB(150, 220, 224), Color3.fromRGB(255, 250, 240), math.pi / 2)
+
 	-- gameplay infrastructure: own coastal pads + themed capsule/guide + shard + travel
 	local pads = {}
 	for _, off in ipairs(GOO_PAD_OFFSETS) do
@@ -659,18 +1230,32 @@ local function buildMoonlitHollow()
 	ring.CFrame = CFrame.new(center + Vector3.new(0, 0.12, -17)) * CFrame.Angles(0, 0, math.rad(90))
 	ring.Parent = folder
 
-	-- the Moon, low over the pool so it reflects
-	local moon = part({
-		Name = "Moon", Shape = Enum.PartType.Ball, Size = Vector3.new(22, 22, 22),
-		Position = center + Vector3.new(0, 72, -133), Color = Color3.fromRGB(236, 234, 255),
-		Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false,
+	-- the Moon, low over the pool so it reflects — a CRESCENT, exactly as it
+	-- appears in every night spread of the book (an arc of glowing beads,
+	-- fattest in the middle, with the bite facing the stars)
+	local moonCenter = center + Vector3.new(0, 72, -133)
+	local moonAnchor = part({
+		Name = "Moon", Shape = Enum.PartType.Ball, Size = Vector3.new(4, 4, 4),
+		Position = moonCenter, Transparency = 1,
+		CanCollide = false, CanQuery = false, CastShadow = false,
 	})
-	moon.Parent = folder
+	moonAnchor.Parent = folder
+	for i = 0, 10 do
+		local a = math.rad(120 + i * 24)
+		local d = 8 - math.abs(i - 5) * 1
+		local bead = part({
+			Name = "MoonBead", Shape = Enum.PartType.Ball, Size = Vector3.new(d, d, d),
+			Position = moonCenter + Vector3.new(math.cos(a) * 9, math.sin(a) * 9, 0),
+			Color = Color3.fromRGB(236, 234, 255), Material = Enum.Material.Neon,
+			CanCollide = false, CanQuery = false, CastShadow = false,
+		})
+		bead.Parent = folder
+	end
 	local moonLight = Instance.new("PointLight")
 	moonLight.Color = Color3.fromRGB(200, 200, 255)
 	moonLight.Brightness = 1.4
 	moonLight.Range = 90
-	moonLight.Parent = moon
+	moonLight.Parent = moonAnchor
 
 	-- glowing mushrooms (stem + neon cap + glow)
 	local function mushroom(pos, h, capSize, color)
@@ -989,6 +1574,14 @@ local function buildMoonlitHollow()
 	fly.Acceleration = Vector3.new(0, 1, 0)
 	fly.SpreadAngle = Vector2.new(60, 60)
 	fly.Parent = fField
+
+	-- ── Beauty pass (2026-06-12): canon night magic ─────────────────────────
+	crescentSwing(folder, center + Vector3.new(52, 0, -80), center + Vector3.new(0, 0, -17))
+	lanternString(folder, center + Vector3.new(-78, 9, 84), center + Vector3.new(-48, 8, 52), 0)
+	lanternString(folder, center + Vector3.new(90, 9, -10), center + Vector3.new(70, 8, -38), 0.6)
+	lanternString(folder, center + Vector3.new(-29, 9, -90), center + Vector3.new(0, 8, -50), 1.2)
+	auroraRibbons(folder, center)
+	cocoaCampfire(folder, center + Vector3.new(80, 0, -92))
 
 	-- gameplay infrastructure: own glade pads + themed capsule/guide + shard + travel
 	local pads = {}
@@ -1854,6 +2447,21 @@ function WorldService.build()
 	})) do
 		cloudBush(folder, at, Color3.fromRGB(255, 252, 248), bushFlowers[(i % #bushFlowers) + 1])
 	end
+
+	-- ── Beauty pass (2026-06-12): candy skyline + path charm ────────────────
+	sodaFalls(folder, Vector3.new(-148, 0, 38), Vector3.new(-80, 0, 22)) -- the river's storybook source
+	donutArch(folder, Vector3.new(44, 0, 44), Vector3.new(78, 0, 40)) -- astride the picnic path
+	candyCaneArch(folder, Vector3.new(-30, 0, 49), Vector3.new(-58, 0, 56))
+	candyCaneArch(folder, Vector3.new(-62, 0, 56), Vector3.new(-90, 0, 60))
+	candyCaneArch(folder, Vector3.new(-92, 0, 60), Vector3.new(-107, 0, 58))
+	for _, lampAt in ipairs({
+		Vector3.new(20, 0, 40), Vector3.new(-20, 0, 46), Vector3.new(8, 0, -30),
+		Vector3.new(58, 0, -44), Vector3.new(95, 0, 30),
+	}) do
+		gumballLamp(folder, lampAt)
+	end
+	macaronBalloon(folder, Vector3.new(0, 0, 0), 85, 105, Color3.fromRGB(255, 170, 195), Color3.fromRGB(255, 226, 150), 0)
+	macaronBalloon(folder, Vector3.new(0, 0, 0), 60, 88, Color3.fromRGB(170, 200, 255), Color3.fromRGB(255, 250, 240), math.pi)
 
 	-- Travel Plaza: the hub lives out on the eastern rise (the road toward the
 	-- old Goo Coast gate), its own destination instead of spawn furniture.

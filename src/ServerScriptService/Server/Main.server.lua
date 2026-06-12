@@ -35,6 +35,7 @@ local FirstDayService = require(script.Parent.FirstDayService)
 local StoryPageService = require(script.Parent.StoryPageService)
 local GiftService = require(script.Parent.GiftService)
 local MonetizationService = require(script.Parent.MonetizationService)
+local CoasterService = require(script.Parent.CoasterService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -61,6 +62,7 @@ MonetizationService.init()
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
 QuestService.init()
+CoasterService.init() -- the Sparkle Express needs the land (and its riders) in place
 
 local zoneGroups = {}
 for _, z in ipairs(world.zones) do
