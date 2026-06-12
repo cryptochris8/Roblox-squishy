@@ -30,6 +30,24 @@ export type Zone = {
 -- The progression order (also the travel order).
 ZoneConfig.Order = { "Pudding Hills", "Goo Coast", "Moonlit Hollow" }
 
+-- "Use the WHOLE land" (Chris's note, three times now: everything clustered
+-- in the middle of a 320-wide plate). The bespoke layouts were authored
+-- compact; every placement offset from a land's centre is stretched by this
+-- factor at build time, so districts genuinely reach the plate's edges.
+ZoneConfig.Spread = 1.45
+
+-- Stretch a land-LOCAL offset (X/Z only — heights never change).
+function ZoneConfig.spread(off: Vector3): Vector3
+	return Vector3.new(off.X * ZoneConfig.Spread, off.Y, off.Z * ZoneConfig.Spread)
+end
+
+-- Stretch an ABSOLUTE world position about its own land's centre (the lands
+-- sit at x = 0 / 600 / 1200, all at z = 0).
+function ZoneConfig.spreadAbs(pos: Vector3): Vector3
+	local cx = if pos.X < 300 then 0 elseif pos.X < 900 then 600 else 1200
+	return Vector3.new(cx + (pos.X - cx) * ZoneConfig.Spread, pos.Y, pos.Z * ZoneConfig.Spread)
+end
+
 ZoneConfig.Zones = {
 	["Pudding Hills"] = {
 		name = "Pudding Hills",
@@ -37,7 +55,7 @@ ZoneConfig.Zones = {
 		capsuleKey = "StarterCapsule",
 		center = Vector3.new(0, 0, 0),
 		spawn = Vector3.new(0, 0.5, 34),
-		shardSpot = Vector3.new(47, 0, -40),
+		shardSpot = Vector3.new(68, 0, -58),
 		shardWakeGoal = 8,
 		shardRewardCoins = 150,
 		friendCount = 12,
@@ -50,7 +68,7 @@ ZoneConfig.Zones = {
 		capsuleKey = "GooCapsule",
 		center = Vector3.new(600, 0, 0),
 		spawn = Vector3.new(600, 0.5, 34),
-		shardSpot = Vector3.new(647, 0, -40),
+		shardSpot = Vector3.new(668, 0, -58),
 		shardWakeGoal = 10,
 		shardRewardCoins = 250,
 		friendCount = 12,
@@ -62,7 +80,7 @@ ZoneConfig.Zones = {
 		capsuleKey = "MoonlitCapsule",
 		center = Vector3.new(1200, 0, 0),
 		spawn = Vector3.new(1200, 0.5, 34),
-		shardSpot = Vector3.new(1247, 0, -40),
+		shardSpot = Vector3.new(1268, 0, -58),
 		shardWakeGoal = 12,
 		shardRewardCoins = 400,
 		friendCount = 12,

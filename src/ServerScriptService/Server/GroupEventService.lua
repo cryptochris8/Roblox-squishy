@@ -140,7 +140,7 @@ function GroupEventService.startNow()
 	local spawnCount = eventGoal + SocialConfig.EventSpawnExtra
 	for _ = 1, spawnCount do
 		local angle = rng:NextNumber(0, math.pi * 2)
-		local radius = rng:NextNumber(14, 42)
+		local radius = rng:NextNumber(20, 60)
 		local pos = zone.center + Vector3.new(math.cos(angle) * radius, 2, math.sin(angle) * radius)
 		local model = SquishService.spawnGolden(zone.packId, CFrame.new(pos))
 		goldenModels[#goldenModels + 1] = model

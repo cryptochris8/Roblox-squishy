@@ -468,8 +468,8 @@ function RoomService.init()
 	-- home door belongs on the cottage lane, not parked at spawn).
 	task.spawn(function()
 		local home = Workspace:WaitForChild("PuddingHills", 30) or Workspace
-		local base = Vector3.new(-34, 0, 22)
-		local face = CFrame.lookAt(base, Vector3.new(-8, 0, 30))
+		local base = Vector3.new(-49, 0, 32)
+		local face = CFrame.lookAt(base, Vector3.new(-12, 0, 44))
 		for _, sx in ipairs({ -1, 1 }) do
 			local post = part({ Name = "RoomDoorPost", Size = Vector3.new(0.9, 8, 0.9), Color = C(244, 230, 214) })
 			post.CFrame = face * CFrame.new(sx * 2.8, 4, 0)

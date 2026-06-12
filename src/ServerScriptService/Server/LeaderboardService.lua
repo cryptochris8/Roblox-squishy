@@ -340,9 +340,9 @@ function LeaderboardService.init()
 	-- so every trip to the Travel Pads walks past them. Built once the land exists.
 	task.spawn(function()
 		local home = Workspace:WaitForChild("PuddingHills", 30) or Workspace
-		local lookAt = Vector3.new(80, 0, 30) -- face the plaza the pads sit on
-		buildBoard(home, BOARDS[1], Vector3.new(64, 0, 42), lookAt)
-		buildBoard(home, BOARDS[2], Vector3.new(96, 0, 42), lookAt)
+		local lookAt = Vector3.new(116, 0, 23) -- face the plaza the pads sit on
+		buildBoard(home, BOARDS[1], Vector3.new(100, 0, 35), lookAt)
+		buildBoard(home, BOARDS[2], Vector3.new(132, 0, 35), lookAt)
 
 		-- First refresh soon after startup (so a solo Studio run sees itself fast),
 		-- then the gentle long cycle.

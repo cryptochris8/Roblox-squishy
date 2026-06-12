@@ -24,7 +24,7 @@ local pages: { Page } = {
 	{ id = "page_05", n = 5, position = Vector3.new(-42, 3, -58), caption = "" },
 	{ id = "page_06", n = 6, position = Vector3.new(102, 3, -14), caption = "" },
 	-- Goo Coast
-	{ id = "page_07", n = 7, position = Vector3.new(600, 4.5, -56), caption = "" },
+	{ id = "page_07", n = 7, position = Vector3.new(600, 4.5, -52), caption = "" },
 	{ id = "page_08", n = 8, position = Vector3.new(518, 3, -4), caption = "" },
 	{ id = "page_09", n = 9, position = Vector3.new(554, 3, 54), caption = "" },
 	{ id = "page_10", n = 10, position = Vector3.new(670, 3, 2), caption = "" },
@@ -38,6 +38,12 @@ local pages: { Page } = {
 	{ id = "page_17", n = 17, position = Vector3.new(1200, 3, -42), caption = "" },
 	{ id = "page_18", n = 18, position = Vector3.new(1272, 3, -20), caption = "" },
 }
+-- Stretch every hiding spot about its land's centre, exactly like the
+-- landmarks they hide at (ZoneConfig.Spread — "use the WHOLE land").
+local ZoneConfig = require(script.Parent.ZoneConfig)
+for _, p in ipairs(pages) do
+	p.position = ZoneConfig.spreadAbs(p.position)
+end
 StoryPageConfig.Pages = pages
 
 function StoryPageConfig.count(): number

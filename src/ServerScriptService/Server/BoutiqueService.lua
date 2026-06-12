@@ -44,8 +44,8 @@ local function buildStall(parent: Instance)
 	model.Name = "SparkleBoutique"
 	-- Market Meadow: the stall anchors the eastern picnic district (districts
 	-- pass — the spawn meadow stays clear), facing the path that leads there.
-	local base = Vector3.new(54, 0, 14)
-	local face = CFrame.lookAt(Vector3.new(base.X, 0, base.Z), Vector3.new(30, 0, 30))
+	local base = Vector3.new(78, 0, 20)
+	local face = CFrame.lookAt(Vector3.new(base.X, 0, base.Z), Vector3.new(44, 0, 44))
 
 	local counter = part({
 		Name = "Counter", Size = Vector3.new(10, 3.4, 4),

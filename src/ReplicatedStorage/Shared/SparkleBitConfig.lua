@@ -47,6 +47,14 @@ SparkleBitConfig.Bits = {
 	{ id = "moon_north",     position = Vector3.new(1174, 2.6, -70), hint = "past the violet cottage" },
 }
 
+-- The spots above were authored against the COMPACT layouts; stretch them
+-- about their land's centre so every bit stays glued to its (also-stretched)
+-- landmark. (ZoneConfig.Spread — "use the WHOLE land".)
+local ZoneConfig = require(script.Parent.ZoneConfig)
+for _, bit in ipairs(SparkleBitConfig.Bits) do
+	bit.position = ZoneConfig.spreadAbs(bit.position)
+end
+
 function SparkleBitConfig.count(): number
 	return #SparkleBitConfig.Bits
 end

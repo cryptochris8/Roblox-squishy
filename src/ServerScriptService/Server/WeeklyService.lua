@@ -29,7 +29,7 @@ local signLabel: TextLabel? = nil
 local currentWeek = -1
 local currentDef: any = nil
 
-local TENT_POS = Vector3.new(-34, 0, 52) -- west of the travel hub, on the village path
+local TENT_POS = Vector3.new(-49, 0, 75) -- on the village path, west side (spread with the village)
 
 local function part(props): Part
 	local p = Instance.new("Part")

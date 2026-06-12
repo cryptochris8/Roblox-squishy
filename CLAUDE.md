@@ -69,7 +69,7 @@ src/ReplicatedStorage/Shared/
   WeeklyConfig.lua         Friend of the Week: UTC week index + the coin price of befriending the visitor
   VariantConfig.lua        duplicate→variant tiers (Sparkly/Rainbow): names, colours, bonus coins
   DailyQuestConfig.lua     rotating daily-quest templates + forDay(dayIndex)
-  ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain
+  ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain + the Spread factor (1.45x — every land-local offset stretches at build/require time so districts reach the plate edges; "use the WHOLE land")
   SocialConfig.lua         Phase C tunables: Sparkle Surge meter, Everybody Squish event, leaderboards
   CosmeticsConfig.lua      Sparkle Boutique catalog (hats/trails/balloons, coin prices, builder hints)
   GiftConfig.lua           Gifting v1 tunables: coin presets, daily gift limit, prompt/send ranges
@@ -78,7 +78,7 @@ src/ReplicatedStorage/Shared/
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
   PlayerDataService.lua    per-player profile (coins, discovered, variants, sparkle bits, shard quest, daily/streak) + leaderstats; DataStore load/save/autosave + BindToClose flush
-  WorldService.lua         builds all 3 lands, bespoke each — Pudding Hills (river/orchard/cottage VILLAGE/windmill/garden/picnic/treats), Goo Coast (goo sea/pier/tide-pools/sandcastle/lighthouse/huts/cove), Moonlit Hollow (moonpool/mushroom grove/mushroom cottages/stargazing circle/lanterns/log/fireflies); 12 friend pads per land SPREAD radius ~10-90 (3-pad starter cluster at spawn, pockets behind/beside landmarks) + wayfinding paths (caramel ribbons / boardwalk planks / glowing stepping stones); each land has its own capsule, guide, shard pedestal + travel hub
+  WorldService.lua         builds all 3 lands, bespoke each — Pudding Hills (river/orchard/cottage VILLAGE/windmill/garden/picnic/treats), Goo Coast (goo sea/pier/tide-pools/sandcastle/lighthouse/huts/cove), Moonlit Hollow (moonpool/mushroom grove/mushroom cottages/stargazing circle/lanterns/log/fireflies); 12 friend pads per land SPREAD radius ~15-150 via ZoneConfig.Spread (3-pad starter cluster at spawn, pockets behind/beside landmarks reaching the plate rims) + wayfinding paths (caramel ribbons / boardwalk planks / glowing stepping stones); each land has its own capsule, guide, shard pedestal + travel hub
   SquishService.lua        spawns each land's pack friends on its pads; squish -> Joy -> Happy Pop -> coins -> respawn
   CapsuleService.lua       per-land Sparkle Capsule (tryOpen(player, capsuleKey, free)): weighted rarity, discover, duplicate→variant; onOpened hook
   CollectionService.lua    Equip Buddy (validated, toggles on/off)
