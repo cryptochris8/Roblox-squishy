@@ -72,6 +72,7 @@ src/ReplicatedStorage/Shared/
   ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain + the Spread factor (1.45x — every land-local offset stretches at build/require time so districts reach the plate edges; "use the WHOLE land")
   SocialConfig.lua         Phase C tunables: Sparkle Surge meter, Everybody Squish event, leaderboards
   CosmeticsConfig.lua      Sparkle Boutique catalog (hats/trails/balloons, coin prices, builder hints)
+  CoasterConfig.lua        the Sparkle Express: hand-laid rim waypoints + kid-gentle motion numbers (cruise 16, bank <=10deg, 2 laps/ride)
   GiftConfig.lua           Gifting v1 tunables: coin presets, daily gift limit, prompt/send ranges
   MonetizationConfig.lua   Phase D: the LIVE Creator Hub ids (3 passes + 6 premium products), perk numbers, product<->item maps
   Remotes.lua              RemoteEvent names + setupServer/get
@@ -97,6 +98,7 @@ src/ServerScriptService/Server/   (server-authoritative)
   CodeService.lua          storybook "magic words" (promo codes; table is SERVER-side only): one-time coin gifts, normalized input, per-player redemption persisted
   GiftService.lua          Gifting v1: 🎁 prompt on every player's character; give preset coins or SHARE a discovered friend (recipient gets discovery + reveal, GIVER KEEPS THEIRS); daily limit + range + cooldown validated server-side; shout-out on gift
   MonetizationService.lua  Phase D: pass ownership (join check w/ retries + PromptFinished instant grant + session cache feeding snapshot.passes), perks (x1.25 coins, +1 gift, VIP welcome), BuyPass/BuyPremium prompts, idempotent ProcessReceipt (grants into Cosmetics.Owned, auto-wears, saves BEFORE consuming the receipt; temp profiles -> NotProcessedYet), owner-only debugGrantPass
+  CoasterService.lua       the Sparkle Express: closed Catmull-Rom spline (arc-length stepped), caramel ribbon track + supports + arches + station generated from it, anchored cars CFramed per Heartbeat w/ SeatWelds carrying riders (Persistent streaming), dwell/2-lap state machine, jump-off = sparkle-poof back to the platform
   SquishyModelFactory.lua  every friend's real 3D shape: ~17 part-built archetypes (dumpling/bun/cube/bunny/bat/ghost...) + hand-tuned skins for all 48 launch friends (+8 weekly); HatOffset attr; applyGolden()
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
