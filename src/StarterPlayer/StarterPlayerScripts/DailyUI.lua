@@ -153,6 +153,7 @@ function DailyUI.mount(playerGui)
 	})
 	panel.Parent = root
 	UiTheme.stroke(UiTheme.Colors.Accent, 3, panel)
+	UiTheme.autoFit(panel, 480, 420)
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1

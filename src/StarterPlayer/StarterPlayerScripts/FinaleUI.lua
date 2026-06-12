@@ -45,6 +45,7 @@ function FinaleUI.play(info)
 	panel.Parent = layer
 	UiTheme.stroke(UiTheme.Colors.Coin, 4, panel)
 	UiTheme.gradient(Color3.fromRGB(255, 246, 222), Color3.fromRGB(255, 220, 242), 120, panel)
+	UiTheme.autoFit(panel, 580, 380)
 	TweenService:Create(panel, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = UDim2.fromOffset(580, 380),
 	}):Play()

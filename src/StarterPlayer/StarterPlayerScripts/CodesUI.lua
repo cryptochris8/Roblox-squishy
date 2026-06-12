@@ -44,6 +44,7 @@ function CodesUI.mount(playerGui, onSubmit)
 	box.Active = true
 	box.Parent = overlay
 	UiTheme.stroke(UiTheme.Colors.AccentDeep, 3, box)
+	UiTheme.autoFit(box, 420, 220)
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1

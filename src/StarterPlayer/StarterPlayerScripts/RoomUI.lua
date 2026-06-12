@@ -139,6 +139,7 @@ function RoomUI.mount(playerGui, onPlace)
 	panel.Active = true
 	panel.Parent = overlay
 	UiTheme.stroke(UiTheme.Colors.AccentDeep, 3, panel)
+	UiTheme.autoFit(panel, 420, 430)
 
 	title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1

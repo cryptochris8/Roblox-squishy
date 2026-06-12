@@ -1,6 +1,15 @@
 -- HudUI
 -- The always-on screen furniture: Sparkle Coins, friends-discovered count, the
--- current cozy quest, and a big round "Squishy Book" button.
+-- current cozy quest, and the action buttons (Squishy Book, Daily Gift, Daily
+-- Quests, Magic Words, Storybook).
+--
+-- Two layouts, one truth:
+--  • Desktop / tablet — the roomy original: pill column top-left, big labeled
+--    buttons bottom-left + bottom-right.
+--  • Compact (phones) — slim pills, and the actions become a row of round
+--    icon buttons pinned TOP-RIGHT, because Roblox's thumbstick owns the
+--    bottom-left of a phone and the jump button owns the bottom-right.
+-- The HUD rebuilds itself if the layout answer flips (rotation/test override).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -12,230 +21,191 @@ local SquishyData = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChil
 
 local HudUI = {}
 
-local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
-local dailyBtn, dailyPulse
+local screen -- the live ScreenGui (rebuilt on layout flips)
+local mountedGui, callbacks
+local lastState
+local compactNow = false
 
-local function coinPill(parent)
+local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
+local dailyBtn, dailyPulse, dailyBaseSize
+
+local function coinPill(parent, C)
 	local pill = UiTheme.panel({
 		Name = "CoinPill",
-		Position = UDim2.fromOffset(16, 16),
-		Size = UDim2.fromOffset(176, 48),
-		radius = 24,
+		Position = C and UDim2.fromOffset(10, 8) or UDim2.fromOffset(16, 16),
+		Size = C and UDim2.fromOffset(130, 34) or UDim2.fromOffset(176, 48),
+		radius = C and 17 or 24,
 	})
 	pill.Parent = parent
 	UiTheme.stroke(UiTheme.Colors.CoinDeep, 2, pill)
 
+	local d = C and 24 or 34
 	local coin = Instance.new("Frame")
-	coin.Size = UDim2.fromOffset(34, 34)
-	coin.Position = UDim2.fromOffset(8, 7)
+	coin.Size = UDim2.fromOffset(d, d)
+	coin.Position = C and UDim2.fromOffset(5, 5) or UDim2.fromOffset(8, 7)
 	coin.BackgroundColor3 = UiTheme.Colors.Coin
 	coin.BorderSizePixel = 0
 	coin.Parent = pill
-	UiTheme.corner(17, coin)
+	UiTheme.corner(d // 2, coin)
 	UiTheme.stroke(UiTheme.Colors.CoinDeep, 2, coin)
 	-- a little shine
 	local shine = Instance.new("Frame")
-	shine.Size = UDim2.fromOffset(10, 10)
-	shine.Position = UDim2.fromOffset(7, 6)
+	shine.Size = C and UDim2.fromOffset(7, 7) or UDim2.fromOffset(10, 10)
+	shine.Position = C and UDim2.fromOffset(5, 4) or UDim2.fromOffset(7, 6)
 	shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	shine.BackgroundTransparency = 0.3
 	shine.BorderSizePixel = 0
 	shine.Parent = coin
-	UiTheme.corner(5, shine)
+	UiTheme.corner(4, shine)
 
 	coinLabel = Instance.new("TextLabel")
 	coinLabel.BackgroundTransparency = 1
-	coinLabel.Position = UDim2.fromOffset(50, 0)
-	coinLabel.Size = UDim2.new(1, -58, 1, 0)
+	coinLabel.Position = C and UDim2.fromOffset(36, 0) or UDim2.fromOffset(50, 0)
+	coinLabel.Size = UDim2.new(1, C and -42 or -58, 1, 0)
 	coinLabel.Font = UiTheme.HeaderFont
-	coinLabel.TextSize = 22
+	coinLabel.TextSize = C and 17 or 22
 	coinLabel.TextXAlignment = Enum.TextXAlignment.Left
 	coinLabel.TextColor3 = UiTheme.Colors.Ink
 	coinLabel.Text = "0"
 	coinLabel.Parent = pill
 end
 
-local function friendsPill(parent)
+local function statPill(parent, C, name, y, yC, strokeColor)
 	local pill = UiTheme.panel({
-		Name = "FriendsPill",
-		Position = UDim2.fromOffset(16, 72),
-		Size = UDim2.fromOffset(176, 40),
-		radius = 20,
+		Name = name,
+		Position = C and UDim2.fromOffset(10, yC) or UDim2.fromOffset(16, y),
+		Size = C and UDim2.fromOffset(130, 28) or UDim2.fromOffset(176, 40),
+		radius = C and 14 or 20,
 	})
 	pill.Parent = parent
-	UiTheme.stroke(UiTheme.Colors.Accent, 2, pill)
+	UiTheme.stroke(strokeColor, 2, pill)
 
-	friendsLabel = Instance.new("TextLabel")
-	friendsLabel.BackgroundTransparency = 1
-	friendsLabel.Size = UDim2.new(1, -20, 1, 0)
-	friendsLabel.Position = UDim2.fromOffset(14, 0)
-	friendsLabel.Font = UiTheme.HeaderFont
-	friendsLabel.TextSize = 18
-	friendsLabel.TextXAlignment = Enum.TextXAlignment.Left
-	friendsLabel.TextColor3 = UiTheme.Colors.AccentDeep
-	friendsLabel.Text = "Friends 0/48"
-	friendsLabel.Parent = pill
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, -20, 1, 0)
+	label.Position = UDim2.fromOffset(C and 10 or 14, 0)
+	label.Font = UiTheme.HeaderFont
+	label.TextSize = C and 13 or 18
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = pill
+	return label
 end
 
-local function bitsPill(parent)
-	local pill = UiTheme.panel({
-		Name = "BitsPill",
-		Position = UDim2.fromOffset(16, 120),
-		Size = UDim2.fromOffset(176, 40),
-		radius = 20,
-	})
-	pill.Parent = parent
-	UiTheme.stroke(UiTheme.Colors.Coin, 2, pill)
-
-	bitsLabel = Instance.new("TextLabel")
-	bitsLabel.BackgroundTransparency = 1
-	bitsLabel.Size = UDim2.new(1, -20, 1, 0)
-	bitsLabel.Position = UDim2.fromOffset(14, 0)
-	bitsLabel.Font = UiTheme.HeaderFont
-	bitsLabel.TextSize = 18
-	bitsLabel.TextXAlignment = Enum.TextXAlignment.Left
-	bitsLabel.TextColor3 = UiTheme.Colors.CoinDeep
-	bitsLabel.Text = "✨ Bits 0/" .. SparkleBitConfig.count()
-	bitsLabel.Parent = pill
-end
-
-local function questBanner(parent)
+local function questBanner(parent, C)
 	questFrame = UiTheme.panel({
 		Name = "QuestBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 16),
-		Size = UDim2.fromOffset(480, 44),
+		Position = C and UDim2.new(0.5, 0, 0, 6) or UDim2.new(0.5, 0, 0, 16),
+		Size = C and UDim2.new(1, -380, 0, 32) or UDim2.fromOffset(480, 44),
 		BackgroundColor3 = UiTheme.Colors.Accent,
-		radius = 22,
+		radius = C and 16 or 22,
 	})
 	questFrame.Visible = false
 	questFrame.Parent = parent
 	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, questFrame)
+	if C then
+		-- a phone banner can't be wider than the gap between the pill column
+		-- and the icon row, but never thinner than a readable ribbon
+		local sizeCap = Instance.new("UISizeConstraint")
+		sizeCap.MinSize = Vector2.new(230, 32)
+		sizeCap.MaxSize = Vector2.new(440, 32)
+		sizeCap.Parent = questFrame
+	end
 
 	questLabel = Instance.new("TextLabel")
 	questLabel.BackgroundTransparency = 1
-	questLabel.Size = UDim2.fromScale(1, 1)
+	questLabel.Size = UDim2.new(1, -16, 1, 0)
+	questLabel.Position = UDim2.fromOffset(8, 0)
 	questLabel.Font = UiTheme.HeaderFont
-	questLabel.TextSize = 19
 	questLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	questLabel.Text = ""
+	if C then
+		questLabel.TextScaled = true
+		local cap = Instance.new("UITextSizeConstraint")
+		cap.MinTextSize = 9
+		cap.MaxTextSize = 15
+		cap.Parent = questLabel
+	else
+		questLabel.TextSize = 19
+	end
 	questLabel.Parent = questFrame
 end
 
-local function dailyButton(parent, onClaimDaily)
+-- One desktop action button (the original big labeled kind, bottom-left).
+local function bigButton(parent, name, text, yFromBottom, h, textSize, bg, fg, onTap)
 	local btn = Instance.new("TextButton")
-	btn.Name = "DailyGiftButton"
+	btn.Name = name
 	btn.AnchorPoint = Vector2.new(0, 1)
-	btn.Position = UDim2.new(0, 18, 1, -18)
-	btn.Size = UDim2.fromOffset(214, 52)
-	btn.BackgroundColor3 = UiTheme.Colors.Coin
+	btn.Position = UDim2.new(0, 18, 1, -yFromBottom)
+	btn.Size = UDim2.fromOffset(214, h)
+	btn.BackgroundColor3 = bg
 	btn.BorderSizePixel = 0
 	btn.Font = UiTheme.HeaderFont
-	btn.TextSize = 20
-	btn.TextColor3 = UiTheme.Colors.Ink
-	btn.Text = "🎁 Free Daily Gift!"
+	btn.TextSize = textSize
+	btn.TextColor3 = fg
+	btn.Text = text
 	btn.AutoButtonColor = true
 	btn.Parent = parent
-	UiTheme.corner(24, btn)
-	UiTheme.stroke(UiTheme.Colors.CoinDeep, 2, btn)
-	dailyBtn = btn
-	dailyPulse = TweenService:Create(btn, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-		Size = UDim2.fromOffset(226, 56),
-	})
-	btn.Activated:Connect(function()
-		if onClaimDaily then
-			onClaimDaily()
-		end
-	end)
-end
-
--- The Storybook shelf (hidden story pages found in the world).
-local function storybookButton(parent, onOpenStorybook)
-	local btn = Instance.new("TextButton")
-	btn.Name = "StorybookButton"
-	btn.AnchorPoint = Vector2.new(0, 1)
-	btn.Position = UDim2.new(0, 18, 1, -180)
-	btn.Size = UDim2.fromOffset(214, 40)
-	btn.BackgroundColor3 = Color3.fromRGB(240, 160, 40)
-	btn.BorderSizePixel = 0
-	btn.Font = UiTheme.HeaderFont
-	btn.TextSize = 17
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = "📖 Storybook"
-	btn.AutoButtonColor = true
-	btn.Parent = parent
-	UiTheme.corner(20, btn)
+	UiTheme.corner(h // 2 - 2, btn)
 	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
 	btn.Activated:Connect(function()
-		if onOpenStorybook then
-			onOpenStorybook()
+		if onTap then
+			onTap()
 		end
 	end)
+	return btn
 end
 
--- The little "magic word" door (storybook promo codes).
-local function codesButton(parent, onOpenCodes)
+-- One compact action button (a round emoji icon, top-right row).
+local function iconButton(parent, name, emoji, xFromRight, w, bg, onTap)
 	local btn = Instance.new("TextButton")
-	btn.Name = "CodesButton"
-	btn.AnchorPoint = Vector2.new(0, 1)
-	btn.Position = UDim2.new(0, 18, 1, -132)
-	btn.Size = UDim2.fromOffset(214, 40)
-	btn.BackgroundColor3 = Color3.fromRGB(190, 160, 235)
+	btn.Name = name
+	btn.AnchorPoint = Vector2.new(1, 0)
+	btn.Position = UDim2.new(1, -xFromRight, 0, 8)
+	btn.Size = UDim2.fromOffset(w, 44)
+	btn.BackgroundColor3 = bg
 	btn.BorderSizePixel = 0
 	btn.Font = UiTheme.HeaderFont
-	btn.TextSize = 17
+	btn.TextSize = 24
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = "🎟️ Magic Words"
+	btn.Text = emoji
 	btn.AutoButtonColor = true
 	btn.Parent = parent
-	UiTheme.corner(20, btn)
+	UiTheme.corner(16, btn)
 	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
 	btn.Activated:Connect(function()
-		if onOpenCodes then
-			onOpenCodes()
+		if onTap then
+			onTap()
 		end
 	end)
+	return btn
 end
 
-local function dailyQuestsButton(parent, onOpenDaily)
-	local btn = Instance.new("TextButton")
-	btn.Name = "DailyQuestsButton"
-	btn.AnchorPoint = Vector2.new(0, 1)
-	btn.Position = UDim2.new(0, 18, 1, -78)
-	btn.Size = UDim2.fromOffset(214, 46)
-	btn.BackgroundColor3 = UiTheme.Colors.AccentDeep
-	btn.BorderSizePixel = 0
-	btn.Font = UiTheme.HeaderFont
-	btn.TextSize = 18
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = "📋 Daily Quests"
-	btn.AutoButtonColor = true
-	btn.Parent = parent
-	UiTheme.corner(22, btn)
-	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
-	btn.Activated:Connect(function()
-		if onOpenDaily then
-			onOpenDaily()
-		end
-	end)
-end
-
--- Owner-only playtest tool: a small "Reset My Progress" button with a confirm step.
-local function resetButton(parent, onReset)
+-- Owner-only playtest tool: "Reset My Progress" with a confirm step. The
+-- trigger button moves per layout; the confirm overlay is shared.
+local function resetTrigger(parent, C, onReset)
 	local btn = Instance.new("TextButton")
 	btn.Name = "ResetButton"
-	btn.AnchorPoint = Vector2.new(0.5, 1)
-	btn.Position = UDim2.new(0.5, 0, 1, -16)
-	btn.Size = UDim2.fromOffset(184, 32)
+	if C then
+		btn.AnchorPoint = Vector2.new(0.5, 0)
+		btn.Position = UDim2.new(0.5, 0, 0, 42)
+		btn.Size = UDim2.fromOffset(34, 24)
+		btn.TextSize = 12
+		btn.Text = "🔄"
+	else
+		btn.AnchorPoint = Vector2.new(0.5, 1)
+		btn.Position = UDim2.new(0.5, 0, 1, -16)
+		btn.Size = UDim2.fromOffset(184, 32)
+		btn.TextSize = 14
+		btn.Text = "🔄 Reset My Progress"
+	end
 	btn.BackgroundColor3 = Color3.fromRGB(150, 120, 140)
 	btn.BackgroundTransparency = 0.2
 	btn.BorderSizePixel = 0
 	btn.Font = UiTheme.BodyFont
-	btn.TextSize = 14
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = "🔄 Reset My Progress"
 	btn.Parent = parent
-	UiTheme.corner(16, btn)
+	UiTheme.corner(C and 10 or 16, btn)
 
 	local overlay = Instance.new("TextButton")
 	overlay.Name = "ResetConfirm"
@@ -259,6 +229,7 @@ local function resetButton(parent, onReset)
 	box.ZIndex = 41
 	box.Parent = overlay
 	UiTheme.stroke(UiTheme.Colors.AccentDeep, 3, box)
+	UiTheme.autoFit(box, 400, 196)
 
 	local msg = Instance.new("TextLabel")
 	msg.BackgroundTransparency = 1
@@ -304,83 +275,155 @@ end
 
 -- Owner-only playtest tools: trigger the shared-world moments on cue (great for
 -- demoing a Surge or an Everybody Squish to the kids without waiting on timers).
-local function ownerDemoButtons(parent, onOwnerDebug)
-	local function demoBtn(text, xOffset, action)
+local function ownerDemoButtons(parent, C, onOwnerDebug)
+	local function demoBtn(text, pos, size, textSize, action)
 		local btn = Instance.new("TextButton")
 		btn.Name = "Demo" .. action
-		btn.AnchorPoint = Vector2.new(0.5, 1)
-		btn.Position = UDim2.new(0.5, xOffset, 1, -16)
-		btn.Size = UDim2.fromOffset(92, 32)
+		btn.AnchorPoint = C and Vector2.new(0.5, 0) or Vector2.new(0.5, 1)
+		btn.Position = pos
+		btn.Size = size
 		btn.BackgroundColor3 = Color3.fromRGB(150, 120, 140)
 		btn.BackgroundTransparency = 0.2
 		btn.BorderSizePixel = 0
 		btn.Font = UiTheme.BodyFont
-		btn.TextSize = 14
+		btn.TextSize = textSize
 		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		btn.Text = text
 		btn.Parent = parent
-		UiTheme.corner(16, btn)
+		UiTheme.corner(C and 10 or 16, btn)
 		btn.Activated:Connect(function()
 			if onOwnerDebug then
 				onOwnerDebug(action)
 			end
 		end)
 	end
-	demoBtn("🌟 Event", -150, "startEvent")
-	demoBtn("✨ Surge", 150, "startSurge")
+	if C then
+		demoBtn("🌟", UDim2.new(0.5, -40, 0, 42), UDim2.fromOffset(34, 24), 12, "startEvent")
+		demoBtn("✨", UDim2.new(0.5, 40, 0, 42), UDim2.fromOffset(34, 24), 12, "startSurge")
+	else
+		demoBtn("🌟 Event", UDim2.new(0.5, -150, 1, -16), UDim2.fromOffset(92, 32), 14, "startEvent")
+		demoBtn("✨ Surge", UDim2.new(0.5, 150, 1, -16), UDim2.fromOffset(92, 32), 14, "startSurge")
+	end
 end
 
-local function bookButton(parent, onOpenBook)
-	local btn = Instance.new("TextButton")
-	btn.Name = "BookButton"
-	btn.AnchorPoint = Vector2.new(1, 1)
-	btn.Position = UDim2.new(1, -18, 1, -18)
-	btn.Size = UDim2.fromOffset(168, 56)
-	btn.BackgroundColor3 = UiTheme.Colors.AccentDeep
-	btn.BorderSizePixel = 0
-	btn.Font = UiTheme.HeaderFont
-	btn.TextSize = 22
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = "Squishy Book"
-	btn.AutoButtonColor = true
-	btn.Parent = parent
-	UiTheme.corner(24, btn)
-	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, btn)
-	btn.Activated:Connect(function()
-		if onOpenBook then
-			onOpenBook()
-		end
-	end)
-end
+-- Builds the whole HUD for the current layout. Destroys any previous build.
+local function build()
+	if screen then
+		screen:Destroy()
+	end
+	local C = UiTheme.isCompact()
+	compactNow = C
 
-function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug, onOpenCodes, onOpenStorybook)
-	local screen = Instance.new("ScreenGui")
+	screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyHUD"
 	screen.ResetOnSpawn = false
 	screen.IgnoreGuiInset = false
-	screen.Parent = playerGui
+	screen.Parent = mountedGui
 
-	coinPill(screen)
-	friendsPill(screen)
-	bitsPill(screen)
-	questBanner(screen)
-	bookButton(screen, onOpenBook)
-	dailyButton(screen, onClaimDaily)
-	dailyQuestsButton(screen, onOpenDaily)
-	codesButton(screen, onOpenCodes)
-	storybookButton(screen, onOpenStorybook)
+	coinPill(screen, C)
+	friendsLabel = statPill(screen, C, "FriendsPill", 72, 46, UiTheme.Colors.Accent)
+	friendsLabel.TextColor3 = UiTheme.Colors.AccentDeep
+	friendsLabel.Text = "Friends 0/48"
+	bitsLabel = statPill(screen, C, "BitsPill", 120, 78, UiTheme.Colors.Coin)
+	bitsLabel.TextColor3 = UiTheme.Colors.CoinDeep
+	bitsLabel.Text = "✨ Bits 0/" .. SparkleBitConfig.count()
+	questBanner(screen, C)
+
+	if C then
+		-- top-right icon row (right to left), clear of the jump button
+		local book = iconButton(screen, "BookButton", "📕", 10, 52, UiTheme.Colors.AccentDeep, callbacks.onOpenBook)
+		book.TextSize = 26
+		dailyBtn = iconButton(screen, "DailyGiftButton", "🎁", 68, 44, UiTheme.Colors.Coin, callbacks.onClaimDaily)
+		dailyBtn.TextColor3 = UiTheme.Colors.Ink
+		iconButton(screen, "DailyQuestsButton", "📋", 118, 44, UiTheme.Colors.Accent, callbacks.onOpenDaily)
+		iconButton(screen, "CodesButton", "🎟️", 168, 44, Color3.fromRGB(190, 160, 235), callbacks.onOpenCodes)
+		iconButton(screen, "StorybookButton", "📖", 218, 44, Color3.fromRGB(240, 160, 40), callbacks.onOpenStorybook)
+		dailyBaseSize = UDim2.fromOffset(44, 44)
+		dailyPulse = TweenService:Create(dailyBtn, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Size = UDim2.fromOffset(50, 50),
+		})
+	else
+		-- the original roomy buttons
+		local book = Instance.new("TextButton")
+		book.Name = "BookButton"
+		book.AnchorPoint = Vector2.new(1, 1)
+		book.Position = UDim2.new(1, -18, 1, -18)
+		book.Size = UDim2.fromOffset(168, 56)
+		book.BackgroundColor3 = UiTheme.Colors.AccentDeep
+		book.BorderSizePixel = 0
+		book.Font = UiTheme.HeaderFont
+		book.TextSize = 22
+		book.TextColor3 = Color3.fromRGB(255, 255, 255)
+		book.Text = "Squishy Book"
+		book.AutoButtonColor = true
+		book.Parent = screen
+		UiTheme.corner(24, book)
+		UiTheme.stroke(Color3.fromRGB(255, 255, 255), 2, book)
+		book.Activated:Connect(function()
+			if callbacks.onOpenBook then
+				callbacks.onOpenBook()
+			end
+		end)
+
+		dailyBtn = bigButton(screen, "DailyGiftButton", "🎁 Free Daily Gift!", 18, 52, 20,
+			UiTheme.Colors.Coin, UiTheme.Colors.Ink, callbacks.onClaimDaily)
+		dailyBaseSize = UDim2.fromOffset(214, 52)
+		dailyPulse = TweenService:Create(dailyBtn, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Size = UDim2.fromOffset(226, 56),
+		})
+		bigButton(screen, "DailyQuestsButton", "📋 Daily Quests", 78, 46, 18,
+			UiTheme.Colors.AccentDeep, Color3.fromRGB(255, 255, 255), callbacks.onOpenDaily)
+		bigButton(screen, "CodesButton", "🎟️ Magic Words", 132, 40, 17,
+			Color3.fromRGB(190, 160, 235), Color3.fromRGB(255, 255, 255), callbacks.onOpenCodes)
+		bigButton(screen, "StorybookButton", "📖 Storybook", 180, 40, 17,
+			Color3.fromRGB(240, 160, 40), Color3.fromRGB(255, 255, 255), callbacks.onOpenStorybook)
+	end
 
 	-- These tools only ever appear for the place owner (you) — never the kids.
 	if game.CreatorType == Enum.CreatorType.User and Players.LocalPlayer.UserId == game.CreatorId then
-		resetButton(screen, onResetProgress)
-		ownerDemoButtons(screen, onOwnerDebug)
+		resetTrigger(screen, C, callbacks.onResetProgress)
+		ownerDemoButtons(screen, C, callbacks.onOwnerDebug)
 	end
+
+	if lastState then
+		HudUI.update(lastState)
+	end
+end
+
+function HudUI.mount(playerGui, onOpenBook, onClaimDaily, onOpenDaily, onResetProgress, onOwnerDebug, onOpenCodes, onOpenStorybook)
+	mountedGui = playerGui
+	callbacks = {
+		onOpenBook = onOpenBook,
+		onClaimDaily = onClaimDaily,
+		onOpenDaily = onOpenDaily,
+		onResetProgress = onResetProgress,
+		onOwnerDebug = onOwnerDebug,
+		onOpenCodes = onOpenCodes,
+		onOpenStorybook = onOpenStorybook,
+	}
+	build()
+
+	-- Rotation / resize / the test override can flip the layout answer.
+	local pending = false
+	UiTheme.onLayoutMaybeChanged(function()
+		if pending then
+			return
+		end
+		pending = true
+		task.defer(function()
+			pending = false
+			if UiTheme.isCompact() ~= compactNow then
+				build()
+			end
+		end)
+	end)
 end
 
 function HudUI.update(state)
 	if not coinLabel then
 		return
 	end
+	lastState = state
 	coinLabel.Text = tostring(state.coins or 0)
 	-- count LAUNCH friends only (event friends live in the Book's Events tab,
 	-- so this pill can never read 49/48)
@@ -407,7 +450,12 @@ function HudUI.update(state)
 
 	if dailyBtn then
 		local ready = state.dailyCapsuleReady == true
-		dailyBtn.Text = ready and "🎁 Free Daily Gift!" or "🎁 Daily Gift  ✓"
+		if compactNow then
+			dailyBtn.Text = ready and "🎁" or "✓"
+			dailyBtn.TextSize = ready and 24 or 20
+		else
+			dailyBtn.Text = ready and "🎁 Free Daily Gift!" or "🎁 Daily Gift  ✓"
+		end
 		dailyBtn.BackgroundColor3 = ready and UiTheme.Colors.Coin or UiTheme.Colors.Panel
 		dailyBtn.TextColor3 = ready and UiTheme.Colors.Ink or UiTheme.Colors.SoftInk
 		dailyBtn.AutoButtonColor = ready
@@ -415,7 +463,7 @@ function HudUI.update(state)
 			dailyPulse:Play()
 		else
 			dailyPulse:Cancel()
-			dailyBtn.Size = UDim2.fromOffset(214, 52)
+			dailyBtn.Size = dailyBaseSize
 		end
 	end
 

@@ -177,6 +177,7 @@ function GiftUI.mount(playerGui, onSend)
 	panel.Active = true
 	panel.Parent = overlay
 	UiTheme.stroke(UiTheme.Colors.AccentDeep, 3, panel)
+	UiTheme.autoFit(panel, 560, 470)
 
 	titleLabel = Instance.new("TextLabel")
 	titleLabel.BackgroundTransparency = 1

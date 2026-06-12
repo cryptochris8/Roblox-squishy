@@ -147,6 +147,7 @@ local function buildViewer(playerGui)
 	panel.Active = true
 	panel.Parent = overlay
 	UiTheme.stroke(UiTheme.Colors.CoinDeep, 3, panel)
+	UiTheme.autoFit(panel, 540, 510)
 
 	pageImage = Instance.new("ImageLabel")
 	pageImage.AnchorPoint = Vector2.new(0.5, 0)

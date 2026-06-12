@@ -508,6 +508,7 @@ function CollectionBookUI.mount(playerGui, onEquip)
 	})
 	panel.Parent = root
 	UiTheme.stroke(UiTheme.Colors.Accent, 3, panel)
+	UiTheme.autoFit(panel, 720, 560)
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1

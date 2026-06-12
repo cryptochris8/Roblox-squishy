@@ -322,6 +322,7 @@ function BoutiqueUI.mount(playerGui, onBuy, onEquip, onBuyPremium, onBuyPass)
 	panel.Active = true -- clicks on the panel shouldn't close it
 	panel.Parent = overlay
 	UiTheme.stroke(UiTheme.Colors.AccentDeep, 3, panel)
+	UiTheme.autoFit(panel, 680, 520)
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1

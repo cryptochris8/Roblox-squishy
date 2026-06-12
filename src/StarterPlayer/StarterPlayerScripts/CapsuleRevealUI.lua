@@ -12,7 +12,9 @@ local VariantConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForCh
 
 local CapsuleRevealUI = {}
 
-local screen, layer
+-- `layer` holds the full-screen dim; `stage` holds the capsule/card and is
+-- wrapped in an auto-fit scale so the big reveal fits phone screens.
+local screen, layer, stage
 local busy = false
 
 -- Safety net: even if a click is somehow swallowed, the reveal closes itself.
@@ -79,6 +81,7 @@ function CapsuleRevealUI.play(result, onClose)
 	end
 	busy = true
 	layer:ClearAllChildren()
+	stage:ClearAllChildren()
 
 	local variantLevel = result.variantLevel or 0
 	local variantUpgraded = result.variantUpgraded == true
@@ -106,6 +109,9 @@ function CapsuleRevealUI.play(result, onClose)
 		end
 		if layer then
 			layer:ClearAllChildren()
+		end
+		if stage then
+			stage:ClearAllChildren()
 		end
 		if onClose then
 			onClose()
@@ -147,7 +153,7 @@ function CapsuleRevealUI.play(result, onClose)
 	capsule.Size = UDim2.fromOffset(150, 150)
 	capsule.BackgroundColor3 = UiTheme.rarityColor(result.rarity)
 	capsule.BorderSizePixel = 0
-	capsule.Parent = layer
+	capsule.Parent = stage
 	UiTheme.corner(75, capsule)
 	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 4, capsule)
 	UiTheme.gradient(Color3.fromRGB(255, 255, 255), UiTheme.rarityColor(result.rarity), 90, capsule)
@@ -200,7 +206,7 @@ function CapsuleRevealUI.play(result, onClose)
 				else
 					bigHeadline.Text = "Friendship Bonus!"
 				end
-				bigHeadline.Parent = layer
+				bigHeadline.Parent = stage
 
 				local img = Instance.new("ImageLabel")
 				img.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -209,14 +215,14 @@ function CapsuleRevealUI.play(result, onClose)
 				img.BackgroundTransparency = 1
 				img.ScaleType = Enum.ScaleType.Fit
 				img.Image = result.imageAssetId
-				img.Parent = layer
+				img.Parent = stage
 				TweenService:Create(img, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 					Size = UDim2.fromOffset(322, 430),
 				}):Play()
 				task.wait(0.32)
 
 				if variantLevel >= 1 then
-					variantBadge(layer, variantIcon, variantName, variantColor, UDim2.new(0.5, 150, 0.5, -210))
+					variantBadge(stage, variantIcon, variantName, variantColor, UDim2.new(0.5, 150, 0.5, -210))
 				end
 
 				local bigYay = Instance.new("TextButton")
@@ -231,7 +237,7 @@ function CapsuleRevealUI.play(result, onClose)
 				bigYay.Text = "Yay!"
 				bigYay.ZIndex = 5
 				bigYay.Active = true
-				bigYay.Parent = layer
+				bigYay.Parent = stage
 				UiTheme.corner(24, bigYay)
 				bigYay.Activated:Connect(function() dismiss() end)
 				bigYay.MouseButton1Click:Connect(function() dismiss() end)
@@ -246,7 +252,7 @@ function CapsuleRevealUI.play(result, onClose)
 				BackgroundColor3 = UiTheme.Colors.Cream,
 				radius = 22,
 			})
-			card.Parent = layer
+			card.Parent = stage
 			UiTheme.stroke(variantLevel >= 1 and variantColor or UiTheme.rarityColor(result.rarity), 4, card)
 
 			-- flip-in (grow width)
@@ -336,6 +342,15 @@ function CapsuleRevealUI.mount(playerGui)
 	layer.Size = UDim2.fromScale(1, 1)
 	layer.BackgroundTransparency = 1
 	layer.Parent = screen
+
+	-- the reveal itself lives on a stage that shrinks to fit small screens
+	-- (the headline sits ~270 above centre and the Yay! ~276 below = ~620 tall)
+	stage = Instance.new("Frame")
+	stage.Name = "Stage"
+	stage.Size = UDim2.fromScale(1, 1)
+	stage.BackgroundTransparency = 1
+	stage.Parent = screen
+	UiTheme.autoFit(stage, 560, 620)
 end
 
 return CapsuleRevealUI

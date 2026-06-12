@@ -24,6 +24,7 @@ local everSquished = false
 local marker: BillboardGui? = nil
 local highlight: Highlight? = nil
 local bookPulse: Tween? = nil
+local bookPulseBtn: TextButton? = nil
 
 local function allDone(): boolean
 	for _, step in ipairs(FirstDayConfig.Steps) do
@@ -59,6 +60,14 @@ local function buildPanel(playerGui)
 	panel.Visible = false
 	panel.Parent = screen
 	UiTheme.stroke(UiTheme.Colors.Coin, 2, panel)
+	if UiTheme.isCompact() then
+		-- phones: shrink + nudge up so it stays clear of the jump button and
+		-- the top-right icon row
+		panel.Position = UDim2.new(1, -8, 0.5, -36)
+		local sc = Instance.new("UIScale")
+		sc.Scale = 0.72
+		sc.Parent = panel
+	end
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
@@ -183,19 +192,33 @@ end
 local function setBookPulse(on: boolean)
 	local hud = localPlayer:FindFirstChild("PlayerGui")
 	hud = hud and hud:FindFirstChild("SquishyHUD")
-	local btn = hud and hud:FindFirstChild("BookButton")
+	local btn = hud and hud:FindFirstChild("BookButton") :: TextButton?
 	if not btn then
 		return
 	end
+	-- the HUD rebuilds itself on layout flips (desktop <-> phone): if our tween
+	-- points at a dead button, re-arm against the live one
+	if bookPulse and bookPulseBtn ~= btn then
+		bookPulse:Cancel()
+		bookPulse = nil
+	end
+	-- remember the button's own resting size (compact and desktop differ)
+	if btn:GetAttribute("BaseW") == nil then
+		btn:SetAttribute("BaseW", btn.Size.X.Offset)
+		btn:SetAttribute("BaseH", btn.Size.Y.Offset)
+	end
+	local bw = btn:GetAttribute("BaseW") :: number
+	local bh = btn:GetAttribute("BaseH") :: number
 	if on and not bookPulse then
+		bookPulseBtn = btn
 		bookPulse = TweenService:Create(btn, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-			Size = UDim2.fromOffset(180, 62),
+			Size = UDim2.fromOffset(bw + 10, bh + 6),
 		})
 		bookPulse:Play()
 	elseif not on and bookPulse then
 		bookPulse:Cancel()
 		bookPulse = nil
-		btn.Size = UDim2.fromOffset(168, 56)
+		btn.Size = UDim2.fromOffset(bw, bh)
 	end
 end
 

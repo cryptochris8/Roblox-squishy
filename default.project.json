@@ -15,6 +15,12 @@
       }
     },
 
+    "StarterGui": {
+      "$properties": {
+        "ScreenOrientation": "LandscapeSensor"
+      }
+    },
+
     "StarterPlayer": {
       "$properties": {
         "DevCameraOcclusionMode": "Invisicam"
