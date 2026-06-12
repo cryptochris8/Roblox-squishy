@@ -69,8 +69,11 @@ One shared description works for all six (tweak if you like):
   - ⚠️ Moderation caution (lesson from the June 10 strike): keep icons
     simple and obviously wholesome — a single friend's face, a hat on a plain
     pastel background. Avoid busy abstract pink-toned collages.
-  - Want a matching set? Ask Claude to cut a pastel icon pack from the
-    existing card art / marketing shots before you start.
+  - ✅ **A matching icon pack is ready in `marketing/product_icons/`** — one
+    512×512 PNG per product, named to match this guide (`pass_*` /
+    `prod_*`), all circle-safe. Just upload each file as you create its
+    product (`_contact_sheet.png` previews the whole set; regenerate or
+    tweak any of them via `marketing/make_product_icons.py`).
 
 ---
 
