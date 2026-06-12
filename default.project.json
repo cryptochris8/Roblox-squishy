@@ -1,5 +1,6 @@
 {
   "name": "SquishySmash",
+  "servePlaceIds": [105594294243426],
   "tree": {
     "$className": "DataModel",
 
