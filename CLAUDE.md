@@ -72,6 +72,7 @@ src/ReplicatedStorage/Shared/
   ZoneConfig.lua           the 3 lands: pack/capsule/center/spawn/shard goal + unlock chain
   SocialConfig.lua         Phase C tunables: Sparkle Surge meter, Everybody Squish event, leaderboards
   CosmeticsConfig.lua      Sparkle Boutique catalog (hats/trails/balloons, coin prices, builder hints)
+  GiftConfig.lua           Gifting v1 tunables: coin presets, daily gift limit, prompt/send ranges
   Remotes.lua              RemoteEvent names + setupServer/get
 src/ServerScriptService/Server/   (server-authoritative)
   Main.server.lua          entry: setup remotes, init services, build world, wire prompts + hooks
@@ -93,6 +94,7 @@ src/ServerScriptService/Server/   (server-authoritative)
   BoutiqueService.lua      the Sparkle Boutique stall (Pudding Hills, near spawn): validated coin-only buy/equip of buddy cosmetics; auto-wear on purchase
   WeeklyService.lua        Friend of the Week: a visiting tent by the travel hub; one of the 8 event friends rotates in weekly; Befriend = known coin price (never random), full card reveal
   CodeService.lua          storybook "magic words" (promo codes; table is SERVER-side only): one-time coin gifts, normalized input, per-player redemption persisted
+  GiftService.lua          Gifting v1: 🎁 prompt on every player's character; give preset coins or SHARE a discovered friend (recipient gets discovery + reveal, GIVER KEEPS THEIRS); daily limit + range + cooldown validated server-side; shout-out on gift
   SquishyModelFactory.lua  every friend's real 3D shape: ~17 part-built archetypes (dumpling/bun/cube/bunny/bat/ghost...) + hand-tuned skins for all 48 launch friends (+8 weekly); HatOffset attr; applyGolden()
 src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   ClientController.client.lua   boots UI, routes server messages
@@ -103,15 +105,21 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   SocialUI.lua             shared-world HUD: Surge meter pill (left column) + "Everybody Squish" banner with countdowns
   BoutiqueUI.lua           the Sparkle Boutique shop panel (price/owned/"Wearing ✓" states, gentle buy confirm)
   CodesUI.lua              the "Magic Words" panel (type a storybook code; feedback arrives as a toast)
+  GiftUI.lua               the gift picker (coin presets + share-a-friend card grid, picture confirm, "N gifts left" pill) + the 🎁 "gift arrived" pop; hides your own GiftPrompt locally
 ```
 
 ### Contract (server <-> client)
 
 - Remotes: c->s `RequestInitialState`, `EquipBuddyRequest`, `CollectSparkleBit`,
-  `ClaimDailyCapsule`, `BuyCosmetic`, `EquipCosmetic`, `RedeemCode`, `ResetProgress` (owner-only),
+  `ClaimDailyCapsule`, `BuyCosmetic`, `EquipCosmetic`, `RedeemCode`, `VisitRoom`,
+  `PlaceRoomItem`, `CollectStoryPage`, `SendGift` (recipientUserId, "coins"|"friend",
+  amount|defId), `ResetProgress` (owner-only),
   `OwnerDebug` (owner-only: "startEvent"/"startSurge" demo triggers, with HUD
   buttons next to Reset); s->c `StateSync`, `SocialSync` (surge meter + event
-  slices, with seconds-remaining), `OpenBoutique`, `SquishResult`, `CapsuleResult`,
+  slices, with seconds-remaining), `OpenBoutique`, `OpenRoomCatalog`,
+  `StoryPageCollected`, `OpenGiftUI` (recipient + their discovered set + gifts
+  left today), `GiftReceived` (coin gifts; friend shares arrive as a
+  `CapsuleResult` carrying `giftFrom`), `SquishResult`, `CapsuleResult`,
   `SparkleBitCollected`, `SparkleRestored`, `Toast`.
 - The `StateSync` snapshot carries: coins, discovered (+count), variants,
   sparkleBits, shards (per-land {progress, collected}), tutorial, dailyCapsuleReady,
@@ -128,10 +136,12 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
 
 ### Not in MVP yet (deliberately)
 
-Gifting/trading (needs a ProfileStore session-lock migration first) and any
-monetization (Phase D — no Game Passes / Developer Products; **Sparkle Capsules
-stay FREE by design**, to avoid the Paid Random Items policy that restricts our
-6–9 audience). *(Earlier gaps now closed: all 48 friends have real trading-card
+Cross-server gifting (v1 is same-server walk-up only; a mailbox pattern can
+ride on the session locks later), TRADING of any kind (gifts only — sharing a
+friend never costs the giver theirs, so nobody can be talked out of their
+collection), and any monetization (Phase D — no Game Passes / Developer
+Products; **Sparkle Capsules stay FREE by design**, to avoid the Paid Random
+Items policy that restricts our 6–9 audience). *(Earlier gaps now closed: all 48 friends have real trading-card
 art; Phase C co-op/social shipped 2026-06-09; and every friend has a real
 part-built 3D shape via SquishyModelFactory — no more placeholder balls.)*
 
@@ -150,7 +160,13 @@ solo-verified; the four-player family playtest is its real multiplayer validatio
 the first coin sink + Phase D groundwork: buddy cosmetics (hats/trails/balloons)
 bought with EARNED Sparkle Coins only, auto-worn on purchase, persisted, and
 visible to everyone — the same system later sells premium cosmetics if/when Robux
-products are priced. Next: Phase D (monetization — needs pricing/business calls).
+products are priced. **Gifting v1** (2026-06-11) adds the first
+player-to-player kindness loop: a 🎁 prompt on every player — give preset
+Sparkle Coins or SHARE a discovered friend (recipient gets the discovery +
+a "💝 A gift from …!" card reveal; the giver keeps theirs), 5 gifts/day,
+picture confirm, server-validated end to end, same-server only. Solo-verified
+in Studio; the family playtest is its real multiplayer validation. Next:
+Phase D (monetization — needs pricing/business calls).
 See `docs/11_GAMEPLAY_V2_DESIGN.md` for the roadmap.
 **Changes are synced to Studio + git but go live in the published game only after
 File → Publish (Alt+P), a creator-only action.**

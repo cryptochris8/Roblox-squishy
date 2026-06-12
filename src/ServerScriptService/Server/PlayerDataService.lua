@@ -82,6 +82,7 @@ export type Profile = {
 	Room: { Owned: { [string]: boolean }, Placed: { [string]: string } },
 	FirstDayPaid: { [string]: boolean },
 	StoryPages: { [string]: boolean },
+	Gifting: { Day: number, Sent: number },
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -125,6 +126,7 @@ local function newProfile(): Profile
 		Room = { Owned = {}, Placed = {} },
 		FirstDayPaid = {},
 		StoryPages = {},
+		Gifting = { Day = 0, Sent = 0 },
 	}
 end
 
@@ -176,6 +178,7 @@ local function serialize(p: Profile, raw: any)
 		Room = p.Room,
 		FirstDayPaid = p.FirstDayPaid,
 		StoryPages = p.StoryPages,
+		Gifting = p.Gifting,
 	}
 	for k, v in pairs(known) do
 		out[k] = v
@@ -308,6 +311,12 @@ local function deserialize(data: any): Profile
 			end
 		end
 		p.StoryPages = pagesGot
+	end
+	if type(data.Gifting) == "table" then
+		p.Gifting = {
+			Day = tonumber(data.Gifting.Day) or 0,
+			Sent = tonumber(data.Gifting.Sent) or 0,
+		}
 	end
 	if type(data.DailyQuests) == "table" then
 		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
@@ -713,6 +722,32 @@ function PlayerDataService.markCodeRedeemed(player: Player, code: string)
 	if p then
 		p.RedeemedCodes[code] = true
 	end
+end
+
+-- ── Gifting (a small daily kindness budget) ─────────────────────────────────
+-- Gifts SENT so far this UTC day (rolls the counter over on a new day).
+function PlayerDataService.giftsSentToday(player: Player): number
+	local p = profiles[player]
+	if not p then
+		return 0
+	end
+	if p.Gifting.Day ~= todayIndex() then
+		p.Gifting.Day = todayIndex()
+		p.Gifting.Sent = 0
+	end
+	return p.Gifting.Sent
+end
+
+function PlayerDataService.noteGiftSent(player: Player)
+	local p = profiles[player]
+	if not p then
+		return
+	end
+	if p.Gifting.Day ~= todayIndex() then
+		p.Gifting.Day = todayIndex()
+		p.Gifting.Sent = 0
+	end
+	p.Gifting.Sent += 1
 end
 
 function PlayerDataService.setTutorialDone(player: Player)

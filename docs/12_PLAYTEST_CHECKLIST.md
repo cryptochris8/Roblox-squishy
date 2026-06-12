@@ -57,6 +57,12 @@ where they get stuck or light up matters more than what they say.*
 - [ ] **Leaderboards** at the travel hub: do they find themselves/sisters on the boards? Is it friendly rivalry or tears? (Watch the 6-year-old — if it stings, we soften it.)
 - [ ] **Show-off buddies:** do they notice each other's name tags + ✨/🌈 auras? Does anyone change their buddy to show off?
 - [ ] **Shout-outs:** when one discovers a new friend / recovers a shard, do the others react to the toast?
+- [ ] **🎁 Gifting (NEW — first real test):** do they find the "🎁 Give a Gift" prompt on each other by themselves? Walk up, hold E → picker opens.
+  - [ ] **Give coins** (25/50/100/250): does the receiver's 🎁 pop-up land? Does giving feel *good* (not like losing)?
+  - [ ] **Share a friend:** does the receiver's "💝 A gift from …!" card reveal get a reaction? Does the giver UNDERSTAND they keep theirs ("sharing is caring")?
+  - [ ] Does the "they know ✓" marking make sense when a friend can't be shared twice?
+  - [ ] **Daily limit (5/day):** when it runs out, is "more tomorrow! 💝" accepted calmly, or tears? (If tears → raise limit, don't remove it.)
+  - [ ] Watch for **pestering** ("gift me!") — the limit + no-ask design should keep it gentle; note if it doesn't.
 
 ## Boredom / difficulty read (the 8-year-olds)
 - [ ] Where does interest dip? (Note the exact moment.)

@@ -74,7 +74,7 @@ local function card(parent, y, item)
 		state.Text = "Owned"
 		state.TextColor3 = UiTheme.Colors.AccentDeep
 	else
-		state.Text = "🪙 " .. item.price
+		state.Text = item.price .. " coins"
 		state.TextColor3 = (coins >= item.price) and GOLD_DEEP or UiTheme.Colors.SoftInk
 	end
 
@@ -88,7 +88,7 @@ local function card(parent, y, item)
 		else
 			pendingItemId = item.id
 			confirmLabel.Text = item.icon .. "  Get the " .. item.name .. " for " .. item.price .. " Sparkle Coins?"
-			confirmYes.Text = "Get it!  🪙 " .. item.price
+			confirmYes.Text = "Get it!  " .. item.price
 			confirmBox.Visible = true
 		end
 	end)
@@ -160,7 +160,7 @@ function RoomUI.mount(playerGui, onPlace)
 	close.Font = UiTheme.HeaderFont
 	close.TextSize = 17
 	close.TextColor3 = Color3.fromRGB(255, 255, 255)
-	close.Text = "✕"
+	close.Text = "X"
 	close.Parent = panel
 	UiTheme.corner(16, close)
 	close.Activated:Connect(function()

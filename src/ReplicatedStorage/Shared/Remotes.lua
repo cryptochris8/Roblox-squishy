@@ -23,6 +23,7 @@ Remotes.RedeemCode = "RedeemCode"                    -- text: try a storybook ma
 Remotes.VisitRoom = "VisitRoom"                      -- ("visit"/"leave"): hop to/from my Squishy Room
 Remotes.PlaceRoomItem = "PlaceRoomItem"              -- (slotId, itemId?): buy-if-needed + place / clear
 Remotes.CollectStoryPage = "CollectStoryPage"        -- id: I walked up to a hidden storybook page
+Remotes.SendGift = "SendGift"                        -- (recipientUserId, kind, value): give coins / share a friend
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -34,6 +35,8 @@ Remotes.SparkleRestored = "SparkleRestored" -- all 3 shards recovered — the fi
 Remotes.OpenBoutique = "OpenBoutique"   -- the Sparkle Boutique stall asked the client to open its shop
 Remotes.OpenRoomCatalog = "OpenRoomCatalog" -- a room slot asked the client to open the furniture picker
 Remotes.StoryPageCollected = "StoryPageCollected" -- a storybook page was found (opens the viewer)
+Remotes.OpenGiftUI = "OpenGiftUI"       -- a 🎁 prompt asked the client to open the gift picker
+Remotes.GiftReceived = "GiftReceived"   -- a coin gift arrived (friend shares arrive as CapsuleResult)
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -49,11 +52,14 @@ local ALL_EVENTS = {
 	Remotes.VisitRoom,
 	Remotes.PlaceRoomItem,
 	Remotes.CollectStoryPage,
+	Remotes.SendGift,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
 	Remotes.OpenRoomCatalog,
 	Remotes.StoryPageCollected,
+	Remotes.OpenGiftUI,
+	Remotes.GiftReceived,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,

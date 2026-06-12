@@ -74,7 +74,7 @@ local function card(parent, item, x, y, w)
 		state.Text = "Tap to wear"
 		state.TextColor3 = UiTheme.Colors.AccentDeep
 	else
-		state.Text = "🪙 " .. item.price
+		state.Text = item.price .. " coins"
 		state.TextColor3 = (coins >= item.price) and GOLD_DEEP or UiTheme.Colors.SoftInk
 	end
 
@@ -87,7 +87,7 @@ local function card(parent, item, x, y, w)
 			-- gentle confirm before spending
 			pendingBuyId = item.id
 			confirmLabel.Text = item.icon .. "  Buy the " .. item.name .. " for " .. item.price .. " Sparkle Coins?"
-			confirmYes.Text = "Buy  🪙 " .. item.price
+			confirmYes.Text = "Buy  " .. item.price
 			confirmBox.Visible = true
 		end
 	end)
@@ -98,7 +98,7 @@ local function render()
 		return
 	end
 	itemsHolder:ClearAllChildren()
-	coinsLabel.Text = "🪙 " .. coins
+	coinsLabel.Text = coins .. " coins"
 
 	local y = 0
 	for _, cosmeticType in ipairs(CosmeticsConfig.Types) do
@@ -194,7 +194,7 @@ function BoutiqueUI.mount(playerGui, onBuy, onEquip)
 	coinsLabel.Font = UiTheme.HeaderFont
 	coinsLabel.TextSize = 18
 	coinsLabel.TextColor3 = GOLD_DEEP
-	coinsLabel.Text = "🪙 0"
+	coinsLabel.Text = "0 coins"
 	coinsLabel.Parent = panel
 	UiTheme.corner(17, coinsLabel)
 	UiTheme.stroke(GOLD_DEEP, 2, coinsLabel)
@@ -208,7 +208,7 @@ function BoutiqueUI.mount(playerGui, onBuy, onEquip)
 	close.Font = UiTheme.HeaderFont
 	close.TextSize = 18
 	close.TextColor3 = Color3.fromRGB(255, 255, 255)
-	close.Text = "✕"
+	close.Text = "X"
 	close.Parent = panel
 	UiTheme.corner(17, close)
 	close.Activated:Connect(function()

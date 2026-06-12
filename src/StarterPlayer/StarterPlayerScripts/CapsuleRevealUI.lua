@@ -188,7 +188,9 @@ function CapsuleRevealUI.play(result, onClose)
 				bigHeadline.TextColor3 = Color3.fromRGB(255, 255, 255)
 				bigHeadline.TextStrokeColor3 = UiTheme.Colors.AccentDeep
 				bigHeadline.TextStrokeTransparency = 0.15
-				if result.isNew then
+				if result.giftFrom then
+					bigHeadline.Text = "💝 A gift from " .. result.giftFrom .. "!"
+				elseif result.isNew then
 					bigHeadline.Text = "New Friend Discovered!"
 				elseif variantUpgraded then
 					bigHeadline.Text = variantIcon .. " " .. variantName .. "!   +" .. (result.bonusCoins or 0) .. " Sparkle Coins"
@@ -265,7 +267,9 @@ function CapsuleRevealUI.play(result, onClose)
 			headline.Font = UiTheme.HeaderFont
 			headline.TextSize = 24
 			headline.TextColor3 = UiTheme.Colors.AccentDeep
-			if result.isNew then
+			if result.giftFrom then
+				headline.Text = "💝 A gift from " .. result.giftFrom .. "!"
+			elseif result.isNew then
 				headline.Text = "New Friend Discovered!"
 			elseif variantUpgraded then
 				headline.Text = variantIcon .. " " .. variantName .. "!"

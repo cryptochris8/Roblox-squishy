@@ -1122,7 +1122,7 @@ function WorldService.build()
 	-- "how to play" a 6-year-old can read at a glance. ──────────────────────
 	local boardSpecs = {
 		{ pos = Vector3.new(-8, 0, 27.5), icon = "👆", line = "Squish sleepy friends!", color = Color3.fromRGB(255, 170, 195) },
-		{ pos = Vector3.new(0, 0, 26), icon = "🪙", line = "Earn Sparkle Coins!", color = Color3.fromRGB(255, 210, 120) },
+		{ pos = Vector3.new(0, 0, 26), icon = "⭐", line = "Earn Sparkle Coins!", color = Color3.fromRGB(255, 210, 120) },
 		{ pos = Vector3.new(8, 0, 27.5), icon = "🎁", line = "Collect new friends!", color = Color3.fromRGB(180, 200, 255) },
 	}
 	for i, spec in ipairs(boardSpecs) do
