@@ -641,12 +641,602 @@ local function buildMushroomHops()
 	end
 end
 
+-- ═════════════════════════════════════════════════════════════════════════════
+-- THE SPARKLE-POP CANNON — climb in, 3-2-1, FLY over the goo sea (Goo Coast)
+-- ═════════════════════════════════════════════════════════════════════════════
+local function buildSparklePopCannon()
+	local zone = ZoneConfig.get("Goo Coast")
+	if not zone then return end
+	local center = zone.center
+
+	local model = atomicModel("SparklePopCannon", Workspace)
+	local at = center + Vector3.new(14, 0, 2) -- beside the pier's base
+	local aimAt = center + Vector3.new(-40, 0, -90) -- splash down in open sea
+	local flat = Vector3.new(aimAt.X - at.X, 0, aimAt.Z - at.Z)
+	local dir = flat.Unit
+	local face = CFrame.lookAt(Vector3.new(at.X, 0, at.Z), Vector3.new(aimAt.X, 0, aimAt.Z))
+
+	-- base + tilted barrel
+	local pedestal = part({
+		Name = "CannonBase", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.4, 9, 9),
+		Color = Color3.fromRGB(150, 220, 224), CanCollide = true, CanQuery = true,
+	})
+	pedestal.CFrame = CFrame.new(at + Vector3.new(0, 1.2, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	pedestal.Parent = model
+	local barrel = part({
+		Name = "CannonBarrel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(9, 5.4, 5.4),
+		Color = Color3.fromRGB(255, 190, 200), CanCollide = true, CanQuery = true,
+	})
+	barrel.CFrame = face * CFrame.new(0, 4.6, -1.6) * CFrame.Angles(0, math.rad(90), 0) * CFrame.Angles(0, 0, math.rad(40))
+	barrel.Parent = model
+	local rim = part({
+		Name = "CannonRim", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.8, 6.2, 6.2),
+		Color = CREAM,
+	})
+	rim.CFrame = barrel.CFrame * CFrame.new(4.6, 0, 0)
+	rim.Parent = model
+	floatingSign(barrel, "🎉 Sparkle-Pop Cannon")
+
+	-- the loading seat, tucked inside the barrel mouth
+	local seat = Instance.new("Seat")
+	seat.Name = "CannonSeat"
+	seat.Size = Vector3.new(2.4, 0.4, 2.4)
+	seat.Color = CREAM
+	seat.Material = Enum.Material.SmoothPlastic
+	seat.Anchored = true
+	seat.CanQuery = true
+	seat.CFrame = barrel.CFrame * CFrame.new(1.2, 0, 0) * CFrame.Angles(0, 0, math.rad(-40)) * CFrame.Angles(0, math.rad(-90), 0)
+	seat.Parent = model
+
+	-- floating bullseye rafts where the arc lands (visual targets, pure delight)
+	for i, ringSpec in ipairs({ { 10, Color3.fromRGB(255, 170, 195) }, { 6.4, CREAM }, { 3, Color3.fromRGB(255, 210, 120) } }) do
+		local ring = part({
+			Name = "Bullseye" .. i, Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(0.4 + i * 0.1, ringSpec[1], ringSpec[1]),
+			Color = ringSpec[2],
+		})
+		ring.CFrame = CFrame.new(aimAt + Vector3.new(0, 0.5 + i * 0.08, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		ring.Parent = model
+	end
+
+	-- countdown sign above the barrel
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(120, 60)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, 5, 0)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 70
+	gui.Parent = rim
+	local count = Instance.new("TextLabel")
+	count.BackgroundTransparency = 1
+	count.Size = UDim2.fromScale(1, 1)
+	count.Font = Enum.Font.FredokaOne
+	count.TextSize = 44
+	count.TextColor3 = Color3.fromRGB(255, 210, 120)
+	count.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+	count.TextStrokeTransparency = 0.2
+	count.Text = ""
+	count.Parent = gui
+
+	-- the flight: the rider STAYS SEATED and the seat itself is flown along a
+	-- big sparkle parabola to the bullseye (the same engine-trusted carry that
+	-- runs the coaster — nothing to ragdoll, clip, or fizzle), then they're
+	-- set down on the rafts and the seat zips home for the next astronaut
+	local seatHome = seat.CFrame
+	local mouth = rim.Position + Vector3.new(0, 2, 0)
+	local landAt = aimAt + Vector3.new(0, 2.4, 0)
+	local firing = false
+	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		local occupant = seat.Occupant
+		if not occupant or firing then
+			return
+		end
+		firing = true
+		task.spawn(function()
+			for _, n in ipairs({ "3", "2", "1", "POP!" }) do
+				count.Text = n
+				task.wait(0.8)
+				if seat.Occupant ~= occupant then -- they hopped out; stand down
+					count.Text = ""
+					firing = false
+					return
+				end
+			end
+			count.Text = ""
+			sparkleBurst(rim, Color3.fromRGB(255, 226, 150), 30)
+			squash(barrel, barrel.Size)
+			-- sparkle contrail on the flyer
+			local char = occupant.Parent :: Model?
+			local root = char and char:FindFirstChild("HumanoidRootPart")
+			local trail
+			if root then
+				trail = Instance.new("ParticleEmitter")
+				trail.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+				trail.LightEmission = 0.9
+				trail.Color = ColorSequence.new(Color3.fromRGB(255, 226, 150), Color3.fromRGB(255, 190, 200))
+				trail.Size = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 0.9), NumberSequenceKeypoint.new(1, 0),
+				})
+				trail.Lifetime = NumberRange.new(0.6, 1)
+				trail.Rate = 40
+				trail.Speed = NumberRange.new(1, 2)
+				trail.Parent = root
+			end
+			-- fly the seat (and its welded rider) along the parabola: ~1.5s,
+			-- apex ~22 studs over the midpoint
+			local FLIGHT = 1.5
+			local APEX = 22
+			local t = 0
+			while t < FLIGHT do
+				local dt = task.wait()
+				t = math.min(t + dt, FLIGHT)
+				local k = t / FLIGHT
+				local pos = mouth:Lerp(landAt, k) + Vector3.new(0, APEX * 4 * k * (1 - k), 0)
+				local aheadK = math.min(k + 0.06, 1)
+				local ahead = mouth:Lerp(landAt, aheadK) + Vector3.new(0, APEX * 4 * aheadK * (1 - aheadK), 0)
+				seat.CFrame = if (ahead - pos).Magnitude > 0.05
+					then CFrame.lookAt(pos, ahead, Vector3.yAxis)
+					else CFrame.new(pos)
+				if not seat.Occupant then
+					break -- bailed mid-air: they're over soft goo, let them drop
+				end
+			end
+			if trail then
+				task.delay(1, function()
+					trail:Destroy()
+				end)
+			end
+			-- set the rider down on the bullseye
+			local rider = seat.Occupant
+			if rider then
+				rider.Sit = false
+				local t0 = os.clock()
+				while rider:GetState() == Enum.HumanoidStateType.Seated and os.clock() - t0 < 1 do
+					task.wait(0.05)
+				end
+				local rchar = rider.Parent :: Model?
+				if rchar and rchar.Parent then
+					rchar:PivotTo(CFrame.new(landAt + Vector3.new(0, 2, 0)))
+				end
+				sparkleBurst(rim, Color3.fromRGB(255, 190, 200), 8)
+			end
+			-- the seat zips home
+			task.wait(0.4)
+			seat.CFrame = seatHome
+			task.wait(0.8)
+			firing = false
+		end)
+	end)
+end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- THE PUDDING-CUP SPINNER — teacups with a kid-worked speed lever (Pudding)
+-- ═════════════════════════════════════════════════════════════════════════════
+local function buildPuddingCupSpinner()
+	local zone = ZoneConfig.get("Pudding Hills")
+	if not zone then return end
+	local center = zone.center
+	local model = atomicModel("PuddingCupSpinner", Workspace)
+	local at = center + Vector3.new(36, 0, 16)
+
+	local tray = part({
+		Name = "SpinnerTray", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.2, 22, 22),
+		Color = Color3.fromRGB(255, 214, 150), CanCollide = true, CanQuery = true,
+	})
+	tray.CFrame = CFrame.new(at + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	tray.Parent = model
+	local hubPost = part({
+		Name = "SpinnerHub", Shape = Enum.PartType.Cylinder, Size = Vector3.new(4, 2.4, 2.4),
+		Color = CREAM, CanCollide = true, CanQuery = true,
+	})
+	hubPost.CFrame = CFrame.new(at + Vector3.new(0, 3.2, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	hubPost.Parent = model
+	floatingSign(hubPost, "🍵 Pudding-Cup Spinner")
+
+	local cupColors = { Color3.fromRGB(255, 170, 195), Color3.fromRGB(170, 200, 255), Color3.fromRGB(180, 230, 200) }
+	local cups = {}
+	for i = 1, 3 do
+		local cup = Instance.new("Model")
+		cup.Name = "Cup" .. i
+		local body = part({
+			Name = "CupBody", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.4, 6.4, 6.4),
+			Color = cupColors[i], CanCollide = true, CanQuery = true,
+		})
+		body.CFrame = CFrame.new(at) -- placed by the spin loop
+		body.Parent = cup
+		cup.PrimaryPart = body
+		local handleArc = part({
+			Name = "CupHandle", Shape = Enum.PartType.Ball, Size = Vector3.new(2.2, 1, 0.8),
+			Color = cupColors[i],
+		})
+		handleArc.CFrame = body.CFrame * CFrame.new(0, 0, 3.6)
+		handleArc.Parent = cup
+		local seats = {}
+		for si, ang in ipairs({ 0, math.pi }) do
+			local s = Instance.new("Seat")
+			s.Name = "CupSeat" .. si
+			s.Size = Vector3.new(2, 0.4, 2)
+			s.Color = CREAM
+			s.Material = Enum.Material.SmoothPlastic
+			s.Anchored = true
+			s.CanQuery = true
+			s.CFrame = body.CFrame * CFrame.new(math.cos(ang) * 1.4, 2, math.sin(ang) * 1.4)
+			s.Parent = cup
+			seats[si] = s
+		end
+		cup.Parent = model
+		cups[i] = cup
+	end
+
+	-- the lever: a kid cycles speed 0 → 1 → 2 → 3 → 0 (one drives, sisters ride)
+	local leverPost = part({
+		Name = "LeverPost", Size = Vector3.new(0.8, 3.4, 0.8),
+		Color = Color3.fromRGB(206, 170, 120), CanCollide = true, CanQuery = true,
+	})
+	leverPost.Position = at + Vector3.new(13.5, 1.7, 0)
+	leverPost.Parent = model
+	local leverBall = part({
+		Name = "LeverBall", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4),
+		Color = Color3.fromRGB(214, 40, 70),
+	})
+	leverBall.Position = at + Vector3.new(13.5, 3.8, 0)
+	leverBall.Parent = model
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ObjectText = "Spinner Lever"
+	prompt.ActionText = "Spin faster!"
+	prompt.HoldDuration = 0.15
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = leverPost
+
+	local SPEEDS = { 0, 0.35, 0.7, 1.1 } -- tray rad/s (rim <= ~12 studs/s)
+	local level = 2
+	prompt.Triggered:Connect(function()
+		level = (level % #SPEEDS) + 1
+		prompt.ActionText = if SPEEDS[level] == 0 then "Start it up!" else "Spin faster!"
+		sparkleBurst(leverBall, Color3.fromRGB(255, 210, 120), 6)
+	end)
+
+	task.spawn(function()
+		local trayA = 0
+		local cupA = 0
+		local speed = SPEEDS[level]
+		RunService.Heartbeat:Connect(function(dt)
+			speed += (SPEEDS[level] - speed) * math.min(1, dt * 1.2) -- soft ramps
+			trayA = (trayA + speed * dt) % (math.pi * 2)
+			cupA = (cupA + speed * 1.6 * dt) % (math.pi * 2)
+			for i, cup in ipairs(cups) do
+				local a = trayA + (i / 3) * math.pi * 2
+				local cupCF = CFrame.new(at + Vector3.new(math.cos(a) * 6.5, 1.4, math.sin(a) * 6.5))
+					* CFrame.Angles(0, -cupA, 0)
+				cup:PivotTo(cupCF)
+			end
+		end)
+	end)
+end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- THE FIREFLY ZIP LINE — grove deck across the moonpool to the stargazers
+-- ═════════════════════════════════════════════════════════════════════════════
+local function buildFireflyZipLine()
+	local zone = ZoneConfig.get("Moonlit Hollow")
+	if not zone then return end
+	local center = zone.center
+	local model = atomicModel("FireflyZipLine", Workspace)
+
+	local startAt = center + Vector3.new(-50, 16, 8)
+	local endAt = center + Vector3.new(68, 2.4, -99)
+	local waypoints = {
+		startAt,
+		center + Vector3.new(-10, 9, -30),
+		center + Vector3.new(35, 5, -70),
+		endAt,
+	}
+	local samples = sampleOpenSpline(waypoints)
+
+	-- the boarding tower: a giant zip-mushroom with wrap steps + deck
+	local stem = part({
+		Name = "ZipStem", Shape = Enum.PartType.Cylinder, Size = Vector3.new(15, 5, 5),
+		Color = Color3.fromRGB(236, 228, 244), CanCollide = true, CanQuery = true,
+	})
+	stem.CFrame = CFrame.new(startAt + Vector3.new(0, -8.5, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	stem.Parent = model
+	local capTop = part({
+		Name = "ZipCap", Shape = Enum.PartType.Ball, Size = Vector3.new(13, 6, 13),
+		Color = Color3.fromRGB(190, 130, 255), Material = Enum.Material.Neon, Transparency = 0.1,
+		CanCollide = true, CanQuery = true,
+	})
+	capTop.Position = startAt + Vector3.new(0, -1.4, 0)
+	capTop.Parent = model
+	for s = 0, 9 do
+		local a = math.rad(s * 52)
+		local step = part({
+			Name = "ZipStep", Size = Vector3.new(3.4, 0.5, 2),
+			Color = (s % 2 == 0) and Color3.fromRGB(236, 228, 244) or Color3.fromRGB(186, 164, 230),
+			CanCollide = true, CanQuery = true,
+		})
+		step.CFrame = CFrame.new(startAt + Vector3.new(math.cos(a) * 4.6, -14.4 + s * 1.5, math.sin(a) * 4.6))
+			* CFrame.Angles(0, -a, 0)
+		step.Parent = model
+	end
+	floatingSign(capTop, "🪰 Firefly Zip Line")
+
+	-- the sagging cable
+	for i = 1, #samples - 4, 4 do
+		local a, b = samples[i], samples[i + 4]
+		local cable = part({
+			Name = "ZipCable", Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new((b - a).Magnitude + 0.2, 0.22, 0.22),
+			Color = Color3.fromRGB(186, 164, 230), Material = Enum.Material.Neon, Transparency = 0.25,
+		})
+		cable.CFrame = CFrame.lookAt((a + b) / 2, b) * CFrame.Angles(0, math.rad(90), 0)
+		cable.Parent = model
+	end
+	-- the landing pad
+	local pad = part({
+		Name = "ZipLanding", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 9, 9),
+		Color = Color3.fromRGB(186, 164, 230), Material = Enum.Material.Neon, Transparency = 0.5,
+		CanCollide = true, CanQuery = true,
+	})
+	pad.CFrame = CFrame.new(endAt + Vector3.new(0, -1.9, 2)) * CFrame.Angles(0, 0, math.rad(90))
+	pad.Parent = model
+
+	-- the lantern trolley
+	local trolley = Instance.new("Model")
+	trolley.Name = "ZipTrolley"
+	local lantern = part({
+		Name = "TrolleyLantern", Shape = Enum.PartType.Ball, Size = Vector3.new(2, 2.4, 2),
+		Color = Color3.fromRGB(255, 226, 150), Material = Enum.Material.Neon,
+	})
+	lantern.Parent = trolley
+	trolley.PrimaryPart = lantern
+	local ropeDown = part({
+		Name = "TrolleyRope", Size = Vector3.new(0.2, 3.4, 0.2),
+		Color = Color3.fromRGB(236, 228, 244),
+	})
+	ropeDown.Parent = trolley
+	local seat = Instance.new("Seat")
+	seat.Name = "ZipSeat"
+	seat.Size = Vector3.new(2.2, 0.4, 1.8)
+	seat.Color = CREAM
+	seat.Material = Enum.Material.SmoothPlastic
+	seat.Anchored = true
+	seat.CanQuery = true
+	seat.Parent = trolley
+	local flies = Instance.new("ParticleEmitter")
+	flies.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	flies.LightEmission = 1
+	flies.Color = ColorSequence.new(Color3.fromRGB(200, 170, 255), Color3.fromRGB(170, 230, 255))
+	flies.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0),
+	})
+	flies.Lifetime = NumberRange.new(1, 1.8)
+	flies.Rate = 0
+	flies.Speed = NumberRange.new(0.5, 1.5)
+	flies.SpreadAngle = Vector2.new(180, 180)
+	flies.Parent = lantern
+	trolley.Parent = model
+
+	local function placeTrolley(idx: number)
+		local pos = samples[math.min(idx, #samples - 1)]
+		local nxt = samples[math.min(idx + 1, #samples)]
+		local cf = CFrame.lookAt(pos, nxt, Vector3.yAxis)
+		lantern.CFrame = cf
+		ropeDown.CFrame = cf * CFrame.new(0, -2.4, 0)
+		seat.CFrame = cf * CFrame.new(0, -4.2, 0)
+	end
+	placeTrolley(1)
+
+	local riding = false
+	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		local occupant = seat.Occupant
+		if not occupant or riding then
+			return
+		end
+		riding = true
+		flies.Rate = 22
+		task.spawn(function()
+			task.wait(0.4)
+			-- glide down the samples at ~20 studs/s
+			local dist = 0
+			local idx = 1
+			while idx < #samples - 1 do
+				local dt = task.wait()
+				dist += 20 * dt
+				local walked = 0
+				idx = 1
+				for i = 2, #samples do
+					walked += (samples[i] - samples[i - 1]).Magnitude
+					if walked >= dist then
+						idx = i
+						break
+					end
+					idx = i
+				end
+				placeTrolley(idx)
+				if not seat.Occupant then
+					break -- they bailed; no damage, soft grass below
+				end
+			end
+			-- arrive: set the rider down by the stargazing circle
+			local rider = seat.Occupant
+			if rider then
+				rider.Sit = false
+				local t0 = os.clock()
+				while rider:GetState() == Enum.HumanoidStateType.Seated and os.clock() - t0 < 1 do
+					task.wait(0.05)
+				end
+				local char = rider.Parent :: Model?
+				if char and char.Parent then
+					char:PivotTo(CFrame.new(endAt + Vector3.new(0, 2, 4)))
+				end
+				sparkleBurst(pad, Color3.fromRGB(200, 170, 255), 14)
+			end
+			flies.Rate = 0
+			-- the empty lantern drifts back up at double speed
+			task.wait(0.6)
+			for i = #samples - 1, 1, -8 do
+				placeTrolley(i)
+				task.wait(0.05)
+			end
+			placeTrolley(1)
+			riding = false
+		end)
+	end)
+end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- THE LAZY GOO RIVER — a drifting convoy of jelly rings (Goo Coast, east bay)
+-- ═════════════════════════════════════════════════════════════════════════════
+local function buildLazyGooRiver()
+	local zone = ZoneConfig.get("Goo Coast")
+	if not zone then return end
+	local center = zone.center
+	local model = atomicModel("LazyGooRiver", Workspace)
+
+	-- a closed loop east of the pier, clear of the rope swing
+	local waypoints = {
+		center + Vector3.new(20, 1.6, -15),
+		center + Vector3.new(58, 1.6, -25),
+		center + Vector3.new(76, 1.6, -55),
+		center + Vector3.new(60, 1.6, -85),
+		center + Vector3.new(28, 1.6, -88),
+		center + Vector3.new(18, 1.6, -52),
+	}
+	-- closed-loop samples: run the open-spline helper around the wrap, then
+	-- trim the duplicated final segment so dist % total wraps seamlessly back
+	-- to the first sample (no teleport seam)
+	local looped = {}
+	for i = 1, #waypoints do
+		looped[i] = waypoints[i]
+	end
+	looped[#looped + 1] = waypoints[1]
+	looped[#looped + 1] = waypoints[2]
+	local samples = sampleOpenSpline(looped)
+	local keep = #waypoints * 16 + 1 -- one sample run per real segment, ending back at waypoint 1
+	while #samples > keep do
+		table.remove(samples)
+	end
+
+	-- glowing current markers so the loop reads from the shore
+	for i = 1, #samples, 12 do
+		local glow = part({
+			Name = "CurrentGlow", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2, 2.4, 2.4),
+			Color = Color3.fromRGB(170, 240, 230), Material = Enum.Material.Neon, Transparency = 0.55,
+		})
+		glow.CFrame = CFrame.new(samples[i] + Vector3.new(0, -0.9, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		glow.Parent = model
+	end
+
+	-- the boarding dock
+	local dock = part({
+		Name = "RiverDock", Size = Vector3.new(8, 1, 6),
+		Color = Color3.fromRGB(206, 170, 120), CanCollide = true, CanQuery = true,
+	})
+	dock.Position = center + Vector3.new(22, 0.9, -10)
+	dock.Parent = model
+	floatingSign(dock, "🛟 Lazy Goo River")
+	local dockPrompt = Instance.new("ProximityPrompt")
+	dockPrompt.ObjectText = "Lazy Goo River"
+	dockPrompt.ActionText = "Hop in a ring"
+	dockPrompt.HoldDuration = 0.15
+	dockPrompt.MaxActivationDistance = 12
+	dockPrompt.RequiresLineOfSight = false
+	dockPrompt.Parent = dock
+
+	-- six drifting rings, evenly spaced around the loop
+	local ringColors = { Color3.fromRGB(255, 190, 200), Color3.fromRGB(150, 220, 224), Color3.fromRGB(255, 226, 150) }
+	local totalLen = 0
+	for i = 2, #samples do
+		totalLen += (samples[i] - samples[i - 1]).Magnitude
+	end
+	local rings = {}
+	for r = 1, 6 do
+		local ring = Instance.new("Model")
+		ring.Name = "RiverRing" .. r
+		local tube = part({
+			Name = "Tube", Shape = Enum.PartType.Ball, Size = Vector3.new(4.2, 1.6, 4.2),
+			Color = ringColors[((r - 1) % #ringColors) + 1], Material = Enum.Material.Glass, Transparency = 0.2,
+		})
+		tube.Parent = ring
+		ring.PrimaryPart = tube
+		local seat = Instance.new("Seat")
+		seat.Name = "RingSeat"
+		seat.Size = Vector3.new(2, 0.4, 2)
+		seat.Color = CREAM
+		seat.Material = Enum.Material.SmoothPlastic
+		seat.Anchored = true
+		seat.CanQuery = true
+		seat.Parent = ring
+		ring.Parent = model
+		rings[r] = { model = ring, seat = seat, dist = totalLen * (r - 1) / 6, spin = r * 1.1 }
+	end
+
+	local function posAt(s: number): (Vector3, Vector3)
+		s = s % totalLen
+		local walked = 0
+		for i = 2, #samples do
+			local seg = (samples[i] - samples[i - 1]).Magnitude
+			if walked + seg >= s then
+				local t = (s - walked) / seg
+				return samples[i - 1]:Lerp(samples[i], t), samples[i]
+			end
+			walked += seg
+		end
+		return samples[1], samples[2]
+	end
+
+	task.spawn(function()
+		local t = 0
+		RunService.Heartbeat:Connect(function(dt)
+			t += dt
+			for _, ring in ipairs(rings) do
+				ring.dist = (ring.dist + 5 * dt) % totalLen
+				local pos, ahead = posAt(ring.dist)
+				ring.spin += dt * 0.3
+				local bob = math.sin(t * 1.8 + ring.spin * 4) * 0.25
+				local cf = CFrame.lookAt(pos + Vector3.new(0, bob, 0), ahead + Vector3.new(0, bob, 0), Vector3.yAxis)
+					* CFrame.Angles(0, ring.spin, 0)
+				ring.model:PivotTo(cf)
+				ring.seat.CFrame = cf * CFrame.new(0, 0.6, 0)
+			end
+		end)
+	end)
+
+	-- the dock seats you in the nearest empty ring
+	dockPrompt.Triggered:Connect(function(player)
+		local char = player.Character
+		local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+		if not humanoid or humanoid.Sit then
+			return
+		end
+		local best, bestD = nil, math.huge
+		for _, ring in ipairs(rings) do
+			if ring.seat.Occupant == nil then
+				local d = (ring.seat.Position - dock.Position).Magnitude
+				if d < bestD then
+					best, bestD = ring, d
+				end
+			end
+		end
+		if best then
+			(char :: Model):PivotTo(best.seat.CFrame + Vector3.new(0, 3, 0))
+			task.wait(0.1)
+			best.seat:Sit(humanoid)
+		end
+	end)
+end
+
 function PlaygroundService.init()
 	task.spawn(buildPuddingPlunge)
 	task.spawn(buildBounceBog)
 	task.spawn(buildSwingRows)
 	task.spawn(buildSpoonSeesaw)
 	task.spawn(buildMushroomHops)
+	-- Wave 2
+	task.spawn(buildSparklePopCannon)
+	task.spawn(buildPuddingCupSpinner)
+	task.spawn(buildFireflyZipLine)
+	task.spawn(buildLazyGooRiver)
 end
 
 return PlaygroundService
