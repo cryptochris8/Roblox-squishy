@@ -60,9 +60,19 @@ function SquishyData.getLaunchRoster(): { any }
 end
 
 -- The event/weekly friends (shown under the "Events" tab in the Squishy Book).
+-- Family friends are their OWN thing, so they're excluded here (and from the
+-- weekly visitor pool, which reads this).
 function SquishyData.getEventRoster(): { any }
 	return sortedBy(function(def)
-		return def.ReleaseType ~= "launch"
+		return def.ReleaseType ~= "launch" and def.ReleaseType ~= "family"
+	end)
+end
+
+-- The three Family friends (Chris's daughters), shown in the Book's ⭐ Family
+-- tab and earned one per land by restoring its Sparkle shard.
+function SquishyData.getFamilyRoster(): { any }
+	return sortedBy(function(def)
+		return def.ReleaseType == "family"
 	end)
 end
 

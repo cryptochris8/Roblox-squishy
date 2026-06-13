@@ -30,6 +30,7 @@ UiTheme.Rarity = {
 	epic = Color3.fromRGB(190, 120, 240),
 	legendary = Color3.fromRGB(255, 200, 70),
 	mythic = Color3.fromRGB(255, 170, 90),
+	family = Color3.fromRGB(255, 140, 175), -- a loving heart-rose, fancier than all
 }
 
 UiTheme.PackColor = {

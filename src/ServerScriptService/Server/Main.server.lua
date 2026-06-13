@@ -37,6 +37,7 @@ local GiftService = require(script.Parent.GiftService)
 local MonetizationService = require(script.Parent.MonetizationService)
 local CoasterService = require(script.Parent.CoasterService)
 local PlaygroundService = require(script.Parent.PlaygroundService)
+local FamilyService = require(script.Parent.FamilyService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -65,6 +66,7 @@ local world = WorldService.build()
 QuestService.init()
 CoasterService.init() -- the Sparkle Express needs the land (and its riders) in place
 PlaygroundService.init() -- slides, bounce bog, swings, seesaw, mushroom hops
+FamilyService.init() -- the three daughter guardians, one per land
 
 local zoneGroups = {}
 for _, z in ipairs(world.zones) do
@@ -154,9 +156,11 @@ SparkleBitService.onCollected = function(player)
 	DailyService.noteEvent(player, "bit")
 end
 
--- Recovering a land's shard is server news too.
+-- Recovering a land's shard is server news too — and earns that land's
+-- Family guardian (Apple Addy / Eggy Ellie / Hot Dog Heidi).
 QuestService.onShardRecovered = function(player, zoneName)
 	shoutToOthers(player, "✨ " .. player.DisplayName .. " recovered the " .. zoneName .. " Sparkle Shard!")
+	FamilyService.grant(player, zoneName)
 end
 
 -- Recovering all three Sparkle shards restores the Sparkle (the finale).
@@ -192,6 +196,7 @@ requestState.OnServerEvent:Connect(function(player)
 	PlayerDataService.sync(player)
 	TutorialService.welcome(player)
 	QuestService.checkReveal(player)
+	FamilyService.checkOwed(player) -- catch up players who restored a land pre-feature
 	SurgeService.syncTo(player)
 	GroupEventService.syncTo(player)
 end)

@@ -22,14 +22,17 @@ local onEquipCb = nil
 local openDetailDef = nil -- the friend whose detail card is currently open
 local openEquipBtn = nil  -- its Equip Buddy button (reconciled from server state)
 
-local TABS = { "All", "Pudding Hills", "Goo Coast", "Moonlit Hollow", "Events" }
+local TABS = { "All", "Pudding Hills", "Goo Coast", "Moonlit Hollow", "Events", "⭐ Family" }
 
--- Which tab a friend belongs to (All = every launch friend; Events = non-launch).
+-- Which tab a friend belongs to (All = every launch friend; Events = weekly/
+-- event; Family = the three daughter cards; zone tabs = that land's launch).
 local function tabMatch(def, tab)
 	if tab == "All" then
 		return def.ReleaseType == "launch"
+	elseif tab == "⭐ Family" then
+		return def.ReleaseType == "family"
 	elseif tab == "Events" then
-		return def.ReleaseType ~= "launch"
+		return def.ReleaseType ~= "launch" and def.ReleaseType ~= "family"
 	else
 		return def.ReleaseType == "launch" and def.Zone == tab
 	end
@@ -383,7 +386,7 @@ local function buildTabs(parent)
 
 	for _, tabName in ipairs(TABS) do
 		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.fromOffset(132, 48)
+		btn.Size = UDim2.fromOffset(104, 48) -- 6 tabs now (incl. ⭐ Family) — fit the row
 		btn.BackgroundColor3 = UiTheme.Colors.Panel
 		btn.BorderSizePixel = 0
 		btn.Font = UiTheme.HeaderFont
@@ -588,6 +591,7 @@ function CollectionBookUI.mount(playerGui, onEquip)
 	end
 	addCells(SquishyData.getLaunchRoster())
 	addCells(SquishyData.getEventRoster())
+	addCells(SquishyData.getFamilyRoster())
 
 	CollectionBookUI.refresh()
 end

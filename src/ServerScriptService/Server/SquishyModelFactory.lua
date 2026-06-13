@@ -574,6 +574,12 @@ local SKINS = {
 	puffkin = { a = "puff", body = C(225, 240, 220), accent = C(205, 230, 200) },
 	soupy_blob = { a = "blob", body = C(255, 205, 150), glass = true, accent = C(245, 185, 130) },
 	steamy = { a = "pudding", body = C(245, 240, 235), accent = C(220, 210, 205) },
+
+	-- The Family Three (interim hand-built shapes — Meshy bodies swap in later,
+	-- one carefully at a time). Each glows in her land's colour.
+	apple_addy = { a = "orb", body = C(235, 92, 120), accent = C(132, 196, 112), glow = C(255, 150, 180), spark = C(255, 196, 214) },
+	eggy_ellie = { a = "pudding", body = C(250, 248, 242), accent = C(120, 182, 246), glow = C(150, 200, 255), spark = C(196, 224, 255) },
+	hot_dog_heidi = { a = "capsule", body = C(214, 150, 110), accent = C(192, 150, 236), glow = C(202, 162, 246), spark = C(224, 188, 250) },
 }
 
 -- A friend with no hand-tuned skin still gets a sensible shape from its name.
