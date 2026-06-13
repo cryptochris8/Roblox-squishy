@@ -69,11 +69,21 @@ function SquishyData.getEventRoster(): { any }
 end
 
 -- The three Family friends (Chris's daughters), shown in the Book's ⭐ Family
--- tab and earned one per land by restoring its Sparkle shard.
+-- tab and earned one per land by restoring its Sparkle shard. Fixed order by
+-- land progression (their CardNumbers aren't numeric, so the default sort is
+-- unstable) — Apple (Pudding) → Eggy (Goo) → Heidi (Moonlit).
+local FAMILY_ORDER = { apple_addy = 1, eggy_ellie = 2, hot_dog_heidi = 3 }
 function SquishyData.getFamilyRoster(): { any }
-	return sortedBy(function(def)
-		return def.ReleaseType == "family"
+	local list = {}
+	for _, def in pairs(Definitions) do
+		if def.ReleaseType == "family" then
+			table.insert(list, def)
+		end
+	end
+	table.sort(list, function(a, b)
+		return (FAMILY_ORDER[a.Id] or 99) < (FAMILY_ORDER[b.Id] or 99)
 	end)
+	return list
 end
 
 function SquishyData.getByPack(packId: string): { any }
