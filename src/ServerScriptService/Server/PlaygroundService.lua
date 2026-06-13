@@ -1107,6 +1107,53 @@ local function buildFireflyZipLine()
 			riding = false
 		end)
 	end)
+
+	-- Ground-level boarding (kid-friendly): walk to the tower foot + hold E, no
+	-- climbing the spiral. Seats you on the trolley when it's parked + free —
+	-- the same one-button pattern as the Lazy Goo River dock.
+	local boardPad = part({
+		Name = "ZipBoardPad", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 9, 9),
+		Color = Color3.fromRGB(186, 164, 230), Material = Enum.Material.Neon, Transparency = 0.45,
+		CanCollide = false, CanQuery = true,
+	})
+	boardPad.CFrame = CFrame.new(Vector3.new(startAt.X, center.Y + 0.4, startAt.Z + 9)) * CFrame.Angles(0, 0, math.rad(90))
+	boardPad.Parent = model
+	local boardSign = Instance.new("BillboardGui")
+	boardSign.Size = UDim2.fromOffset(190, 38)
+	boardSign.StudsOffsetWorldSpace = Vector3.new(0, 3, 0)
+	boardSign.AlwaysOnTop = true
+	boardSign.MaxDistance = 70
+	boardSign.Parent = boardPad
+	local boardLbl = Instance.new("TextLabel")
+	boardLbl.BackgroundTransparency = 1
+	boardLbl.Size = UDim2.fromScale(1, 1)
+	boardLbl.Font = Enum.Font.FredokaOne
+	boardLbl.TextSize = 18
+	boardLbl.TextColor3 = Color3.fromRGB(170, 140, 230)
+	boardLbl.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+	boardLbl.TextStrokeTransparency = 0.2
+	boardLbl.Text = "🪰 Ride the Zip Line!"
+	boardLbl.Parent = boardSign
+	local boardPrompt = Instance.new("ProximityPrompt")
+	boardPrompt.ObjectText = "Firefly Zip Line"
+	boardPrompt.ActionText = "Ride it!"
+	boardPrompt.HoldDuration = 0.2
+	boardPrompt.MaxActivationDistance = 14
+	boardPrompt.RequiresLineOfSight = false
+	boardPrompt.Parent = boardPad
+	boardPrompt.Triggered:Connect(function(player)
+		if riding or seat.Occupant then
+			return
+		end
+		local char = player.Character
+		local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+		if not humanoid or humanoid.Sit then
+			return
+		end
+		char:PivotTo(seat.CFrame + Vector3.new(0, 3, 0))
+		task.wait(0.1)
+		seat:Sit(humanoid)
+	end)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
