@@ -603,6 +603,14 @@ function SquishyModelFactory.build(def): Model
 	if meshTemplate then
 		local body = meshTemplate:Clone()
 		body.Name = "Body"
+		-- These are hero collectibles kids look at from across a spread-out
+		-- land. RenderFidelity.Automatic drops a distant mesh to a crude box
+		-- approximation (it reads as "just an outline" — most visible against
+		-- Moonlit Hollow's dark ground). Precise keeps the real shape at every
+		-- distance; the meshes are small + simple so the cost is negligible.
+		if body:IsA("MeshPart") then
+			body.RenderFidelity = Enum.RenderFidelity.Precise
+		end
 		body.Parent = m
 		m.PrimaryPart = body
 		m:SetAttribute("HatOffset", body.Size.Y / 2 + 0.2)
