@@ -63,6 +63,11 @@ local CardImageAssets: { [string]: number } = {
 	arcane_wobble_kitty = 124009678365463,     -- 046_Arcane_Wobble_Kitty
 	phantom_jelly_beast = 72493061037906,      -- 047_Phantom_Jelly_Beast
 	mythic_plush_familiar = 107444986316308,   -- 048_Mythic_Plush_Familiar
+
+	-- ── The Family Three (Chris's daughters; uploaded 2026-06-13, all Approved) ──
+	apple_addy = 73277969488811,               -- Apple Addy (Pudding Hills)
+	eggy_ellie = 111971804512275,              -- Eggy Ellie (Goo Coast)
+	hot_dog_heidi = 125141679529292,           -- Hot Dog Heidi (Moonlit Hollow)
 }
 
 return CardImageAssets

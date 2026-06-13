@@ -1,4 +1,8 @@
 ﻿{
+    "apple_addy":  {
+                       "assetId":  "84068158306702",
+                       "error":  null
+                   },
     "arcane_wobble_kitty":  {
                                 "assetId":  "108386352534807",
                                 "error":  null
@@ -39,6 +43,10 @@
                                "assetId":  "97471409183793",
                                "error":  null
                            },
+    "eggy_ellie":  {
+                       "assetId":  "116297409595829",
+                       "error":  null
+                   },
     "frost_gel_cube":  {
                            "assetId":  "89759917619786",
                            "error":  null
@@ -63,6 +71,10 @@
                      "assetId":  "85266889744083",
                      "error":  null
                  },
+    "hot_dog_heidi":  {
+                          "assetId":  "125112268059090",
+                          "error":  null
+                      },
     "jelly_bun":  {
                       "assetId":  "76007144471377",
                       "error":  null

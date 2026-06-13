@@ -1,4 +1,11 @@
 ﻿{
+    "apple_addy":  {
+                       "taskId":  "019ebf41-c3fe-711d-8ead-2bd3350084d0",
+                       "status":  "done",
+                       "fbx":  "output/apple_addy.fbx",
+                       "thumb":  "output/apple_addy_thumb.png",
+                       "credits":  30
+                   },
     "arcane_wobble_kitty":  {
                                 "taskId":  "019eafab-b94d-7a21-afc4-dff811a20ecd",
                                 "status":  "done",
@@ -69,6 +76,13 @@
                                "thumb":  "output/dream_eater_squish_thumb.png",
                                "credits":  30
                            },
+    "eggy_ellie":  {
+                       "taskId":  "019ebf41-d793-71c4-8385-ade0579349fb",
+                       "status":  "done",
+                       "fbx":  "output/eggy_ellie.fbx",
+                       "thumb":  "output/eggy_ellie_thumb.png",
+                       "credits":  30
+                   },
     "frost_gel_cube":  {
                            "taskId":  "019eafb0-fe81-7207-8f6a-e9981d740a99",
                            "status":  "done",
@@ -111,6 +125,13 @@
                      "thumb":  "output/goo_ball_thumb.png",
                      "credits":  30
                  },
+    "hot_dog_heidi":  {
+                          "taskId":  "019ebf41-efa4-765e-ae39-057cb3547b4d",
+                          "status":  "done",
+                          "fbx":  "output/hot_dog_heidi.fbx",
+                          "thumb":  "output/hot_dog_heidi_thumb.png",
+                          "credits":  30
+                      },
     "jelly_bun":  {
                       "taskId":  "019eafb5-939f-7aeb-8a21-578456574d87",
                       "status":  "done",

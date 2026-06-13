@@ -1,0 +1,26 @@
+﻿[
+    {
+        "file":  "Apple_Addy",
+        "friendId":  "apple_addy",
+        "displayName":  "Apple Addy",
+        "decalId":  "122470136824233",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "Eggy_Ellie",
+        "friendId":  "eggy_ellie",
+        "displayName":  "Eggy Ellie",
+        "decalId":  "74422059921672",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "file":  "Hot_Dog_Heidi",
+        "friendId":  "hot_dog_heidi",
+        "displayName":  "Hot Dog Heidi",
+        "decalId":  "123758237483747",
+        "ok":  true,
+        "error":  null
+    }
+]
