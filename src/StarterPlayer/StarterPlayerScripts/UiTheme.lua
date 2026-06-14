@@ -116,7 +116,13 @@ function UiTheme.autoFit(panel: GuiObject, designW: number, designH: number): UI
 		apply()
 		local screen = panel:FindFirstAncestorWhichIsA("ScreenGui")
 		if screen then
-			screen:GetPropertyChangedSignal("AbsoluteSize"):Connect(apply)
+			local conn = screen:GetPropertyChangedSignal("AbsoluteSize"):Connect(apply)
+			-- Transient panels (e.g. a rebuilt card-detail modal) are destroyed
+			-- and remade often; drop the resize listener with them so repeated
+			-- opens don't leak a connection each time.
+			panel.Destroying:Connect(function()
+				conn:Disconnect()
+			end)
 		end
 	end)
 	return scaleObj

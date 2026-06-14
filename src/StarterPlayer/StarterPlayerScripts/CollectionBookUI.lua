@@ -304,6 +304,10 @@ function CollectionBookUI.openDetail(def)
 		holder.Size = UDim2.fromOffset(372, 548)
 		holder.BackgroundTransparency = 1
 		holder.Parent = detailHolder
+		-- Shrink-to-fit on small screens so the card AND its Equip Buddy button
+		-- (pinned to the bottom) stay on-screen on phones — the fixed 548-tall
+		-- card otherwise runs its bottom (the button) off a short mobile viewport.
+		UiTheme.autoFit(holder, 372, 548)
 
 		local img = Instance.new("ImageLabel")
 		img.AnchorPoint = Vector2.new(0.5, 0)
@@ -326,6 +330,8 @@ function CollectionBookUI.openDetail(def)
 	})
 	card.Parent = detailHolder
 	UiTheme.stroke(UiTheme.rarityColor(def.Rarity), 4, card)
+	-- Same shrink-to-fit for the placeholder-art detail (Equip button at bottom).
+	UiTheme.autoFit(card, 320, 440)
 
 	local art = Instance.new("Frame")
 	art.Position = UDim2.fromOffset(20, 20)
