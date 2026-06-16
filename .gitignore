@@ -31,3 +31,5 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+*.mp4
+*.mov
