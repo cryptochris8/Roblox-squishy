@@ -339,7 +339,7 @@ function SquishFx.handle(result)
 		local def = SquishyData.getById(result.defId)
 		local color = def and UiTheme.rarityColor(def.Rarity) or nil
 		sparkle(body, 26, color)
-		playSound(body, SoundConfig.HappyPop, 0.6, 1.1)
+		playSound(body, SoundConfig.pick(SoundConfig.HappyPopVariants) or SoundConfig.HappyPop, 0.6, 1.04 + math.random() * 0.08)
 		if result.byUserId == localPlayer.UserId and result.coins then
 			floatingCoins(body, result.coins)
 		end
@@ -348,7 +348,7 @@ function SquishFx.handle(result)
 	else
 		entry.squashAt = os.clock() -- the Heartbeat loop plays the squish-spring
 		sparkle(body, 6, Color3.fromRGB(255, 240, 205))
-		playSound(body, SoundConfig.Squish, 0.7, 1.0)
+		playSound(body, SoundConfig.pick(SoundConfig.SquishVariants) or SoundConfig.Squish, 0.7, 0.96 + math.random() * 0.08)
 	end
 end
 

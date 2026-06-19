@@ -115,10 +115,11 @@ local function burstAt(pos: Vector3, big: boolean)
 	em.Parent = anchor
 	em:Emit(big and 60 or 28)
 
-	if SoundConfig.HappyPop and SoundConfig.HappyPop ~= "" then
+	local bitSound = SoundConfig.pick(SoundConfig.SparkleBitVariants) or SoundConfig.HappyPop
+	if bitSound and bitSound ~= "" then
 		local s = Instance.new("Sound")
-		s.SoundId = SoundConfig.HappyPop
-		s.Volume = 0.6
+		s.SoundId = bitSound
+		s.Volume = 0.55
 		s.Parent = anchor
 		s:Play()
 	end

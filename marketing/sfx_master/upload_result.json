@@ -1,0 +1,98 @@
+﻿[
+    {
+        "name":  "sfx_capsule_1",
+        "file":  "sfx_capsule_1.mp3",
+        "assetId":  "70404875944499",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_finale_1",
+        "file":  "sfx_finale_1.mp3",
+        "assetId":  "71127982595459",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_happy_pop_1",
+        "file":  "sfx_happy_pop_1.mp3",
+        "assetId":  "140344226127416",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_happy_pop_2",
+        "file":  "sfx_happy_pop_2.mp3",
+        "assetId":  "89368212106293",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_happy_pop_3",
+        "file":  "sfx_happy_pop_3.mp3",
+        "assetId":  "123992378529165",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_shard_1",
+        "file":  "sfx_shard_1.mp3",
+        "assetId":  "89953198547390",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_sparkle_bit_1",
+        "file":  "sfx_sparkle_bit_1.mp3",
+        "assetId":  "121268737505147",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_sparkle_bit_2",
+        "file":  "sfx_sparkle_bit_2.mp3",
+        "assetId":  "122332793140978",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_squish_1",
+        "file":  "sfx_squish_1.mp3",
+        "assetId":  "121399769198652",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_squish_2",
+        "file":  "sfx_squish_2.mp3",
+        "assetId":  "120358439767829",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_squish_3",
+        "file":  "sfx_squish_3.mp3",
+        "assetId":  "135539135487499",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    },
+    {
+        "name":  "sfx_story_page_1",
+        "file":  "sfx_story_page_1.mp3",
+        "assetId":  "74051137788928",
+        "moderation":  "Reviewing",
+        "ok":  true,
+        "error":  null
+    }
+]

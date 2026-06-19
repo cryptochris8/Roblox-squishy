@@ -358,7 +358,7 @@ function CapsuleRevealUI.mount(playerGui)
 	UiTheme.autoFit(stage, 560, 620)
 
 	chime = Instance.new("Sound")
-	chime.SoundId = SoundConfig.Chime
+	chime.SoundId = SoundConfig.CapsuleReveal or SoundConfig.Chime
 	chime.Volume = 0.5
 	chime.Parent = screen
 end
