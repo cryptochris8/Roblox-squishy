@@ -3,7 +3,10 @@
 -- recovered and the Sparkle is restored to the Squishy world.
 
 local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UiTheme = require(script.Parent.UiTheme)
+local SoundConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SoundConfig"))
 
 local FinaleUI = {}
 
@@ -34,6 +37,15 @@ function FinaleUI.play(info)
 	layer.Visible = true
 	layer.BackgroundTransparency = 1
 	TweenService:Create(layer, TweenInfo.new(0.4), { BackgroundTransparency = 0.25 }):Play()
+
+	if SoundConfig.FinaleRestore and SoundConfig.FinaleRestore ~= "" then
+		local s = Instance.new("Sound")
+		s.SoundId = SoundConfig.FinaleRestore
+		s.Volume = 0.7
+		s.Parent = layer
+		s:Play()
+		Debris:AddItem(s, 6)
+	end
 
 	local panel = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),

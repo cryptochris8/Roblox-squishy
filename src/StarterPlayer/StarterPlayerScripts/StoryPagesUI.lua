@@ -14,7 +14,10 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local StoryPageConfig = require(Shared:WaitForChild("StoryPageConfig"))
 local StoryPageAssets = require(Shared:WaitForChild("StoryPageAssets"))
+local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 local UiTheme = require(script.Parent.UiTheme)
+local Debris = game:GetService("Debris")
+local SoundService = game:GetService("SoundService")
 
 local StoryPagesUI = {}
 
@@ -279,6 +282,12 @@ function StoryPagesUI.mount(playerGui, onToast)
 		end
 		found[info.id] = true
 		destroyPage(info.id)
+		local pageSound = Instance.new("Sound")
+		pageSound.SoundId = (info.all and SoundConfig.ShardRecovered) or SoundConfig.StoryPage
+		pageSound.Volume = 0.6
+		pageSound.Parent = SoundService
+		pageSound:Play()
+		Debris:AddItem(pageSound, 5)
 		if onToast then
 			if info.all then
 				onToast("📖 You found EVERY page of The Lost Sparkle!  +" .. tostring(info.bonus) .. " bonus coins!")

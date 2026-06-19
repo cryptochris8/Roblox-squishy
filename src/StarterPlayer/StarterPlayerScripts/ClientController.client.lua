@@ -6,9 +6,12 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
+local Debris = game:GetService("Debris")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 
 local here = script.Parent
 local UiTheme = require(here:WaitForChild("UiTheme"))
@@ -93,7 +96,21 @@ SparkleBits.init(function(msg)
 	ToastUI.show(msg)
 end)
 
+-- A short 2D sound for celebratory moments not tied to a 3D spot.
+local function playUiSound(id, volume)
+	if not id or id == "" then
+		return
+	end
+	local s = Instance.new("Sound")
+	s.SoundId = id
+	s.Volume = volume or 0.6
+	s.Parent = SoundService
+	s:Play()
+	Debris:AddItem(s, 5)
+end
+
 -- Server -> client routing
+local prevShards = nil
 Remotes.get(Remotes.StateSync).OnClientEvent:Connect(function(state)
 	HudUI.update(state)
 	CollectionBookUI.update(state)
@@ -104,6 +121,20 @@ Remotes.get(Remotes.StateSync).OnClientEvent:Connect(function(state)
 	GiftUI.update(state)
 	SparkleBits.syncCollected(state.sparkleBits)
 	StoryPagesUI.syncCollected(state.storyPages)
+	-- Ring the shard chime the moment a land's Sparkle shard is newly recovered
+	-- (skipped on the first sync so already-recovered shards stay silent).
+	if state.shards then
+		if prevShards then
+			for zone, info in pairs(state.shards) do
+				local was = prevShards[zone] and prevShards[zone].collected
+				if info.collected and not was then
+					playUiSound(SoundConfig.ShardRecovered, 0.6)
+					break
+				end
+			end
+		end
+		prevShards = state.shards
+	end
 end)
 
 Remotes.get(Remotes.SquishResult).OnClientEvent:Connect(function(result)
