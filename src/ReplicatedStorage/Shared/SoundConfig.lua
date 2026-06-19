@@ -1,9 +1,8 @@
 -- SoundConfig
--- One place for the game's sound asset ids. Everything below is from
--- Roblox's OFFICIAL free audio library (Pro Sound Effects / APM Music /
--- licensed-distribution partners) — verified loading in this place on
--- 2026-06-12, usable in any experience, nothing uploaded by us (so zero
--- moderation risk). Swap any id freely; ids live only here.
+-- One place for the game's sound asset ids. The per-land MUSIC is from Roblox's
+-- official free library (APM Music). The SFX + per-land AMBIENCE are now OUR OWN
+-- ElevenLabs-generated uploads (stable — no library 403 dropouts). Swap any id
+-- freely; ids live only here.
 
 local SoundConfig = {
 	-- ── Per-land music (crossfaded by the client SoundScape as you travel) ──
@@ -16,9 +15,9 @@ local SoundConfig = {
 
 	-- ── Per-land nature, quiet under the music ──────────────────────────────
 	AmbientByZone = {
-		["Pudding Hills"] = "rbxassetid://9116969962", -- "Morning Birds 3"
-		["Goo Coast"] = "rbxassetid://71778550603470", -- "Soft Ocean Waves"
-		["Moonlit Hollow"] = "rbxassetid://108750790460172", -- "Night Cricket Stillness"
+		["Pudding Hills"] = "rbxassetid://115201743653440", -- our meadow birds (ElevenLabs, looped)
+		["Goo Coast"] = "rbxassetid://127711304647742", -- our calm shore waves
+		["Moonlit Hollow"] = "rbxassetid://113331943734600", -- our night crickets
 	},
 	AmbientVolume = 0.16,
 
@@ -27,12 +26,12 @@ local SoundConfig = {
 	HappyPop = "rbxasset://sounds/electronicpingshort.wav",
 
 	-- ── Playground + moments (Pro Sound Effects library) ────────────────────
-	Boing = "rbxassetid://6075441854", -- "Cartoon Spring Bounce"
-	Splash = "rbxassetid://9119674632", -- "Surfacing Splash Kids Playing"
-	Pop = "rbxassetid://9112872239", -- "Small Bubbles Pop"
-	Whoosh = "rbxassetid://9116411685", -- "Magic Swoosh Fast Zooming"
-	TrainWhistle = "rbxassetid://9120222876", -- "Toy Train Whistle 8"
-	TrainChug = "rbxassetid://9119626154", -- "Steam Train 1" (loop)
+	Boing = "rbxassetid://118713267500225", -- our springy boing (ElevenLabs)
+	Splash = "rbxassetid://118369676847068", -- our soft kid splash
+	Pop = "rbxassetid://106359238383849", -- our bubble pop
+	Whoosh = "rbxassetid://93019091138643", -- our zip whoosh
+	TrainWhistle = "rbxassetid://92637900651163", -- our toy-train whistle
+	TrainChug = "rbxassetid://104015401921394", -- our toy-train chug (loop)
 	Chime = "rbxassetid://9116394876", -- "Magic Glows Soft Chiming Hits"
 
 	-- ── Custom SFX we generated (ElevenLabs) + uploaded as OUR OWN assets ────
@@ -58,6 +57,14 @@ local SoundConfig = {
 	ShardRecovered = "rbxassetid://89953198547390",
 	FinaleRestore = "rbxassetid://71127982595459",
 	StoryPage = "rbxassetid://74051137788928",
+
+	-- Per-friend signature squish, keyed by def.SignatureSound (the book's
+	-- "Pmf / Sploink / Thup" chant) — SquishFx plays the friend's own.
+	SignatureSounds = {
+		Pmf = { "rbxassetid://89917384302600", "rbxassetid://94478471627920" },
+		Sploink = { "rbxassetid://110605891641808", "rbxassetid://117457128212264" },
+		Thup = { "rbxassetid://127526325190451", "rbxassetid://97735721668064" },
+	},
 }
 
 -- Pick a random id from a variation pool (or return a plain value as-is).

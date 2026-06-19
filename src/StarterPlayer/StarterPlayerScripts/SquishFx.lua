@@ -348,7 +348,14 @@ function SquishFx.handle(result)
 	else
 		entry.squashAt = os.clock() -- the Heartbeat loop plays the squish-spring
 		sparkle(body, 6, Color3.fromRGB(255, 240, 205))
-		playSound(body, SoundConfig.pick(SoundConfig.SquishVariants) or SoundConfig.Squish, 0.7, 0.96 + math.random() * 0.08)
+		-- Per-friend signature squish (Pmf / Sploink / Thup from the book) when we
+		-- know the friend, else a generic variant — plus pitch jitter so it never
+		-- repeats.
+		local sigDef = SquishyData.getById(entry.model:GetAttribute("DefId"))
+		local sigPool = sigDef and sigDef.SignatureSound and SoundConfig.SignatureSounds
+			and SoundConfig.SignatureSounds[sigDef.SignatureSound]
+		local squishId = SoundConfig.pick(sigPool) or SoundConfig.pick(SoundConfig.SquishVariants) or SoundConfig.Squish
+		playSound(body, squishId, 0.7, 0.96 + math.random() * 0.08)
 	end
 end
 
