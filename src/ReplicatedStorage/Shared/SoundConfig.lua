@@ -1,15 +1,15 @@
 -- SoundConfig
--- One place for the game's sound asset ids. The per-land MUSIC is from Roblox's
--- official free library (APM Music). The SFX + per-land AMBIENCE are now OUR OWN
--- ElevenLabs-generated uploads (stable — no library 403 dropouts). Swap any id
--- freely; ids live only here.
+-- One place for the game's sound asset ids. Everything here is now OUR OWN
+-- ElevenLabs-generated audio uploaded as owned assets — music, SFX, AND per-land
+-- ambience — so the soundscape is stable with no Roblox-library 403 dropouts.
+-- Swap any id freely; ids live only here.
 
 local SoundConfig = {
 	-- ── Per-land music (crossfaded by the client SoundScape as you travel) ──
 	MusicByZone = {
-		["Pudding Hills"] = "rbxassetid://1839580320", -- "Happy Forever Ukulele" (APM)
-		["Goo Coast"] = "rbxassetid://1842199675", -- "Lazy Caribbean" (APM)
-		["Moonlit Hollow"] = "rbxassetid://91539844933951", -- "Gentle Music Box"
+		["Pudding Hills"] = "rbxassetid://101719911506649", -- our cozy ukulele theme (ElevenLabs)
+		["Goo Coast"] = "rbxassetid://111754435899050", -- our lazy calypso theme
+		["Moonlit Hollow"] = "rbxassetid://86026581501038", -- our music-box lullaby
 	},
 	MusicVolume = 0.25,
 
