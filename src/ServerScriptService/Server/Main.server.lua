@@ -38,6 +38,9 @@ local MonetizationService = require(script.Parent.MonetizationService)
 local CoasterService = require(script.Parent.CoasterService)
 local PlaygroundService = require(script.Parent.PlaygroundService)
 local FamilyService = require(script.Parent.FamilyService)
+local MilestoneService = require(script.Parent.MilestoneService)
+local Telemetry = require(script.Parent.Telemetry)
+local BadgeService = require(script.Parent.BadgeService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -60,6 +63,7 @@ FirstDayService.init()
 StoryPageService.init()
 GiftService.init()
 MonetizationService.init()
+MilestoneService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -85,6 +89,26 @@ local function shoutToOthers(player: Player, message: string)
 	end
 end
 
+-- FTUE funnel (Telemetry): the once-ever new-player journey. The per-session
+-- dedupe keeps analytics calls off the hot paths (every squish hits step 1);
+-- sessionId = UserId makes each step once-ever per player server-side too.
+local ftueSent: { [Player]: { [number]: boolean } } = {}
+local function ftue(player: Player, step: number, name: string)
+	local sent = ftueSent[player]
+	if not sent then
+		sent = {}
+		ftueSent[player] = sent
+	end
+	if sent[step] then
+		return
+	end
+	sent[step] = true
+	Telemetry.funnelStep(player, "ftue", step, name, tostring(player.UserId))
+end
+Players.PlayerRemoving:Connect(function(player)
+	ftueSent[player] = nil
+end)
+
 -- A Happy Pop nudges the tutorial + the land's shard quest along, and feeds the
 -- server-wide Sparkle Surge meter.
 SquishService.onHappyPop = function(player, def)
@@ -92,6 +116,7 @@ SquishService.onHappyPop = function(player, def)
 	QuestService.notePop(player, def)
 	DailyService.noteEvent(player, "pop")
 	SurgeService.notePop(player, def)
+	BadgeService.award(player, "FirstHappyPop")
 end
 
 -- During a Sparkle Surge every coin award doubles, and Coin Boost pass owners
@@ -103,6 +128,7 @@ end
 -- The First Day list watches its five signals.
 SquishService.onSquish = function(player)
 	FirstDayService.check(player)
+	ftue(player, 1, "first_squish")
 end
 RoomService.onVisited = function(player)
 	FirstDayService.noteRoomVisit(player)
@@ -151,9 +177,47 @@ CapsuleService.onOpened = function(player, isNew, def)
 			BuddyService.refresh(player)
 		end
 	end
+	-- Any open can complete a set (new discovery OR a dup's variant shine-up).
+	MilestoneService.check(player)
+	ftue(player, 2, "first_capsule")
+	BadgeService.award(player, "FirstCapsule")
+	local prof = PlayerDataService.get(player)
+	if prof then
+		BadgeService.discoveryCount(player, prof.DiscoveredCount)
+	end
+	if def then
+		local lvl = PlayerDataService.getVariant(player, def.Id)
+		if lvl >= 1 then
+			BadgeService.award(player, "FirstSparkly")
+		end
+		if lvl >= 2 then
+			BadgeService.award(player, "FirstRainbow")
+		end
+	end
 end
-SparkleBitService.onCollected = function(player)
+
+-- A gifted friend can complete the recipient's set too; a granted crown
+-- should appear on the buddy right away.
+GiftService.onFriendShared = function(recipient)
+	MilestoneService.check(recipient)
+end
+MilestoneService.onCosmeticsChanged = function(player)
+	BuddyService.refresh(player)
+end
+SparkleBitService.onCollected = function(player, all)
 	DailyService.noteEvent(player, "bit")
+	if all then
+		BadgeService.award(player, "AllSparkleBits")
+	end
+end
+StoryPageService.onAllPages = function(player)
+	BadgeService.award(player, "AllStoryPages")
+end
+GiftService.onGiftSent = function(sender)
+	BadgeService.award(sender, "KindFriend")
+end
+TravelService.onTraveled = function(player)
+	ftue(player, 4, "first_travel")
 end
 
 -- Recovering a land's shard is server news too — and earns that land's
@@ -161,11 +225,15 @@ end
 QuestService.onShardRecovered = function(player, zoneName)
 	shoutToOthers(player, "✨ " .. player.DisplayName .. " recovered the " .. zoneName .. " Sparkle Shard!")
 	FamilyService.grant(player, zoneName)
+	BadgeService.shard(player, zoneName)
+	ftue(player, 3, "first_shard")
 end
 
 -- Recovering all three Sparkle shards restores the Sparkle (the finale).
 QuestService.onAllShardsRecovered = function(player)
 	FinaleService.celebrate(player)
+	BadgeService.award(player, "SparkleRestored")
+	ftue(player, 5, "sparkle_restored")
 end
 
 -- Each land's Sparkle Capsule (draws from that land's pack) + guide (gives that
@@ -191,12 +259,14 @@ end
 -- 6) When a client says it's ready, send its state + a warm welcome.
 local requestState = Remotes.get(Remotes.RequestInitialState)
 requestState.OnServerEvent:Connect(function(player)
+	BadgeService.award(player, "Welcome")
 	DailyService.onJoin(player)
 	FirstDayService.check(player)
 	PlayerDataService.sync(player)
 	TutorialService.welcome(player)
 	QuestService.checkReveal(player)
 	FamilyService.checkOwed(player) -- catch up players who restored a land pre-feature
+	MilestoneService.checkOwed(player) -- celebrate sets completed before this shipped
 	SurgeService.syncTo(player)
 	GroupEventService.syncTo(player)
 end)

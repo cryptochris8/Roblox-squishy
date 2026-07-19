@@ -177,12 +177,20 @@ local function onSendGift(sender: Player, recipientUserId: any, kind: any, value
 			giftFrom = sender.DisplayName,
 		})
 		shoutText = "💝 " .. sender.DisplayName .. " shared " .. def.DisplayName .. " with " .. recipient.DisplayName .. "!"
+		-- a shared friend can complete the recipient's set (Main wires this to
+		-- MilestoneService.check so the celebration fires on gifts too)
+		if GiftService.onFriendShared then
+			GiftService.onFriendShared(recipient)
+		end
 	else
 		return
 	end
 
 	lastSentAt[sender] = now
 	PlayerDataService.noteGiftSent(sender)
+	if GiftService.onGiftSent then
+		GiftService.onGiftSent(sender)
+	end
 	PlayerDataService.sync(sender)
 	PlayerDataService.sync(recipient)
 	for _, other in ipairs(Players:GetPlayers()) do

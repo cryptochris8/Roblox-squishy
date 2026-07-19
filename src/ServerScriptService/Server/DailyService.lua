@@ -57,7 +57,10 @@ function DailyService.noteEvent(player: Player, eventType: string)
 	end
 end
 
--- On arrival: roll the gentle streak + give the login bonus (once per day).
+-- On arrival: count the lifetime Sparkle Day + give the login bonus (once per
+-- day). The consecutive-day streak is INTERNAL — it only sizes the bonus (with
+-- a grace day, so one missed day never shrinks it). Nothing the player sees
+-- ever goes down: the visible number is SparkleDays, which only counts up.
 function DailyService.onJoin(player: Player)
 	local profile = PlayerDataService.get(player)
 	if not profile then
@@ -68,19 +71,21 @@ function DailyService.onJoin(player: Player)
 	if today <= profile.LastPlayDay then
 		return
 	end
-	if profile.LastPlayDay > 0 and today == profile.LastPlayDay + 1 then
+	-- gap of 1 = consecutive, gap of 2 = the grace day; both keep the bonus ramp
+	if profile.LastPlayDay > 0 and today <= profile.LastPlayDay + 2 then
 		profile.StreakDays += 1
 	else
 		profile.StreakDays = 1
 	end
 	profile.LastPlayDay = today
+	profile.SparkleDays += 1
 	-- Fresh Sparkle Bits scattered for the new day, so the hunt (and the daily
 	-- "find Sparkle Bits" quest) renews. The friends Book is the lasting collection.
 	profile.SparkleBits = {}
 	local steps = math.min(profile.StreakDays, GameConfig.StreakMaxForBonus) - 1
 	local bonus = GameConfig.StreakBaseBonus + GameConfig.StreakPerDay * steps
 	PlayerDataService.addCoins(player, bonus)
-	toastEvent:FireClient(player, "🔥 Day " .. profile.StreakDays .. " streak!  +" .. bonus .. " Sparkle Coins")
+	toastEvent:FireClient(player, "⭐ Sparkle Day " .. profile.SparkleDays .. "!  +" .. bonus .. " Sparkle Coins")
 	PlayerDataService.sync(player)
 end
 

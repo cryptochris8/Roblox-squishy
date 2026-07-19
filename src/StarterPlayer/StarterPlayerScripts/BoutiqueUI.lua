@@ -258,6 +258,13 @@ local function render()
 	for _, cosmeticType in ipairs(CosmeticsConfig.Types) do
 		sectionHeader(CosmeticsConfig.TypeLabel[cosmeticType] or cosmeticType)
 		local items = CosmeticsConfig.ofType(cosmeticType)
+		-- Earned rewards (e.g. the Rainbow Keeper Crown) are never sold, but once
+		-- owned they join their shelf so kids can re-wear them anytime.
+		for _, item in ipairs(CosmeticsConfig.rewardItems(cosmeticType)) do
+			if owned[item.id] == true then
+				items[#items + 1] = item
+			end
+		end
 		for i, item in ipairs(items) do
 			local col = (i - 1) % perRow
 			local row = math.floor((i - 1) / perRow)

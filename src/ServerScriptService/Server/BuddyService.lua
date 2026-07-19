@@ -307,6 +307,28 @@ local HAT_BUILDERS: { [string]: (Model, CFrame, any) -> () } = {
 			point.CFrame = top * CFrame.new(math.cos(angle) * 0.62, 0.42, math.sin(angle) * 0.62)
 		end
 	end,
+	-- The Rainbow Keeper Crown: the full-Rainbow-Book reward (never sold). A
+	-- gold band ringed by six glowing points, one per rainbow color.
+	hat_rainbow_keeper = function(model, top, item)
+		local band = prop(model, {
+			Name = "KeeperBand", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.42, 1.5, 1.5),
+			Color = item.color, Reflectance = 0.25,
+		})
+		band.CFrame = top * CFrame.new(0, 0.12, 0) * CFrame.Angles(0, 0, math.rad(90))
+		local rainbow = {
+			Color3.fromRGB(255, 120, 120), Color3.fromRGB(255, 190, 100),
+			Color3.fromRGB(255, 240, 140), Color3.fromRGB(150, 230, 160),
+			Color3.fromRGB(140, 200, 255), Color3.fromRGB(200, 150, 255),
+		}
+		for i = 1, 6 do
+			local angle = (i / 6) * math.pi * 2
+			local point = prop(model, {
+				Name = "KeeperPoint", Shape = Enum.PartType.Ball, Size = Vector3.new(0.24, 0.44, 0.24),
+				Color = rainbow[i], Material = Enum.Material.Neon,
+			})
+			point.CFrame = top * CFrame.new(math.cos(angle) * 0.62, 0.45, math.sin(angle) * 0.62)
+		end
+	end,
 }
 
 local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds"

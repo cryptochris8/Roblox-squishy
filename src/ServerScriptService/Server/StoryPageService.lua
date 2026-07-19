@@ -61,6 +61,9 @@ local function onCollect(player: Player, id: any)
 				toastEvent:FireClient(other, "📖 " .. player.DisplayName .. " found EVERY page of The Lost Sparkle storybook!")
 			end
 		end
+		if StoryPageService.onAllPages then
+			StoryPageService.onAllPages(player)
+		end
 	end
 
 	collectedEvent:FireClient(player, {

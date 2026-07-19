@@ -5,6 +5,7 @@
 
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local DailyQuestConfig = require(Shared:WaitForChild("DailyQuestConfig"))
@@ -89,7 +90,10 @@ function DailyUI.update(state)
 	if not daily then
 		return
 	end
-	streakLabel.Text = "🔥 Day " .. (daily.streak or 0) .. " streak  —  come back tomorrow to keep it going!"
+	-- Celebration framing only: the lifetime count never goes down, and there is
+	-- no "keep it going" pressure copy (falls back to the old field on old servers).
+	local sparkleDays = math.max(daily.sparkleDays or daily.streak or 0, 1)
+	streakLabel.Text = "⭐ You've played " .. sparkleDays .. (sparkleDays == 1 and " sparkle day!" or " sparkle days!")
 	local active = DailyQuestConfig.forDay(daily.day or 0)
 	for i, row in ipairs(questRows) do
 		local q = active[i]
@@ -174,7 +178,7 @@ function DailyUI.mount(playerGui)
 	streakLabel.TextSize = 16
 	streakLabel.TextXAlignment = Enum.TextXAlignment.Left
 	streakLabel.TextColor3 = UiTheme.Colors.Ink
-	streakLabel.Text = "🔥 Day 0 streak"
+	streakLabel.Text = "⭐ Sparkle days"
 	streakLabel.Parent = panel
 
 	local close = Instance.new("TextButton")
@@ -196,6 +200,35 @@ function DailyUI.mount(playerGui)
 	for i = 1, DailyQuestConfig.PerDay do
 		questRows[i] = makeRow(panel, i)
 	end
+
+	-- Calm Sparkles: a gentler-effects mode (about half the celebration
+	-- particles) for sensitive kids or tired eyes. Session-scoped: it lives on
+	-- a LocalPlayer attribute that SquishFx reads for its FX budget.
+	local localPlayer = Players.LocalPlayer
+	local calm = Instance.new("TextButton")
+	calm.Name = "CalmSparkles"
+	calm.Position = UDim2.fromOffset(20, 382)
+	calm.Size = UDim2.fromOffset(230, 30)
+	calm.BackgroundColor3 = UiTheme.Colors.Panel
+	calm.BorderSizePixel = 0
+	calm.Font = UiTheme.BodyFont
+	calm.TextSize = 15
+	calm.TextXAlignment = Enum.TextXAlignment.Left
+	calm.Parent = panel
+	UiTheme.corner(12, calm)
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 12)
+	pad.Parent = calm
+	local function paintCalm()
+		local on = localPlayer:GetAttribute("CalmSparkles") == true
+		calm.Text = on and "✨ Calm Sparkles: On" or "✨ Calm Sparkles: Off"
+		calm.TextColor3 = on and UiTheme.Colors.AccentDeep or UiTheme.Colors.SoftInk
+	end
+	calm.Activated:Connect(function()
+		localPlayer:SetAttribute("CalmSparkles", not (localPlayer:GetAttribute("CalmSparkles") == true))
+		paintCalm()
+	end)
+	paintCalm()
 end
 
 return DailyUI

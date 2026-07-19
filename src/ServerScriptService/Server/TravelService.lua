@@ -49,6 +49,10 @@ function TravelService.travel(player: Player, destZone: string)
 	end
 	char:PivotTo(CFrame.new(zone.spawn + Vector3.new(0, 3, 0)))
 	toastEvent:FireClient(player, "Welcome to " .. destZone .. "! ✨")
+	-- fires only on a SUCCESSFUL hop (Main wires the FTUE funnel to this)
+	if TravelService.onTraveled then
+		TravelService.onTraveled(player, destZone)
+	end
 end
 
 function TravelService.init()

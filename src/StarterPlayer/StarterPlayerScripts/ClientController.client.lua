@@ -145,8 +145,10 @@ Remotes.get(Remotes.CapsuleResult).OnClientEvent:Connect(function(result)
 	CapsuleRevealUI.play(result)
 end)
 
-Remotes.get(Remotes.Toast).OnClientEvent:Connect(function(text)
-	ToastUI.show(text)
+Remotes.get(Remotes.Toast).OnClientEvent:Connect(function(text, kind)
+	-- kind is optional ("celebration" | "social" | "info") — servers can tag
+	-- messages so the toast queue drains the most joyful ones first.
+	ToastUI.show(text, kind)
 end)
 
 Remotes.get(Remotes.SparkleRestored).OnClientEvent:Connect(function(info)

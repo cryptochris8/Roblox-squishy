@@ -432,9 +432,21 @@ function CollectionBookUI.refresh()
 				end
 			end
 			local active = (tabName == currentTab)
-			btn.BackgroundColor3 = active and UiTheme.Colors.AccentDeep or UiTheme.Colors.Panel
-			btn.TextColor3 = active and Color3.fromRGB(255, 255, 255) or UiTheme.Colors.SoftInk
-			btn.Text = tabName .. "\n" .. d .. " / " .. t
+			-- Near-done salience: one friend away glows gold ("almost there!"),
+			-- a finished set wears its ✓ — set completion is the collector's fuel.
+			local oneAway = (t > 0) and (d == t - 1)
+			local complete = (t > 0) and (d == t)
+			btn.BackgroundColor3 = active and UiTheme.Colors.AccentDeep
+				or (oneAway and UiTheme.Colors.Coin or UiTheme.Colors.Panel)
+			btn.TextColor3 = active and Color3.fromRGB(255, 255, 255)
+				or (oneAway and UiTheme.Colors.CoinDeep or UiTheme.Colors.SoftInk)
+			if complete then
+				btn.Text = tabName .. "\n" .. d .. " / " .. t .. " ✓"
+			elseif oneAway then
+				btn.Text = tabName .. "\n" .. d .. " / " .. t .. " ⭐"
+			else
+				btn.Text = tabName .. "\n" .. d .. " / " .. t
+			end
 		end
 	end
 

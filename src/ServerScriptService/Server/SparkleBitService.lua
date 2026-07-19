@@ -73,7 +73,7 @@ local function onCollect(player: Player, id: any)
 	})
 	PlayerDataService.sync(player)
 	if SparkleBitService.onCollected then
-		SparkleBitService.onCollected(player)
+		SparkleBitService.onCollected(player, all)
 	end
 end
 

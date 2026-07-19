@@ -5,9 +5,10 @@
 -- stay free). One slot per type: a hat, a trail, and a balloon can all be worn
 -- at once. Shared so the client shop and the server validator always agree.
 --
--- Prices are tuned against the kid economy: a cozy session earns ~100-300 coins
--- (pops + dailies + bits), the finale gifts 1000 — so small items are an
--- every-session treat and the crown/rainbow are real goals.
+-- Prices are tuned against the kid economy (measured in docs/economy/
+-- ECONOMY_MODEL.md: a 30-min session earns ~2,000 new-player to ~8,000
+-- endgame) — so small items are an every-session treat and the crown/rainbow
+-- are near-term goals; bigger sinks belong in future catalog waves.
 
 export type Cosmetic = {
 	id: string,
@@ -19,6 +20,9 @@ export type Cosmetic = {
 	-- in MonetizationConfig); ownership lands in the same Cosmetics.Owned set
 	premium: boolean?,
 	robux: number?,
+	-- Earned-only rewards (e.g. the Rainbow Keeper Crown): never sold for coins
+	-- OR Robux — granted by MilestoneService, then wearable like anything else
+	reward: boolean?,
 	-- builder hints (colors etc.) used by BuddyService's prop builders
 	color: Color3?,
 	color2: Color3?,
@@ -82,6 +86,11 @@ local catalog: { Cosmetic } = {
 	{ id = "trail_aurora", name = "Aurora Ribbon", icon = "🌌", type = "trail",
 		premium = true, robux = 249,
 		color = Color3.fromRGB(140, 230, 200), color2 = Color3.fromRGB(190, 150, 255) },
+
+	-- ── Earned rewards (never sold — see MilestoneService) ──────────────────
+	{ id = "hat_rainbow_keeper", name = "Rainbow Keeper Crown", icon = "🌈", type = "hat",
+		reward = true,
+		color = Color3.fromRGB(255, 214, 90) },
 }
 CosmeticsConfig.Catalog = catalog
 
@@ -95,11 +104,24 @@ function CosmeticsConfig.get(id: string): Cosmetic?
 end
 
 -- COIN items of one type, in catalog (cheap -> fancy) order. Premium items
--- are excluded here — they render on the Boutique's own Premium shelf.
+-- are excluded here — they render on the Boutique's own Premium shelf — and so
+-- are earned rewards (the shop can't sell what can only be earned).
 function CosmeticsConfig.ofType(cosmeticType: string): { Cosmetic }
 	local list = {}
 	for _, item in ipairs(CosmeticsConfig.Catalog) do
-		if item.type == cosmeticType and not item.premium then
+		if item.type == cosmeticType and not item.premium and not item.reward then
+			list[#list + 1] = item
+		end
+	end
+	return list
+end
+
+-- Earned-only rewards of one type (shown on a shelf only once owned, so kids
+-- can re-wear them after trying something else on).
+function CosmeticsConfig.rewardItems(cosmeticType: string): { Cosmetic }
+	local list = {}
+	for _, item in ipairs(CosmeticsConfig.Catalog) do
+		if item.type == cosmeticType and item.reward then
 			list[#list + 1] = item
 		end
 	end

@@ -25,6 +25,11 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 
+-- Analytics (first-party AnalyticsService only, all pcall-guarded): the two
+-- coin choke points below log every earn/spend so Creator Hub gets the whole
+-- economy curve for free.
+local Telemetry = require(script.Parent.Telemetry)
+
 -- Bump the version suffix only if the saved shape changes incompatibly.
 local DATASTORE_NAME = "SquishyPlayerData_v1"
 local DATA_VERSION = 1
@@ -76,6 +81,7 @@ export type Profile = {
 	LastDailyCapsuleDay: number,
 	StreakDays: number,
 	LastPlayDay: number,
+	SparkleDays: number, -- lifetime distinct play days; display-only, ONLY ever counts up
 	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean } },
 	SparkleRestored: boolean,
 	Cosmetics: { Owned: { [string]: boolean }, Equipped: { [string]: string } },
@@ -85,6 +91,7 @@ export type Profile = {
 	StoryPages: { [string]: boolean },
 	Gifting: { Day: number, Sent: number },
 	PremiumReceipts: { [string]: boolean }, -- processed Robux receipt ids (idempotence)
+	Milestones: { [string]: boolean }, -- collection celebrations already awarded
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -122,6 +129,7 @@ local function newProfile(): Profile
 		LastDailyCapsuleDay = 0,
 		StreakDays = 0,
 		LastPlayDay = 0,
+		SparkleDays = 0,
 		DailyQuests = { day = 0, progress = {}, claimed = {} },
 		SparkleRestored = false,
 		Cosmetics = { Owned = {}, Equipped = {} },
@@ -131,6 +139,7 @@ local function newProfile(): Profile
 		StoryPages = {},
 		Gifting = { Day = 0, Sent = 0 },
 		PremiumReceipts = {},
+		Milestones = {},
 	}
 end
 
@@ -176,6 +185,7 @@ local function serialize(p: Profile, raw: any)
 		LastDailyCapsuleDay = p.LastDailyCapsuleDay,
 		StreakDays = p.StreakDays,
 		LastPlayDay = p.LastPlayDay,
+		SparkleDays = p.SparkleDays,
 		DailyQuests = p.DailyQuests,
 		SparkleRestored = p.SparkleRestored,
 		Cosmetics = p.Cosmetics,
@@ -185,6 +195,7 @@ local function serialize(p: Profile, raw: any)
 		StoryPages = p.StoryPages,
 		Gifting = p.Gifting,
 		PremiumReceipts = p.PremiumReceipts,
+		Milestones = p.Milestones,
 	}
 	for k, v in pairs(known) do
 		out[k] = v
@@ -242,6 +253,15 @@ local function deserialize(data: any): Profile
 		end
 		p.SparkleBits = bits
 	end
+	if type(data.Milestones) == "table" then
+		local ms = {}
+		for id, got in pairs(data.Milestones) do
+			if type(id) == "string" and got == true then
+				ms[id] = true
+			end
+		end
+		p.Milestones = ms
+	end
 	if type(data.Variants) == "table" then
 		local variants = {}
 		for id, lvl in pairs(data.Variants) do
@@ -255,6 +275,9 @@ local function deserialize(data: any): Profile
 	p.LastDailyCapsuleDay = tonumber(data.LastDailyCapsuleDay) or 0
 	p.StreakDays = tonumber(data.StreakDays) or 0
 	p.LastPlayDay = tonumber(data.LastPlayDay) or 0
+	-- Older saves have no SparkleDays: seed from the streak they had (the best
+	-- known lower bound on lifetime days) — it only ever counts up from here.
+	p.SparkleDays = tonumber(data.SparkleDays) or (tonumber(data.StreakDays) or 0)
 	p.SparkleRestored = data.SparkleRestored == true
 	if type(data.Cosmetics) == "table" then
 		local owned, equipped = {}, {}
@@ -536,6 +559,7 @@ function PlayerDataService.snapshot(player: Player)
 		-- daily quests + gentle streak (the client derives the active set from `day`)
 		daily = {
 			streak = p.StreakDays,
+			sparkleDays = p.SparkleDays,
 			day = p.DailyQuests.day,
 			progress = p.DailyQuests.progress,
 			claimed = p.DailyQuests.claimed,
@@ -570,6 +594,9 @@ function PlayerDataService.addCoins(player: Player, amount: number)
 	if not p then return end
 	p.SparkleCoins += amount
 	refreshLeaderstats(player, p)
+	if amount > 0 then
+		Telemetry.economy(player, "Source", "SparkleCoins", amount, p.SparkleCoins, "Gameplay")
+	end
 end
 
 -- Returns true if the player could afford it (and were charged).
@@ -580,6 +607,7 @@ function PlayerDataService.spendCoins(player: Player, amount: number): boolean
 	end
 	p.SparkleCoins -= amount
 	refreshLeaderstats(player, p)
+	Telemetry.economy(player, "Sink", "SparkleCoins", amount, p.SparkleCoins, "Shop")
 	return true
 end
 

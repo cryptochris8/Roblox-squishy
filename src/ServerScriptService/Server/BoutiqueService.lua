@@ -159,6 +159,9 @@ local function onBuy(player: Player, id: any)
 	if item.premium then
 		return -- premium items go through MonetizationService (Robux), never coins
 	end
+	if item.reward or not item.price then
+		return -- earned rewards are granted by MilestoneService, never bought
+	end
 	if PlayerDataService.ownsCosmetic(player, id) then
 		toastEvent:FireClient(player, "You already have the " .. item.name .. "! Tap it to wear it.")
 		return

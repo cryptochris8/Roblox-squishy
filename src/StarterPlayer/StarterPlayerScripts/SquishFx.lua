@@ -24,6 +24,43 @@ local BASE_SIZE = Vector3.new(4, 4, 4)
 
 local entries = {} -- objectId -> { body, fill, zzz }
 
+-- ── FX budget ────────────────────────────────────────────────────────────────
+-- One global cap keeps celebration sparkles from stacking into a frame-rate
+-- cliff when several friends pop at once (three kids chain-popping on a
+-- tablet). Burst counts scale down in the compact/mobile layout and again in
+-- Calm Sparkles mode (the gentler-effects toggle in Today's Quests).
+local FX_MAX_PER_SECOND = 260
+local FX_MIN_BURST = 3 -- a squish always answers with SOMETHING
+local recentBursts = {} -- sliding one-second window of { at, count }
+
+local function fxScalar(): number
+	local s = UiTheme.isCompact() and 0.5 or 1
+	if localPlayer:GetAttribute("CalmSparkles") == true then
+		s *= 0.5
+	end
+	return s
+end
+
+local function budgetBurst(requested: number): number
+	local now = os.clock()
+	local total = 0
+	for i = #recentBursts, 1, -1 do
+		if now - recentBursts[i].at > 1 then
+			table.remove(recentBursts, i)
+		else
+			total += recentBursts[i].count
+		end
+	end
+	local scalar = fxScalar()
+	local allowed = math.max(math.floor(requested * scalar + 0.5), FX_MIN_BURST)
+	local ceiling = math.floor(FX_MAX_PER_SECOND * scalar)
+	if total + allowed > ceiling then
+		allowed = math.clamp(ceiling - total, FX_MIN_BURST, allowed)
+	end
+	table.insert(recentBursts, { at = now, count = allowed })
+	return allowed
+end
+
 local function buildBillboard(body, def)
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "SquishyLabel"
@@ -266,19 +303,24 @@ local function sparkle(body, count, color)
 	if not body or not body.Parent then
 		return
 	end
-	local emitter = Instance.new("ParticleEmitter")
-	emitter.Texture = SPARKLE
-	emitter.Rate = 0
-	emitter.Lifetime = NumberRange.new(0.5, 0.9)
-	emitter.Speed = NumberRange.new(6, 15)
-	emitter.SpreadAngle = Vector2.new(180, 180)
-	emitter.Rotation = NumberRange.new(0, 360)
-	emitter.Size = NumberSequence.new(1.4)
+	-- Reuse this body's emitter when it still exists (per-body pooling: bursts
+	-- are frequent, and the emitter dies with the body on pop/respawn anyway).
+	local emitter = body:FindFirstChild("SquishSparkle")
+	if not emitter then
+		emitter = Instance.new("ParticleEmitter")
+		emitter.Name = "SquishSparkle"
+		emitter.Texture = SPARKLE
+		emitter.Rate = 0
+		emitter.Lifetime = NumberRange.new(0.5, 0.9)
+		emitter.Speed = NumberRange.new(6, 15)
+		emitter.SpreadAngle = Vector2.new(180, 180)
+		emitter.Rotation = NumberRange.new(0, 360)
+		emitter.Size = NumberSequence.new(1.4)
+		emitter.LightEmission = 0.6
+		emitter.Parent = body
+	end
 	emitter.Color = ColorSequence.new(color or Color3.fromRGB(255, 232, 180))
-	emitter.LightEmission = 0.6
-	emitter.Parent = body
-	emitter:Emit(count)
-	Debris:AddItem(emitter, 1)
+	emitter:Emit(budgetBurst(count))
 end
 
 -- A short positional sound on the friend (3D, so it plays where the squish happens).
