@@ -35,6 +35,25 @@ local activeByPad: { [number]: Model } = {} -- pad index -> the squishy currentl
 local objectCounter = 0
 local rng = Random.new()
 
+-- Sparkle Chain (WO-1): per-player { count, lastPopAt }. Popping again within
+-- the chain window bumps the count; each step past the first pays a small FLAT
+-- coin bonus (added AFTER any multiplier, capped — see docs/economy). Cleared
+-- when a player leaves so the table never grows.
+local chainByUser: { [number]: { count: number, lastPopAt: number } } = {}
+
+local function noteChain(player: Player): number
+	local now = os.clock()
+	local rec = chainByUser[player.UserId]
+	if rec and now - rec.lastPopAt <= GameConfig.SparkleChainWindowSeconds then
+		rec.count += 1
+		rec.lastPopAt = now
+	else
+		rec = { count = 1, lastPopAt = now }
+		chainByUser[player.UserId] = rec
+	end
+	return rec.count
+end
+
 local function pickDefForPack(packId: string)
 	local pool = SquishyData.getByPack(packId)
 	if #pool > 0 then
@@ -57,6 +76,10 @@ local function buildSquishy(def, cf: CFrame): Model
 	model:SetAttribute("DefId", def.Id)
 	model:SetAttribute("Joy", 0)
 	model:SetAttribute("Sleepy", true)
+	-- Synced server clock, so the client can tell a fresh Happy-Pop respawn (grows
+	-- in like a mystery box) from a friend that merely streamed in when you reached
+	-- a far land (already here, no reveal).
+	model:SetAttribute("SpawnedAt", Workspace:GetServerTimeNow())
 
 	-- On the MODEL, so ears, wings, and toppings are all squishable.
 	local click = Instance.new("ClickDetector")
@@ -149,6 +172,11 @@ function SquishService.handleSquish(player: Player, model: Model)
 		if SquishService.coinMultiplier then
 			coins = math.floor(coins * SquishService.coinMultiplier(player))
 		end
+		-- Sparkle Chain bonus: FLAT, capped, added AFTER the multiplier so it
+		-- never rides the surge/boost stack (keeps the economy in budget).
+		local chain = noteChain(player)
+		local chainBonus = math.min((chain - 1) * GameConfig.SparkleChainCoinPerStep, GameConfig.SparkleChainBonusCap)
+		coins += chainBonus
 		PlayerDataService.addCoins(player, coins)
 		PlayerDataService.incHappyPop(player)
 
@@ -159,6 +187,8 @@ function SquishService.handleSquish(player: Player, model: Model)
 			popped = true,
 			byUserId = player.UserId,
 			coins = coins,
+			chain = chain,
+			chainBonus = chainBonus,
 		})
 
 		local padIndex = model:GetAttribute("PadIndex")
@@ -211,6 +241,11 @@ function SquishService.init(zoneGroups: { { zone: string, packId: string, pads: 
 	squishiesFolder.Name = "Squishies"
 	squishiesFolder.Parent = Workspace
 	squishResultEvent = Remotes.get(Remotes.SquishResult)
+
+	-- Forget a player's chain when they leave (keeps chainByUser bounded).
+	game:GetService("Players").PlayerRemoving:Connect(function(player)
+		chainByUser[player.UserId] = nil
+	end)
 
 	for i = 1, #pads do
 		SquishService.spawnAtPad(i)

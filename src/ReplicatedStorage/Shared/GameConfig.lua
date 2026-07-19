@@ -15,6 +15,14 @@ GameConfig.SquishCooldownSeconds = 0.12   -- gentle anti-spam, per player per fr
 GameConfig.HappyPopRespawnSeconds = 1.2   -- a new sleepy friend wakes up after a pop
 GameConfig.HappyPopHoldSeconds = 1.1      -- keep a popped friend briefly so its Happy Pop plays out
 
+-- Sparkle Chain (WO-1): Happy Pops in quick succession build a chain. Each step
+-- adds a small FLAT coin bonus (never multiplied — see docs/economy) capped so
+-- the top-end economy stays in budget. A chain never "breaks" with a message;
+-- it just quietly starts fresh once the window lapses.
+GameConfig.SparkleChainWindowSeconds = 10  -- pop again within this to keep the chain
+GameConfig.SparkleChainCoinPerStep = 1     -- +1 coin per chain step past the first
+GameConfig.SparkleChainBonusCap = 5        -- but never more than +5 (economy cap)
+
 -- First tutorial quest: wake up (Happy Pop) this many sleepy friends.
 GameConfig.TutorialPopGoal = 3
 GameConfig.TutorialRewardCoins = 100

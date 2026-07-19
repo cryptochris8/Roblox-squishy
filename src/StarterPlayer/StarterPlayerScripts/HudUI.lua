@@ -28,6 +28,9 @@ local compactNow = false
 
 local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
 local dailyBtn, dailyPulse, dailyBaseSize
+local coinPillScale -- UIScale on the coin pill, for the earn "bounce"
+local prevCoins -- last coin total shown (nil until the first sync)
+local countUpToken = 0 -- cancels an in-flight count-up when a newer one starts
 
 local function coinPill(parent, C)
 	local pill = UiTheme.panel({
@@ -38,6 +41,9 @@ local function coinPill(parent, C)
 	})
 	pill.Parent = parent
 	UiTheme.stroke(UiTheme.Colors.CoinDeep, 2, pill)
+	coinPillScale = Instance.new("UIScale")
+	coinPillScale.Name = "EarnBounce"
+	coinPillScale.Parent = pill
 
 	local d = C and 24 or 34
 	local coin = Instance.new("Frame")
@@ -306,6 +312,45 @@ local function ownerDemoButtons(parent, C, onOwnerDebug)
 	end
 end
 
+-- Count the coin number UP to its new value (a satisfying little tally) and
+-- bounce the pill. A newer earn cancels an older tally so they never fight.
+local function animateCoins(from, to)
+	countUpToken += 1
+	local token = countUpToken
+	local label = coinLabel
+	local start = os.clock()
+	local dur = 0.4
+	task.spawn(function()
+		while token == countUpToken and label and label.Parent do
+			local k = math.min(1, (os.clock() - start) / dur)
+			local eased = 1 - (1 - k) * (1 - k)
+			label.Text = tostring(math.floor(from + (to - from) * eased + 0.5))
+			if k >= 1 then
+				break
+			end
+			task.wait()
+		end
+		if token == countUpToken and label and label.Parent then
+			label.Text = tostring(to)
+		end
+	end)
+end
+
+local function bounceCoinPill()
+	local scale = coinPillScale
+	if not scale then
+		return
+	end
+	scale.Scale = 1
+	local up = TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.15 })
+	up.Completed:Connect(function()
+		if scale and scale.Parent then
+			TweenService:Create(scale, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 1 }):Play()
+		end
+	end)
+	up:Play()
+end
+
 -- Builds the whole HUD for the current layout. Destroys any previous build.
 local function build()
 	if screen then
@@ -424,7 +469,14 @@ function HudUI.update(state)
 		return
 	end
 	lastState = state
-	coinLabel.Text = tostring(state.coins or 0)
+	local newCoins = state.coins or 0
+	if prevCoins ~= nil and newCoins > prevCoins then
+		animateCoins(prevCoins, newCoins) -- coins went UP: tally + bounce
+		bounceCoinPill()
+	else
+		coinLabel.Text = tostring(newCoins) -- first sync, or a spend: just show it
+	end
+	prevCoins = newCoins
 	-- count LAUNCH friends only (event friends live in the Book's Events tab,
 	-- so this pill can never read 49/48)
 	local launchCount = 0
