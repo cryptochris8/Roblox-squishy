@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local DailyQuestConfig = require(Shared:WaitForChild("DailyQuestConfig"))
+local Remotes = require(Shared:WaitForChild("Remotes"))
 local UiTheme = require(script.Parent.UiTheme)
 
 local DailyUI = {}
@@ -229,6 +230,37 @@ function DailyUI.mount(playerGui)
 		paintCalm()
 	end)
 	paintCalm()
+
+	-- Faster Rides: make every ride you get on go faster (a fun, still-gentle
+	-- speed-up; the coaster + ferris wheel get a milder boost so they stay kind).
+	-- Session-scoped; the server reads it to speed up the rides you're on.
+	local ridePref = Remotes.get(Remotes.SetRidePref)
+	local fastBtn = Instance.new("TextButton")
+	fastBtn.Name = "FasterRides"
+	fastBtn.Position = UDim2.fromOffset(260, 382)
+	fastBtn.Size = UDim2.fromOffset(200, 30)
+	fastBtn.BackgroundColor3 = UiTheme.Colors.Panel
+	fastBtn.BorderSizePixel = 0
+	fastBtn.Font = UiTheme.BodyFont
+	fastBtn.TextSize = 15
+	fastBtn.TextXAlignment = Enum.TextXAlignment.Left
+	fastBtn.Parent = panel
+	UiTheme.corner(12, fastBtn)
+	local fpad = Instance.new("UIPadding")
+	fpad.PaddingLeft = UDim.new(0, 12)
+	fpad.Parent = fastBtn
+	local function paintFast()
+		local on = localPlayer:GetAttribute("FastRides") == true
+		fastBtn.Text = on and "⚡ Faster Rides: On" or "⚡ Faster Rides: Off"
+		fastBtn.TextColor3 = on and UiTheme.Colors.AccentDeep or UiTheme.Colors.SoftInk
+	end
+	fastBtn.Activated:Connect(function()
+		local on = not (localPlayer:GetAttribute("FastRides") == true)
+		localPlayer:SetAttribute("FastRides", on)
+		ridePref:FireServer(on)
+		paintFast()
+	end)
+	paintFast()
 end
 
 return DailyUI

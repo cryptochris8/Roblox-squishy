@@ -28,6 +28,7 @@ local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Players = game:GetService("Players")
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local RidePrefs = require(script.Parent.RidePrefs)
 
 -- set in init() (remotes exist by then); reused by the Bounce Bog toast + Picnic
 local toastEvent: RemoteEvent
@@ -358,9 +359,10 @@ local function buildPuddingPlunge()
 	end
 	local function descend(chute)
 		local seat, samples, ring, pool, spec = chute.seat, chute.samples, chute.ring, chute.pool, chute.spec
-		local dist, speed = 0, 8
-		local accel = 24 + math.random() * 4 -- a hair of variance so mirrored slides don't always tie
-		local cap = 28 + math.random() * 4
+		local mult = RidePrefs.speedFor(seat.Occupant) -- Faster Rides
+		local dist, speed = 0, 8 * mult
+		local accel = (24 + math.random() * 4) * mult -- a hair of variance so mirrored slides don't always tie
+		local cap = (28 + math.random() * 4) * mult
 		local idx = 1
 		while idx < #samples - 1 and seat.Occupant ~= nil do
 			local dt = task.wait()
@@ -706,10 +708,13 @@ local function buildSwingSet(parent: Instance, at: Vector3, faceToward: Vector3,
 
 		-- each seat is its own gentle pendulum, phase-offset from its neighbors
 		task.spawn(function()
-			local t = si * 0.9
+			-- phase accumulator (not sin of absolute t) so Faster Rides speeds the swing
+			-- up smoothly instead of teleporting the anchored seat
+			local phase = si * 0.9 * (math.pi * 2 / opts.period)
 			RunService.Heartbeat:Connect(function(dt)
-				t += dt
-				local a = math.sin(t * math.pi * 2 / opts.period) * opts.amplitude
+				local mult = RidePrefs.speedFor(seat.Occupant)
+				phase += dt * (math.pi * 2 / opts.period) * mult
+				local a = math.sin(phase) * opts.amplitude
 				swing:PivotTo(pivotCF * CFrame.Angles(a, 0, 0))
 			end)
 		end)
@@ -813,14 +818,15 @@ local function buildSpoonSeesaw()
 	-- two = a smooth happy rock (mass-independent, nobody gets pinned)
 	task.spawn(function()
 		local angle = 0
-		local t = 0
+		local phase = 0
 		RunService.Heartbeat:Connect(function(dt)
-			t += dt
 			local a1 = seats[1].Occupant ~= nil
 			local a2 = seats[2].Occupant ~= nil
 			local target
 			if a1 and a2 then
-				target = math.sin(t * math.pi * 2 / 2.4) * math.rad(13)
+				local mult = RidePrefs.maxSpeedFor({ seats[1].Occupant, seats[2].Occupant })
+				phase += dt * (math.pi * 2 / 2.4) * mult
+				target = math.sin(phase) * math.rad(13)
 			elseif a1 then
 				target = -math.rad(15)
 			elseif a2 then
@@ -1011,7 +1017,7 @@ local function buildSparklePopCannon()
 			end
 			-- fly the seat (and its welded rider) along the parabola: ~1.5s,
 			-- apex ~22 studs over the midpoint
-			local FLIGHT = 1.5
+			local FLIGHT = 1.5 / RidePrefs.speedFor(occupant)
 			local APEX = 22
 			local t = 0
 			while t < FLIGHT do
@@ -1153,7 +1159,14 @@ local function buildPuddingCupSpinner()
 		local cupA = 0
 		local speed = SPEEDS[level]
 		RunService.Heartbeat:Connect(function(dt)
-			speed += (SPEEDS[level] - speed) * math.min(1, dt * 1.2) -- soft ramps
+			local riders = {}
+			for _, cup in ipairs(cups) do
+				for _, cs in ipairs(cup:GetChildren()) do
+					if cs:IsA("Seat") and cs.Occupant then riders[#riders + 1] = cs.Occupant end
+				end
+			end
+			local mult = RidePrefs.maxSpeedFor(riders, true) -- gentle 1.3x + clamp (spinning = nausea-prone)
+			speed += (math.min(SPEEDS[level] * mult, 1.3) - speed) * math.min(1, dt * 1.2) -- soft ramps
 			trayA = (trayA + speed * dt) % (math.pi * 2)
 			cupA = (cupA + speed * 1.6 * dt) % (math.pi * 2)
 			for i, cup in ipairs(cups) do
@@ -1290,11 +1303,12 @@ local function buildFireflyZipLine()
 		task.spawn(function()
 			task.wait(0.4)
 			-- glide down the samples at ~20 studs/s
+			local mult = RidePrefs.speedFor(occupant) -- Faster Rides
 			local dist = 0
 			local idx = 1
 			while idx < #samples - 1 do
 				local dt = task.wait()
-				dist += 20 * dt
+				dist += 20 * mult * dt
 				local walked = 0
 				idx = 1
 				for i = 2, #samples do
@@ -1489,8 +1503,13 @@ local function buildLazyGooRiver()
 		local t = 0
 		RunService.Heartbeat:Connect(function(dt)
 			t += dt
+			local riders = {}
 			for _, ring in ipairs(rings) do
-				ring.dist = (ring.dist + 5 * dt) % totalLen
+				if ring.seat.Occupant then riders[#riders + 1] = ring.seat.Occupant end
+			end
+			local mult = RidePrefs.maxSpeedFor(riders) -- one shared speed keeps the convoy evenly spaced
+			for _, ring in ipairs(rings) do
+				ring.dist = (ring.dist + 5 * mult * dt) % totalLen
 				local pos, ahead = posAt(ring.dist)
 				ring.spin += dt * 0.3
 				local bob = math.sin(t * 1.8 + ring.spin * 4) * 0.25

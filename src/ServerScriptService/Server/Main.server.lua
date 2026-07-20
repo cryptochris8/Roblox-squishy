@@ -43,6 +43,7 @@ local Telemetry = require(script.Parent.Telemetry)
 local BadgeService = require(script.Parent.BadgeService)
 local BoopService = require(script.Parent.BoopService)
 local EmoteService = require(script.Parent.EmoteService)
+local RidePrefs = require(script.Parent.RidePrefs)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -68,6 +69,7 @@ MonetizationService.init()
 MilestoneService.init()
 BoopService.init()
 EmoteService.init()
+RidePrefs.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()

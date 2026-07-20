@@ -22,6 +22,7 @@ local CoasterConfig = require(Shared:WaitForChild("CoasterConfig"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
+local RidePrefs = require(script.Parent.RidePrefs)
 
 local CoasterService = {}
 
@@ -480,7 +481,18 @@ local function update(dt: number)
 		-- ease toward cruise, then brake so we stop exactly back at the station
 		local rideLength = totalLength * CoasterConfig.LapsPerRide
 		local lapRemaining = rideLength - rideDist
-		local target = CoasterConfig.CruiseSpeed
+		-- Faster Rides: a shared, gentle boost — fast if anyone aboard wants it.
+		-- Only the cruise TARGET scales; the brake math below still stops us exactly
+		-- back at the station (it computes from actual speed, not this target).
+		local riders = {}
+		for _, car in ipairs(cars) do
+			for _, seat in ipairs(car.seats) do
+				if seat.Occupant then
+					riders[#riders + 1] = seat.Occupant
+				end
+			end
+		end
+		local target = CoasterConfig.CruiseSpeed * RidePrefs.maxSpeedFor(riders, true)
 		local brakeDist = (speed * speed) / (2 * CoasterConfig.Accel) + 2
 		if lapRemaining <= brakeDist then
 			target = math.max(2, math.sqrt(2 * CoasterConfig.Accel * math.max(lapRemaining, 0)))

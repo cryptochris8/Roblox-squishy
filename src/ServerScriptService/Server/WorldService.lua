@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
 local SquishyData = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SquishyData"))
 local SquishyModelFactory = require(script.Parent.SquishyModelFactory)
+local RidePrefs = require(script.Parent.RidePrefs)
 
 local WorldService = {}
 
@@ -545,13 +546,15 @@ local function crescentSwing(folder: Instance, at: Vector3, faceToward: Vector3)
 		rope.Parent = swing
 	end
 	swing.Parent = folder
-	-- gentle pendulum around the beam
+	-- gentle pendulum around the beam. Phase accumulator (not sin of absolute t)
+	-- so Faster Rides speeds the swing up smoothly instead of teleporting the seat.
 	task.spawn(function()
-		local t = 0
+		local phase = 0
 		local pivotCF = face * CFrame.new(0, 14.2, 0)
 		RunService.Heartbeat:Connect(function(dt)
-			t += dt
-			local a = math.sin(t * math.pi * 2 / 5) * math.rad(6)
+			local mult = RidePrefs.speedFor(seat.Occupant)
+			phase += dt * (math.pi * 2 / 5) * mult
+			local a = math.sin(phase) * math.rad(6)
 			swing:PivotTo(pivotCF * CFrame.Angles(0, 0, a) * CFrame.new(0, 0, 0))
 		end)
 	end)
@@ -2401,10 +2404,20 @@ function WorldService.build()
 			gondolas[i] = g
 		end
 
-		-- the gentle spin (one rotation per minute)
+		-- the gentle spin (one rotation per minute). angle is an accumulator, so a
+		-- Faster Rides boost just turns it a little quicker — no jump. Gentle 1.3x,
+		-- shared: fast if any gondola rider wants it.
 		local angle = 0
 		RunService.Heartbeat:Connect(function(dt)
-			angle = (angle + dt * math.pi * 2 / 60) % (math.pi * 2)
+			local riders = {}
+			for _, g in ipairs(gondolas) do
+				local s = g:FindFirstChild("RideSeat")
+				if s and s:IsA("Seat") and s.Occupant then
+					riders[#riders + 1] = s.Occupant
+				end
+			end
+			local mult = RidePrefs.maxSpeedFor(riders, true)
+			angle = (angle + dt * math.pi * 2 / 60 * mult) % (math.pi * 2)
 			ring:PivotTo(CFrame.new(hub) * CFrame.Angles(0, 0, angle))
 			for i, g in ipairs(gondolas) do
 				local a = angle + math.rad(i * 60)

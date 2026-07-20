@@ -26,6 +26,7 @@ Remotes.CollectStoryPage = "CollectStoryPage"        -- id: I walked up to a hid
 Remotes.SendGift = "SendGift"                        -- (recipientUserId, kind, value): give coins / share a friend
 Remotes.BuyPremium = "BuyPremium"                    -- itemId: prompt a Robux purchase of a premium cosmetic
 Remotes.BuyPass = "BuyPass"                          -- passKey: prompt a Robux Game Pass purchase
+Remotes.SetRidePref = "SetRidePref"                  -- bool: "Faster Rides" toggle on/off
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -58,6 +59,7 @@ local ALL_EVENTS = {
 	Remotes.SendGift,
 	Remotes.BuyPremium,
 	Remotes.BuyPass,
+	Remotes.SetRidePref,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
