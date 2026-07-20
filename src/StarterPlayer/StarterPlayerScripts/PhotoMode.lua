@@ -136,7 +136,15 @@ end
 -- the compact/desktop flip.
 local function positionEntry()
 	if entryButton then
-		entryButton.Position = UDim2.new(1, -14, 0, UiTheme.isCompact() and 118 or 156)
+		if UiTheme.isCompact() then
+			-- phones: the HUD actions are a right-edge column now, so tuck 📸 on the
+			-- LEFT below the stat pills, clear of the joystick
+			entryButton.AnchorPoint = Vector2.new(0, 0)
+			entryButton.Position = UDim2.new(0, 12, 0, 150)
+		else
+			entryButton.AnchorPoint = Vector2.new(1, 0)
+			entryButton.Position = UDim2.new(1, -14, 0, 156)
+		end
 	end
 end
 

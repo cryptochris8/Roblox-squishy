@@ -162,13 +162,15 @@ local function bigButton(parent, name, text, yFromBottom, h, textSize, bg, fg, o
 	return btn
 end
 
--- One compact action button (a round emoji icon, top-right row).
-local function iconButton(parent, name, emoji, xFromRight, w, bg, onTap)
+-- One compact action button (a round emoji icon). Phones stack these in a single
+-- column down the RIGHT EDGE — bigger + clearly spaced, clear of the center quest
+-- banner and the jump button.
+local function iconButton(parent, name, emoji, yFromTop, bg, onTap)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
 	btn.AnchorPoint = Vector2.new(1, 0)
-	btn.Position = UDim2.new(1, -xFromRight, 0, 8)
-	btn.Size = UDim2.fromOffset(w, 44)
+	btn.Position = UDim2.new(1, -12, 0, yFromTop)
+	btn.Size = UDim2.fromOffset(48, 48)
 	btn.BackgroundColor3 = bg
 	btn.BorderSizePixel = 0
 	btn.Font = UiTheme.HeaderFont
@@ -376,16 +378,16 @@ local function build()
 
 	if C then
 		-- top-right icon row (right to left), clear of the jump button
-		local book = iconButton(screen, "BookButton", "📕", 10, 52, UiTheme.Colors.AccentDeep, callbacks.onOpenBook)
-		book.TextSize = 26
-		dailyBtn = iconButton(screen, "DailyGiftButton", "🎁", 68, 44, UiTheme.Colors.Coin, callbacks.onClaimDaily)
+		local book = iconButton(screen, "BookButton", "📕", 8, UiTheme.Colors.AccentDeep, callbacks.onOpenBook)
+		book.TextSize = 28
+		dailyBtn = iconButton(screen, "DailyGiftButton", "🎁", 62, UiTheme.Colors.Coin, callbacks.onClaimDaily)
 		dailyBtn.TextColor3 = UiTheme.Colors.Ink
-		iconButton(screen, "DailyQuestsButton", "📋", 118, 44, UiTheme.Colors.Accent, callbacks.onOpenDaily)
-		iconButton(screen, "CodesButton", "🎟️", 168, 44, Color3.fromRGB(190, 160, 235), callbacks.onOpenCodes)
-		iconButton(screen, "StorybookButton", "📖", 218, 44, Color3.fromRGB(240, 160, 40), callbacks.onOpenStorybook)
-		dailyBaseSize = UDim2.fromOffset(44, 44)
+		iconButton(screen, "DailyQuestsButton", "📋", 116, UiTheme.Colors.Accent, callbacks.onOpenDaily)
+		iconButton(screen, "CodesButton", "🎟️", 170, Color3.fromRGB(190, 160, 235), callbacks.onOpenCodes)
+		iconButton(screen, "StorybookButton", "📖", 224, Color3.fromRGB(240, 160, 40), callbacks.onOpenStorybook)
+		dailyBaseSize = UDim2.fromOffset(48, 48)
 		dailyPulse = TweenService:Create(dailyBtn, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-			Size = UDim2.fromOffset(50, 50),
+			Size = UDim2.fromOffset(54, 54),
 		})
 	else
 		-- the original roomy buttons
