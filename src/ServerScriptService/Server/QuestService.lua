@@ -15,6 +15,9 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
+-- One source of truth for "has this player earned this land?" (no require cycle:
+-- TravelService's deps never reach QuestService).
+local TravelService = require(script.Parent.TravelService)
 
 local QuestService = {}
 
@@ -134,6 +137,11 @@ function QuestService.notePop(player: Player, def: any)
 	if not profile then
 		return
 	end
+	-- An escorted visitor plays freely, but never advances a land she hasn't earned.
+	-- (Coins are still paid — SquishService awards them independently of notePop.)
+	if not TravelService.isUnlocked(profile, def.Zone) then
+		return
+	end
 	local zone = ZoneConfig.get(def.Zone)
 	local shard = profile.Shards[def.Zone]
 	if not zone or not shard or shard.collected then
@@ -161,6 +169,11 @@ function QuestService.onShardTriggered(player: Player, zoneName: string)
 	end
 	if shard.collected then
 		toastEvent:FireClient(player, "You've already recovered the " .. zoneName .. " shard!")
+		return
+	end
+	if not TravelService.isUnlocked(profile, zoneName) then
+		local nextZone = TravelService.nextShardZone(profile) or "Pudding Hills"
+		toastEvent:FireClient(player, "This shard is for the friends who live here to wake! Your own Sparkle Shard is glimmering back in " .. nextZone .. ". ✨")
 		return
 	end
 	if shard.progress < zone.shardWakeGoal then
@@ -218,6 +231,11 @@ function QuestService.giveClue(player: Player, zoneName: string?)
 	local zone = ZoneConfig.get(zoneName)
 	local shard = profile and profile.Shards[zoneName]
 	if not profile or not zone or not shard then
+		return
+	end
+	if not TravelService.isUnlocked(profile, zoneName) then
+		local nextZone = TravelService.nextShardZone(profile) or "Pudding Hills"
+		toastEvent:FireClient(player, "Have fun exploring! When you're ready for YOUR next Sparkle Shard, it's waiting in " .. nextZone .. ". ✨")
 		return
 	end
 	if shard.collected then

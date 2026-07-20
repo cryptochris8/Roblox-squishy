@@ -42,6 +42,7 @@ local MilestoneService = require(script.Parent.MilestoneService)
 local Telemetry = require(script.Parent.Telemetry)
 local BadgeService = require(script.Parent.BadgeService)
 local BoopService = require(script.Parent.BoopService)
+local EmoteService = require(script.Parent.EmoteService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -66,6 +67,7 @@ GiftService.init()
 MonetizationService.init()
 MilestoneService.init()
 BoopService.init()
+EmoteService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -227,6 +229,7 @@ end
 QuestService.onShardRecovered = function(player, zoneName)
 	shoutToOthers(player, "✨ " .. player.DisplayName .. " recovered the " .. zoneName .. " Sparkle Shard!")
 	FamilyService.grant(player, zoneName)
+	EmoteService.autoCheer(player)
 	BadgeService.shard(player, zoneName)
 	ftue(player, 3, "first_shard")
 end
@@ -234,6 +237,7 @@ end
 -- Recovering all three Sparkle shards restores the Sparkle (the finale).
 QuestService.onAllShardsRecovered = function(player)
 	FinaleService.celebrate(player)
+	EmoteService.onSparkleRestored(player)
 	BadgeService.award(player, "SparkleRestored")
 	ftue(player, 5, "sparkle_restored")
 end
@@ -253,7 +257,7 @@ for _, z in ipairs(world.zones) do
 	end
 	for _, tp in ipairs(z.travelPads or {}) do
 		tp.prompt.Triggered:Connect(function(player)
-			TravelService.travel(player, tp.destZone)
+			TravelService.travel(player, tp.destZone, tp.prompt.Parent)
 		end)
 	end
 end
@@ -265,6 +269,7 @@ requestState.OnServerEvent:Connect(function(player)
 	DailyService.onJoin(player)
 	FirstDayService.check(player)
 	PlayerDataService.sync(player)
+	EmoteService.refresh(player)
 	TutorialService.welcome(player)
 	QuestService.checkReveal(player)
 	FamilyService.checkOwed(player) -- catch up players who restored a land pre-feature
@@ -289,10 +294,13 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 		MonetizationService.debugGrantPass(player, action:sub(11))
 	elseif action == "treatAsFriend" then
 		BoopService.forceFriendTier = true -- demo/test the FRIEND boop FX solo
+		TravelService.setFriendOverride(player.UserId, "friend")
 	elseif action == "treatAsStranger" then
 		BoopService.forceFriendTier = false -- demo/test the VISITOR boop FX solo
+		TravelService.setFriendOverride(player.UserId, "stranger")
 	elseif action == "treatReset" then
 		BoopService.forceFriendTier = nil
+		TravelService.setFriendOverride(player.UserId, nil)
 	elseif action == "restoreRoom610" then
 		-- One-time restitution: an old pre-Room server's leave-save dropped the
 		-- owner's furniture + buddy on 2026-06-10. Owner-gated; idempotent.
