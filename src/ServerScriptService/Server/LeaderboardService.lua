@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SocialConfig = require(Shared:WaitForChild("SocialConfig"))
+local WeeklyConfig = require(Shared:WaitForChild("WeeklyConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -24,10 +25,24 @@ type BoardSpec = {
 	title: string,
 	subtitle: string,
 	accent: Color3,
+	weekly: boolean?, -- true = a per-week store (resets even each week)
 	score: (profile: any) -> number,
 }
 
 local BOARDS: { BoardSpec } = {
+	{
+		-- A brand new week of kindness — everyone starts even each week, so the
+		-- youngest/newest friend is never buried under tenure. Gifts, not combat.
+		storeName = "SquishyBoard_Kindest_v1",
+		title = "💝 Kindest Friends",
+		subtitle = "gifts given this week",
+		accent = Color3.fromRGB(120, 195, 130),
+		weekly = true,
+		score = function(profile)
+			local gw = profile.GiftsWeek
+			return (gw and gw.week == WeeklyConfig.weekIndex()) and gw.count or 0
+		end,
+	},
 	{
 		storeName = "SquishyBoard_Friends_v1",
 		title = "🏆 Top Friend Finders",
@@ -65,6 +80,27 @@ do
 end
 
 -- userId -> the friendly name we show on the boards.
+-- Weekly boards live in a per-week OrderedDataStore (name carries the week index),
+-- created lazily and cached, so each new week starts everyone at zero.
+local weeklyStores: { [string]: OrderedDataStore } = {}
+local function activeStore(spec: BoardSpec): (OrderedDataStore?, string)
+	if not spec.weekly then
+		return stores[spec.storeName], spec.storeName
+	end
+	local name = spec.storeName .. "_w" .. WeeklyConfig.weekIndex()
+	local s = weeklyStores[name]
+	if not s and storesEnabled then
+		local ok, res = pcall(function()
+			return DataStoreService:GetOrderedDataStore(name)
+		end)
+		if ok then
+			s = res
+			weeklyStores[name] = s
+		end
+	end
+	return s, name
+end
+
 local nameCache: { [number]: string } = {}
 -- userId -> { [storeName]: lastWrittenValue } so we skip unchanged writes.
 local lastWritten: { [number]: { [string]: number } } = {}
@@ -101,12 +137,13 @@ local function writeScores(userId: number)
 	local written = lastWritten[userId] or {}
 	for _, spec in ipairs(BOARDS) do
 		local value = byStore[spec.storeName]
-		if value and value > 0 and value ~= written[spec.storeName] then
+		local store, activeName = activeStore(spec)
+		if store and value and value > 0 and value ~= written[activeName] then
 			local ok, err = pcall(function()
-				stores[spec.storeName]:SetAsync(tostring(userId), value)
+				store:SetAsync(tostring(userId), value)
 			end)
 			if ok then
-				written[spec.storeName] = value
+				written[activeName] = value
 			else
 				warn("[Squishy Smash] Leaderboard write failed: " .. tostring(err))
 			end
@@ -299,9 +336,13 @@ local function refreshBoard(spec: BoardSpec)
 		return
 	end
 
+	local store = activeStore(spec)
+	if not store then
+		return
+	end
 	local entries: { { key: string, value: number } } = {}
 	local ok, err = pcall(function()
-		local pages = stores[spec.storeName]:GetSortedAsync(false, SocialConfig.BoardTopCount)
+		local pages = store:GetSortedAsync(false, SocialConfig.BoardTopCount)
 		entries = pages:GetCurrentPage()
 	end)
 	if not ok then
@@ -341,8 +382,9 @@ function LeaderboardService.init()
 	task.spawn(function()
 		local home = Workspace:WaitForChild("PuddingHills", 30) or Workspace
 		local lookAt = Vector3.new(116, 0, 23) -- face the plaza the pads sit on
-		buildBoard(home, BOARDS[1], Vector3.new(100, 0, 35), lookAt)
-		buildBoard(home, BOARDS[2], Vector3.new(132, 0, 35), lookAt)
+		buildBoard(home, BOARDS[2], Vector3.new(96, 0, 35), lookAt)  -- Top Friend Finders
+		buildBoard(home, BOARDS[1], Vector3.new(116, 0, 35), lookAt)  -- Kindest Friends (center)
+		buildBoard(home, BOARDS[3], Vector3.new(136, 0, 35), lookAt)  -- Joy Champions
 
 		-- First refresh soon after startup (so a solo Studio run sees itself fast),
 		-- then the gentle long cycle.

@@ -603,7 +603,73 @@ function BuddyService.refresh(player: Player)
 	end
 end
 
+-- Buddy-to-buddy greetings (WO-2): two DIFFERENT owners' buddies that drift close
+-- occasionally wave hello with a little heart-sparkle burst. Scanned on a ~1s tick
+-- (not every frame), squared distance, per-pair 60s cooldown, and skipped entirely
+-- once more than a few buddies are about (keeps it cheap).
+local greetAccum = 0
+local greetCooldown: { [string]: number } = {}
+
+local function heartBurst(body: BasePart)
+	local em = body:FindFirstChild("GreetHearts") :: ParticleEmitter?
+	if not em then
+		em = Instance.new("ParticleEmitter")
+		em.Name = "GreetHearts"
+		em.Texture = SPARKLE_TEXTURE
+		em.Color = ColorSequence.new(Color3.fromRGB(255, 150, 190), Color3.fromRGB(255, 224, 236))
+		em.LightEmission = 0.75
+		em.Lifetime = NumberRange.new(0.7, 1.1)
+		em.Rate = 0
+		em.Speed = NumberRange.new(2, 4)
+		em.SpreadAngle = Vector2.new(180, 180)
+		em.Acceleration = Vector3.new(0, 2, 0)
+		em.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(0.4, 0.8), NumberSequenceKeypoint.new(1, 0),
+		})
+		em.Parent = body
+	end
+	em:Emit(10)
+end
+
+local function scanGreetings()
+	local active: { { uid: number, pos: Vector3, body: BasePart } } = {}
+	for player, slots in pairs(buddies) do
+		for _, model in pairs(slots) do
+			local body = model.PrimaryPart
+			if model.Parent and body then
+				active[#active + 1] = { uid = player.UserId, pos = body.Position, body = body }
+			end
+		end
+	end
+	local n = #active
+	if n < 2 or n > 8 then
+		return -- solo (no one to greet), or a crowd (skip the O(n^2) scan)
+	end
+	local now = os.clock()
+	for i = 1, n do
+		for j = i + 1, n do
+			local a, b = active[i], active[j]
+			if a.uid ~= b.uid then
+				local d = a.pos - b.pos
+				if d:Dot(d) <= 36 then -- within ~6 studs (squared)
+					local key = if a.uid < b.uid then a.uid .. "-" .. b.uid else b.uid .. "-" .. a.uid
+					if now - (greetCooldown[key] or 0) > 60 then
+						greetCooldown[key] = now
+						heartBurst(a.body)
+						heartBurst(b.body)
+					end
+				end
+			end
+		end
+	end
+end
+
 local function update(dt: number)
+	greetAccum += dt
+	if greetAccum >= 1 then
+		greetAccum = 0
+		scanGreetings()
+	end
 	for player, slots in pairs(buddies) do
 		local char = player.Character
 		local hrp = char and char:FindFirstChild("HumanoidRootPart") :: BasePart?
@@ -661,6 +727,15 @@ function BuddyService.init()
 		onPlayer(player)
 	end
 	Players.PlayerRemoving:Connect(clearBuddies)
+	Players.PlayerRemoving:Connect(function(player)
+		-- drop the leaving player's buddy-greeting cooldowns (mirrors BoopService)
+		local uid = player.UserId
+		for key in pairs(greetCooldown) do
+			if key:find("^" .. uid .. "%-") or key:find("%-" .. uid .. "$") then
+				greetCooldown[key] = nil
+			end
+		end
+	end)
 
 	RunService.Heartbeat:Connect(update)
 end

@@ -24,6 +24,7 @@ local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
+local WeeklyConfig = require(Shared:WaitForChild("WeeklyConfig"))
 
 -- Analytics (first-party AnalyticsService only, all pcall-guarded): the two
 -- coin choke points below log every earn/spend so Creator Hub gets the whole
@@ -90,6 +91,8 @@ export type Profile = {
 	FirstDayPaid: { [string]: boolean },
 	StoryPages: { [string]: boolean },
 	Gifting: { Day: number, Sent: number },
+	TotalGiftsSent: number, -- lifetime gifts given (Kindest Friends board + future Sparkle Keeper ranks)
+	GiftsWeek: { week: number, count: number }, -- gifts given THIS week (the weekly-fresh Kindest board)
 	PremiumReceipts: { [string]: boolean }, -- processed Robux receipt ids (idempotence)
 	Milestones: { [string]: boolean }, -- collection celebrations already awarded
 }
@@ -138,6 +141,8 @@ local function newProfile(): Profile
 		FirstDayPaid = {},
 		StoryPages = {},
 		Gifting = { Day = 0, Sent = 0 },
+		TotalGiftsSent = 0,
+		GiftsWeek = { week = 0, count = 0 },
 		PremiumReceipts = {},
 		Milestones = {},
 	}
@@ -194,6 +199,8 @@ local function serialize(p: Profile, raw: any)
 		FirstDayPaid = p.FirstDayPaid,
 		StoryPages = p.StoryPages,
 		Gifting = p.Gifting,
+			TotalGiftsSent = p.TotalGiftsSent,
+			GiftsWeek = p.GiftsWeek,
 		PremiumReceipts = p.PremiumReceipts,
 		Milestones = p.Milestones,
 	}
@@ -349,6 +356,10 @@ local function deserialize(data: any): Profile
 			Day = tonumber(data.Gifting.Day) or 0,
 			Sent = tonumber(data.Gifting.Sent) or 0,
 		}
+	end
+	p.TotalGiftsSent = tonumber(data.TotalGiftsSent) or 0
+	if type(data.GiftsWeek) == "table" then
+		p.GiftsWeek = { week = tonumber(data.GiftsWeek.week) or 0, count = tonumber(data.GiftsWeek.count) or 0 }
 	end
 	if type(data.PremiumReceipts) == "table" then
 		local receipts = {}
@@ -831,6 +842,14 @@ function PlayerDataService.noteGiftSent(player: Player)
 		p.Gifting.Sent = 0
 	end
 	p.Gifting.Sent += 1
+	-- Lifetime + weekly kindness counters (Kindest Friends board / future ranks).
+	p.TotalGiftsSent += 1
+	local week = WeeklyConfig.weekIndex()
+	if p.GiftsWeek.week ~= week then
+		p.GiftsWeek.week = week
+		p.GiftsWeek.count = 0
+	end
+	p.GiftsWeek.count += 1
 end
 
 function PlayerDataService.setTutorialDone(player: Player)

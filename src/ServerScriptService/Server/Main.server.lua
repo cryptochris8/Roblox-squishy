@@ -41,6 +41,7 @@ local FamilyService = require(script.Parent.FamilyService)
 local MilestoneService = require(script.Parent.MilestoneService)
 local Telemetry = require(script.Parent.Telemetry)
 local BadgeService = require(script.Parent.BadgeService)
+local BoopService = require(script.Parent.BoopService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -64,6 +65,7 @@ StoryPageService.init()
 GiftService.init()
 MonetizationService.init()
 MilestoneService.init()
+BoopService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -285,6 +287,12 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 	elseif type(action) == "string" and action:sub(1, 10) == "grantPass:" then
 		-- session-only pass demo, e.g. "grantPass:VIP" (owner-gated above)
 		MonetizationService.debugGrantPass(player, action:sub(11))
+	elseif action == "treatAsFriend" then
+		BoopService.forceFriendTier = true -- demo/test the FRIEND boop FX solo
+	elseif action == "treatAsStranger" then
+		BoopService.forceFriendTier = false -- demo/test the VISITOR boop FX solo
+	elseif action == "treatReset" then
+		BoopService.forceFriendTier = nil
 	elseif action == "restoreRoom610" then
 		-- One-time restitution: an old pre-Room server's leave-save dropped the
 		-- owner's furniture + buddy on 2026-06-10. Owner-gated; idempotent.

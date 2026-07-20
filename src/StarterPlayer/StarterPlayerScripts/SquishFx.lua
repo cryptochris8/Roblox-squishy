@@ -757,6 +757,16 @@ function SquishFx.handle(result)
 
 		setAura(entry, "off")
 		stopSnore(entry)
+		if result.coSquish then
+			-- a bigger shared celebration; a helper sees their own coins float up
+			-- (the popper's coins/chain already showed above)
+			confettiRing(body)
+			if result.byUserId == localPlayer.UserId then
+				ToastUI.show("Squished together! ✨", "celebration")
+			elseif result.coCredit and result.coCredit[localPlayer.UserId] then
+				floatingCoins(body, result.coCredit[localPlayer.UserId])
+			end
+		end
 		entries[result.objectId] = nil -- leave the anim loop before the pop swell
 		popModel(entry)
 	else

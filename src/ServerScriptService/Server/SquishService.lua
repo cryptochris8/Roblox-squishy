@@ -6,6 +6,7 @@
 
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
@@ -30,6 +31,7 @@ SquishService.coinMultiplier = nil :: ((Player) -> number)?
 
 local squishiesFolder: Folder
 local squishResultEvent: RemoteEvent
+local toastEvent: RemoteEvent
 local pads: { { cf: CFrame, zone: string, packId: string } } = {}
 local activeByPad: { [number]: Model } = {} -- pad index -> the squishy currently there
 local objectCounter = 0
@@ -40,6 +42,10 @@ local rng = Random.new()
 -- coin bonus (added AFTER any multiplier, capped — see docs/economy). Cleared
 -- when a player leaves so the table never grows.
 local chainByUser: { [number]: { count: number, lastPopAt: number } } = {}
+
+-- Co-squish (WO-2): who has helped wake each friend, so 2+ players squishing the
+-- same one both get full pop credit. Keyed by objectId, cleared on pop.
+local contributorsByObject: { [string]: { [number]: boolean } } = {}
 
 local function noteChain(player: Player): number
 	local now = os.clock()
@@ -89,6 +95,11 @@ local function buildSquishy(def, cf: CFrame): Model
 		SquishService.handleSquish(player, model)
 	end)
 
+	-- Free the co-squish contributor set no matter HOW this friend leaves (a pop
+	-- clears it early; a golden destroyed unpopped at event end is caught here).
+	model.Destroying:Connect(function()
+		contributorsByObject[objectId] = nil
+	end)
 	model.Parent = squishiesFolder
 	return model
 end
@@ -161,6 +172,13 @@ function SquishService.handleSquish(player: Player, model: Model)
 	local joy = math.min(1, (model:GetAttribute("Joy") or 0) + GameConfig.JoyPerSquish)
 	model:SetAttribute("Joy", joy)
 	model:SetAttribute("Sleepy", false)
+	-- Remember this squisher — everyone who helps wake a friend shares the pop.
+	local contribs = contributorsByObject[objectId]
+	if not contribs then
+		contribs = {}
+		contributorsByObject[objectId] = contribs
+	end
+	contribs[player.UserId] = true
 
 	if joy >= 1 then
 		-- Happy Pop!
@@ -179,6 +197,32 @@ function SquishService.handleSquish(player: Player, model: Model)
 		coins += chainBonus
 		PlayerDataService.addCoins(player, coins)
 		PlayerDataService.incHappyPop(player)
+		-- Co-squish: everyone else who helped wake this friend gets FULL coins too
+		-- (no chain double-count), and a "Squished together!" moment for all.
+		local coCredit: { [number]: number }? = nil
+		local contribs = contributorsByObject[objectId]
+		if contribs then
+			for uid in pairs(contribs) do
+				if uid ~= player.UserId then
+					local helper = Players:GetPlayerByUserId(uid)
+					if helper then
+						local helperCoins = def.CoinReward or 5
+						if isGolden then
+							helperCoins *= SocialConfig.EventGoldenCoinMultiplier
+						end
+						if SquishService.coinMultiplier then
+							helperCoins = math.floor(helperCoins * SquishService.coinMultiplier(helper))
+						end
+						PlayerDataService.addCoins(helper, helperCoins)
+						PlayerDataService.sync(helper)
+						coCredit = coCredit or {}
+						coCredit[uid] = helperCoins
+						toastEvent:FireClient(helper, "Squished together! ✨  +" .. helperCoins .. " Sparkle Coins", "celebration")
+					end
+				end
+			end
+		end
+		contributorsByObject[objectId] = nil
 
 		squishResultEvent:FireAllClients({
 			objectId = objectId,
@@ -189,6 +233,8 @@ function SquishService.handleSquish(player: Player, model: Model)
 			coins = coins,
 			chain = chain,
 			chainBonus = chainBonus,
+			coSquish = coCredit ~= nil,
+			coCredit = coCredit,
 		})
 
 		local padIndex = model:GetAttribute("PadIndex")
@@ -241,6 +287,7 @@ function SquishService.init(zoneGroups: { { zone: string, packId: string, pads: 
 	squishiesFolder.Name = "Squishies"
 	squishiesFolder.Parent = Workspace
 	squishResultEvent = Remotes.get(Remotes.SquishResult)
+	toastEvent = Remotes.get(Remotes.Toast)
 
 	-- Forget a player's chain when they leave (keeps chainByUser bounded).
 	game:GetService("Players").PlayerRemoving:Connect(function(player)

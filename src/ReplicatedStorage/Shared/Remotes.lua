@@ -39,6 +39,7 @@ Remotes.OpenRoomCatalog = "OpenRoomCatalog" -- a room slot asked the client to o
 Remotes.StoryPageCollected = "StoryPageCollected" -- a storybook page was found (opens the viewer)
 Remotes.OpenGiftUI = "OpenGiftUI"       -- a 🎁 prompt asked the client to open the gift picker
 Remotes.GiftReceived = "GiftReceived"   -- a coin gift arrived (friend shares arrive as CapsuleResult)
+Remotes.BoopFx = "BoopFx"               -- a friendly Boop happened (from, to, tier) — clients play the FX
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -64,6 +65,7 @@ local ALL_EVENTS = {
 	Remotes.StoryPageCollected,
 	Remotes.OpenGiftUI,
 	Remotes.GiftReceived,
+	Remotes.BoopFx,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,
