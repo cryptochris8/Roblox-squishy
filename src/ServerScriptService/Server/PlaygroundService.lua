@@ -25,6 +25,12 @@ local CollectionService = game:GetService("CollectionService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
+local Remotes = require(Shared:WaitForChild("Remotes"))
+local Players = game:GetService("Players")
+local PlayerDataService = require(script.Parent.PlayerDataService)
+
+-- set in init() (remotes exist by then); reused by the Bounce Bog toast + Picnic
+local toastEvent: RemoteEvent
 
 local PlaygroundService = {}
 
@@ -376,6 +382,36 @@ end
 -- ═════════════════════════════════════════════════════════════════════════════
 -- THE BOUNCE BOG — a giant jelly trampoline (Goo Coast, southern dunes)
 -- ═════════════════════════════════════════════════════════════════════════════
+-- A shared 3-2-1 countdown billboard on a part; aborts (returns false) if stillOk
+-- goes false partway (a rider/kid wandered off) — no failure copy, ever.
+local function countdownOn(onPart: BasePart, offsetY: number, steps: { string }, hold: number, stillOk: (() -> boolean)?): boolean
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(150, 90)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, offsetY, 0)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 90
+	gui.Parent = onPart
+	local lbl = Instance.new("TextLabel")
+	lbl.BackgroundTransparency = 1
+	lbl.Size = UDim2.fromScale(1, 1)
+	lbl.Font = Enum.Font.FredokaOne
+	lbl.TextSize = 54
+	lbl.TextColor3 = Color3.fromRGB(255, 210, 120)
+	lbl.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+	lbl.TextStrokeTransparency = 0.2
+	lbl.Parent = gui
+	for _, n in ipairs(steps) do
+		if stillOk and not stillOk() then
+			gui:Destroy()
+			return false
+		end
+		lbl.Text = n
+		task.wait(hold)
+	end
+	gui:Destroy()
+	return true
+end
+
 local recentBounces: { number } = {}
 
 local function buildBounceBog()
@@ -401,11 +437,70 @@ local function buildBounceBog()
 	drum.CFrame = CFrame.new(at + Vector3.new(0, 2.6, 0)) * CFrame.Angles(0, 0, math.rad(90))
 	drum.Parent = model
 	floatingSign(drum, "🫧 The Bounce Bog")
+	-- WO-2.6: the together-bonus already works (PartyUntil below) but was invisible.
+	-- A why-sign, plus a gold glow + "SUPER BOUNCE!" banner while the window is open.
+	local tip = Instance.new("BillboardGui")
+	tip.Size = UDim2.fromOffset(260, 40)
+	tip.StudsOffsetWorldSpace = Vector3.new(0, 4.5, 0)
+	tip.AlwaysOnTop = true
+	tip.MaxDistance = 80
+	tip.Parent = rim
+	local tl = Instance.new("TextLabel")
+	tl.BackgroundTransparency = 1
+	tl.Size = UDim2.fromScale(1, 1)
+	tl.Font = Enum.Font.FredokaOne
+	tl.TextSize = 18
+	tl.TextColor3 = Color3.fromRGB(90, 150, 180)
+	tl.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+	tl.TextStrokeTransparency = 0.25
+	tl.Text = "Bounce TOGETHER for a SUPER bounce!"
+	tl.Parent = tip
+
+	local glow = Instance.new("PointLight")
+	glow.Color = Color3.fromRGB(255, 224, 140)
+	glow.Brightness = 0
+	glow.Range = 26
+	glow.Enabled = false
+	glow.Parent = drum
+	local superGui = Instance.new("BillboardGui")
+	superGui.Size = UDim2.fromOffset(230, 70)
+	superGui.StudsOffsetWorldSpace = Vector3.new(0, 11, 0)
+	superGui.AlwaysOnTop = true
+	superGui.MaxDistance = 110
+	superGui.Enabled = false
+	superGui.Parent = drum
+	local sl = Instance.new("TextLabel")
+	sl.BackgroundTransparency = 1
+	sl.Size = UDim2.fromScale(1, 1)
+	sl.Font = Enum.Font.FredokaOne
+	sl.TextSize = 40
+	sl.TextColor3 = Color3.fromRGB(255, 210, 120)
+	sl.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+	sl.TextStrokeTransparency = 0.15
+	sl.Text = "SUPER BOUNCE!"
+	sl.Parent = superGui
+	local partyToken = 0
+	local function showSuper(untilTime: number)
+		-- latest party window wins, so overlapping bounces never flicker it off early
+		partyToken += 1
+		local tok = partyToken
+		glow.Enabled = true
+		glow.Brightness = 4
+		superGui.Enabled = true
+		task.delay(math.max(0, untilTime - workspace:GetServerTimeNow()), function()
+			if partyToken == tok then
+				glow.Enabled = false
+				glow.Brightness = 0
+				superGui.Enabled = false
+			end
+		end)
+	end
+	local superSeen: { [number]: boolean } = {} -- one gentle intro toast per player/session
 
 	-- normal bounce ~17 studs; the together-bonus (~26) opens for everyone when
 	-- two friends bounce within the same beat (published via PartyUntil)
 	drum:SetAttribute("PartyVelocity", Vector3.new(0, 102, 0))
-	makeBouncy(drum, Vector3.new(0, 82, 0), function()
+	makeBouncy(drum, Vector3.new(0, 82, 0), function(char)
 		squash(drum, drumSize)
 		playAt(drum, SoundConfig.Boing, 0.5, 0.95 + math.random() * 0.15)
 		local now = os.clock()
@@ -416,8 +511,15 @@ local function buildBounceBog()
 			end
 		end
 		if #recentBounces >= 2 then
-			drum:SetAttribute("PartyUntil", workspace:GetServerTimeNow() + 4)
+			local untilTime = workspace:GetServerTimeNow() + 4
+			drum:SetAttribute("PartyUntil", untilTime)
 			sparkleBurst(drum, Color3.fromRGB(255, 226, 150), 26)
+			showSuper(untilTime)
+			local player = char and Players:GetPlayerFromCharacter(char)
+			if player and not superSeen[player.UserId] then
+				superSeen[player.UserId] = true
+				toastEvent:FireClient(player, "✨ SUPER BOUNCE! Bounce together for an even bigger boing! 🌈", "celebration")
+			end
 		end
 	end)
 end
@@ -1298,7 +1400,114 @@ local function buildLazyGooRiver()
 	end)
 end
 
+-- ── WO-2.8 Friendship Picnic (per-land co-op pad circle) ─────────────────────
+-- 2-4 kids STAND on a blanket -> gentle 3-2-1 -> confetti + EQUAL small coins.
+-- Presence-based (no prompt), server-authoritative, no-loser.
+local PICNIC_COINS = 15
+local PICNIC_RADIUS = 9
+local PICNIC_PLAYER_COOLDOWN = 90 -- re-standing pays 0 (a cozy toast) until this passes
+local PICNIC_REARM = 18
+local PICNIC_HOLD = 0.8
+
+local function playersOnPad(center: Vector3, radius: number): { Player }
+	local out = {}
+	for _, pl in ipairs(Players:GetPlayers()) do
+		local ch = pl.Character
+		local root = ch and ch:FindFirstChild("HumanoidRootPart")
+		local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+		if root and hum and hum.Health > 0 then
+			local flat = (Vector3.new(root.Position.X, 0, root.Position.Z) - Vector3.new(center.X, 0, center.Z)).Magnitude
+			if flat <= radius and math.abs(root.Position.Y - center.Y) < 8 then
+				out[#out + 1] = pl
+			end
+		end
+	end
+	return out
+end
+
+local picnicRewardAt: { [number]: number } = {}
+local function awardPicnic(pl: Player)
+	local now = os.clock()
+	local pay = PICNIC_COINS
+	if now - (picnicRewardAt[pl.UserId] or 0) < PICNIC_PLAYER_COOLDOWN then
+		pay = 0
+	else
+		picnicRewardAt[pl.UserId] = now
+	end
+	if pay > 0 then
+		PlayerDataService.addCoins(pl, pay)
+		PlayerDataService.sync(pl)
+		toastEvent:FireClient(pl, "🧺 Friendship Picnic! +" .. pay .. " Sparkle Coins! 💖", "celebration")
+	else
+		toastEvent:FireClient(pl, "🧺 So cozy together! 💖", "celebration")
+	end
+end
+
+local function buildFriendshipPicnic(zoneName: string, offset: Vector3, blanketColor: Color3)
+	local zone = ZoneConfig.get(zoneName)
+	if not zone then
+		return
+	end
+	local center = zone.center + offset
+	local model = atomicModel("FriendshipPicnic_" .. string.gsub(zoneName, " ", ""), Workspace)
+	local blanket = part({
+		Name = "PicnicBlanket", Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.5, PICNIC_RADIUS * 2, PICNIC_RADIUS * 2),
+		Color = blanketColor, CanCollide = true, CanQuery = true,
+	})
+	blanket.CFrame = CFrame.new(center + Vector3.new(0, 0.3, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	blanket.Parent = model
+	for i, deg in ipairs({ 0, 90, 180, 270 }) do
+		local a = math.rad(deg)
+		local cu = part({
+			Name = "PicnicCushion" .. i, Shape = Enum.PartType.Ball,
+			Size = Vector3.new(3, 1.3, 3), Color = Color3.fromRGB(255, 236, 205),
+		})
+		cu.Position = center + Vector3.new(math.cos(a) * 6, 0.9, math.sin(a) * 6)
+		cu.Parent = model
+	end
+	local basket = part({
+		Name = "PicnicBasket", Size = Vector3.new(3, 2.4, 3),
+		Color = Color3.fromRGB(206, 150, 96), CanCollide = true, CanQuery = true,
+	})
+	basket.Position = center + Vector3.new(0, 1.5, 0)
+	basket.Parent = model
+	floatingSign(basket, "🧺 Friendship Picnic")
+
+	local celebrating = false
+	local lastAt = 0
+	task.spawn(function()
+		while true do
+			task.wait(0.4)
+			if not celebrating and os.clock() - lastAt >= PICNIC_REARM then
+				if #playersOnPad(center, PICNIC_RADIUS) >= 2 then
+					celebrating = true
+					local ok = countdownOn(basket, 5, { "3", "2", "1" }, PICNIC_HOLD, function()
+						return #playersOnPad(center, PICNIC_RADIUS) >= 2
+					end)
+					if ok then
+						local present = playersOnPad(center, PICNIC_RADIUS)
+						if #present >= 2 then
+							sparkleBurst(blanket, Color3.fromRGB(255, 200, 120), 40)
+							task.delay(0.06, function()
+								sparkleBurst(blanket, Color3.fromRGB(150, 200, 255), 26)
+							end)
+							playAt(basket, SoundConfig.Pop, 0.5)
+							for _, pl in ipairs(present) do
+								awardPicnic(pl)
+							end
+						end
+						lastAt = os.clock()
+					end
+					celebrating = false
+				end
+			end
+		end
+	end)
+end
+
 function PlaygroundService.init()
+	toastEvent = Remotes.get(Remotes.Toast)
 	task.spawn(buildPuddingPlunge)
 	task.spawn(buildBounceBog)
 	task.spawn(buildSwingRows)
@@ -1309,6 +1518,11 @@ function PlaygroundService.init()
 	task.spawn(buildPuddingCupSpinner)
 	task.spawn(buildFireflyZipLine)
 	task.spawn(buildLazyGooRiver)
+	-- WO-2.8 Friendship Picnic, one per land (final post-spread offsets; eyeballed
+	-- in Studio to sit in open meadow clear of pads/coaster/plunge)
+	task.spawn(buildFriendshipPicnic, "Pudding Hills", Vector3.new(-80, 0, -40), Color3.fromRGB(255, 190, 200))
+	task.spawn(buildFriendshipPicnic, "Goo Coast", Vector3.new(-90, 0, 40), Color3.fromRGB(160, 220, 220))
+	task.spawn(buildFriendshipPicnic, "Moonlit Hollow", Vector3.new(-80, 0, -40), Color3.fromRGB(190, 160, 255))
 end
 
 return PlaygroundService
