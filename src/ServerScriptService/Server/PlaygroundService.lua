@@ -51,6 +51,13 @@ end
 local CREAM = Color3.fromRGB(255, 250, 240)
 local CARAMEL = Color3.fromRGB(240, 196, 138)
 
+-- Race tunables (WO-2.5). RACE_COINS is a new coin SOURCE — capped + cooldowned.
+local RACE_SOLO_GRACE = 2.5
+local RACE_COINS = 20
+local RACE_COIN_COOLDOWN = 25
+local RACE_COUNTDOWN_HOLD = 0.7
+local RACE_PHOTO_GAP = 1.5
+
 local function part(props): Part
 	local p = Instance.new("Part")
 	p.Anchored = true
@@ -251,6 +258,7 @@ local function buildPuddingPlunge()
 		{ sign = -1, color = Color3.fromRGB(255, 170, 195) },
 		{ sign = 1, color = Color3.fromRGB(170, 200, 255) },
 	}
+	local chutes = {}
 	for _, spec in ipairs(chuteSpecs) do
 		local sx = spec.sign
 		local waypoints = {
@@ -319,64 +327,182 @@ local function buildPuddingPlunge()
 		end
 		parkAtTop()
 
-		-- riding: when someone sits, glide the ring down, splash, hop them out,
-		-- then zip the empty ring back up for the next racer
-		local busy = false
-		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-			local occupant = seat.Occupant
-			if not occupant or busy then
-				return
-			end
-			busy = true
-			task.spawn(function()
-				task.wait(0.5)
-				-- accelerate down the arc-length samples (slide feel: fast middle)
-				local dist = 0
-				local speed = 8
-				local idx = 1
-				while idx < #samples - 1 and seat.Occupant ~= nil do
-					local dt = task.wait()
-					speed = math.min(speed + 26 * dt, 30)
-					dist += speed * dt
-					-- advance to the sample at this distance
-					local walked = 0
-					idx = 1
-					for i = 2, #samples do
-						walked += (samples[i] - samples[i - 1]).Magnitude
-						if walked >= dist then
-							idx = i
-							break
-						end
-						idx = i
-					end
-					local pos = samples[math.min(idx, #samples - 1)]
-					local nxt = samples[math.min(idx + 1, #samples)]
-					local cf = CFrame.lookAt(pos, nxt, Vector3.yAxis)
-					ring:PivotTo(cf + Vector3.new(0, 1, 0))
-					seat.CFrame = cf + Vector3.new(0, 1.6, 0)
-				end
-				-- splash!
-				local rider = seat.Occupant
-				sparkleBurst(pool, spec.color, 18)
-				playAt(pool, SoundConfig.Splash, 0.55)
-				if rider then
-					rider.Sit = false
-					local t0 = os.clock()
-					while rider:GetState() == Enum.HumanoidStateType.Seated and os.clock() - t0 < 1 do
-						task.wait(0.05)
-					end
-					local char = rider.Parent :: Model?
-					if char then
-						char:PivotTo(CFrame.new(poolAt + Vector3.new(0, 4, -4)))
-					end
-				end
-				-- the empty ring zips back up
-				task.wait(0.4)
-				parkAtTop()
-				busy = false
-			end)
-		end)
+		-- record this chute; the shared race controller (after the loop) drives the ride
+		chutes[#chutes + 1] = { spec = spec, seat = seat, ring = ring, samples = samples, pool = pool, poolAt = poolAt, topCF = topCF, parkAtTop = parkAtTop }
 	end
+
+	-- ── Race controller (WO-2.5) ──────────────────────────────────────────────
+	-- Both rings occupied -> a 3-2-1 race; a lone rider auto-slides solo after a
+	-- short grace. Coins are ALWAYS equal; the titles are pure flavour (shuffled,
+	-- so the 6yo wins a fun one ~half the time). No loser, ever.
+	local lastRaceAward: { [number]: number } = {}
+	local AWARD_TITLES = { "Fastest Splash", "Bounciest Splash", "Sparkliest Style" }
+	local function awardRider(rider, title: string)
+		local char = rider and rider.Parent
+		local player = char and Players:GetPlayerFromCharacter(char)
+		if not player then
+			return
+		end
+		local now = os.clock()
+		local pay = RACE_COINS
+		if now - (lastRaceAward[player.UserId] or 0) < RACE_COIN_COOLDOWN then
+			pay = 0
+		else
+			lastRaceAward[player.UserId] = now
+		end
+		if pay > 0 then
+			PlayerDataService.addCoins(player, pay)
+			PlayerDataService.sync(player)
+		end
+		toastEvent:FireClient(player, "🏁 " .. title .. (pay > 0 and (" +" .. pay .. " Sparkle Coins!") or "!"), "celebration")
+	end
+	local function descend(chute)
+		local seat, samples, ring, pool, spec = chute.seat, chute.samples, chute.ring, chute.pool, chute.spec
+		local dist, speed = 0, 8
+		local accel = 24 + math.random() * 4 -- a hair of variance so mirrored slides don't always tie
+		local cap = 28 + math.random() * 4
+		local idx = 1
+		while idx < #samples - 1 and seat.Occupant ~= nil do
+			local dt = task.wait()
+			speed = math.min(speed + accel * dt, cap)
+			dist += speed * dt
+			local walked = 0
+			idx = 1
+			for i = 2, #samples do
+				walked += (samples[i] - samples[i - 1]).Magnitude
+				if walked >= dist then
+					idx = i
+					break
+				end
+				idx = i
+			end
+			local pos = samples[math.min(idx, #samples - 1)]
+			local nxt = samples[math.min(idx + 1, #samples)]
+			local cf = CFrame.lookAt(pos, nxt, Vector3.yAxis)
+			ring:PivotTo(cf + Vector3.new(0, 1, 0))
+			seat.CFrame = cf + Vector3.new(0, 1.6, 0)
+		end
+		sparkleBurst(pool, spec.color, 18)
+		playAt(pool, SoundConfig.Splash, 0.55)
+		return os.clock(), seat.Occupant
+	end
+	local function hopOut(chute, rider)
+		if not rider then
+			return
+		end
+		rider.Sit = false
+		local t0 = os.clock()
+		while rider:GetState() == Enum.HumanoidStateType.Seated and os.clock() - t0 < 1 do
+			task.wait(0.05)
+		end
+		local char = rider.Parent
+		if char then
+			(char :: Model):PivotTo(CFrame.new(chute.poolAt + Vector3.new(0, 4, -4)))
+		end
+	end
+	local function bothIn(): boolean
+		return chutes[1].seat.Occupant ~= nil and chutes[2].seat.Occupant ~= nil
+	end
+	local raceBusy = false
+	local soloToken = 0
+	local function runSolo(chute)
+		task.wait(0.5)
+		local _, rider = descend(chute)
+		awardRider(rider, "Sparkly Splash")
+		hopOut(chute, rider)
+		task.wait(0.4)
+		chute.parkAtTop()
+	end
+	local function runRace()
+		if not countdownOn(deck, 10, { "3", "2", "1", "SPLASH!" }, RACE_COUNTDOWN_HOLD, bothIn) then
+			-- a rider hopped off mid-countdown: just slide whoever is still in (no loser copy)
+			for _, c in ipairs(chutes) do
+				if c.seat.Occupant then
+					local _, r = descend(c)
+					awardRider(r, "Sparkly Splash")
+					hopOut(c, r)
+					task.wait(0.4)
+					c.parkAtTop()
+				end
+			end
+			return
+		end
+		local res = {}
+		local done = 0
+		for i, c in ipairs(chutes) do
+			task.spawn(function()
+				local f, r = descend(c)
+				res[i] = { finish = f, rider = r, chute = c }
+				done += 1
+			end)
+		end
+		local deadline = os.clock() + 12
+		while done < 2 and os.clock() < deadline do
+			task.wait(0.05)
+		end
+		local fin = {}
+		for _, r in ipairs(res) do
+			if r.rider then
+				fin[#fin + 1] = r
+			end
+		end
+		if #fin == 2 and math.abs(fin[1].finish - fin[2].finish) <= RACE_PHOTO_GAP then
+			for _, f in ipairs(fin) do
+				awardRider(f.rider, "📸 Photo finish!")
+				sparkleBurst(f.chute.pool, f.chute.spec.color, 34)
+			end
+		else
+			local titles = { AWARD_TITLES[1], AWARD_TITLES[2], AWARD_TITLES[3] }
+			for i = #titles, 2, -1 do
+				local j = math.random(1, i)
+				titles[i], titles[j] = titles[j], titles[i]
+			end
+			for i, f in ipairs(fin) do
+				awardRider(f.rider, titles[i] or "Sparkly Splash")
+			end
+		end
+		for _, r in ipairs(res) do
+			hopOut(r.chute, r.rider)
+		end
+		task.wait(0.4)
+		for _, c in ipairs(chutes) do
+			c.parkAtTop()
+		end
+	end
+	local function onSit(which: number)
+		local chute = chutes[which]
+		if raceBusy or not chute.seat.Occupant then
+			return
+		end
+		if bothIn() then
+			raceBusy = true
+			soloToken += 1
+			task.spawn(function()
+				runRace()
+				raceBusy = false
+			end)
+		else
+			soloToken += 1
+			local tok = soloToken
+			task.spawn(function()
+				task.wait(RACE_SOLO_GRACE)
+				if raceBusy or soloToken ~= tok then
+					return
+				end
+				if chute.seat.Occupant and not chutes[3 - which].seat.Occupant then
+					raceBusy = true
+					runSolo(chute)
+					raceBusy = false
+				end
+			end)
+		end
+	end
+	chutes[1].seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		onSit(1)
+	end)
+	chutes[2].seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		onSit(2)
+	end)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
