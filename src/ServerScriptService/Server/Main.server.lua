@@ -44,6 +44,7 @@ local BadgeService = require(script.Parent.BadgeService)
 local BoopService = require(script.Parent.BoopService)
 local EmoteService = require(script.Parent.EmoteService)
 local RidePrefs = require(script.Parent.RidePrefs)
+local PhotoSpotService = require(script.Parent.PhotoSpotService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -77,6 +78,7 @@ QuestService.init()
 CoasterService.init() -- the Sparkle Express needs the land (and its riders) in place
 PlaygroundService.init() -- slides, bounce bog, swings, seesaw, mushroom hops
 FamilyService.init() -- the three daughter guardians, one per land
+PhotoSpotService.init() -- Sparkle Photo Spots need the land's tagged pads in place
 
 local zoneGroups = {}
 for _, z in ipairs(world.zones) do
@@ -294,6 +296,9 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 	elseif type(action) == "string" and action:sub(1, 10) == "grantPass:" then
 		-- session-only pass demo, e.g. "grantPass:VIP" (owner-gated above)
 		MonetizationService.debugGrantPass(player, action:sub(11))
+	elseif type(action) == "string" and action:sub(1, 6) == "photo:" then
+		-- solo photo-moment demo, e.g. "photo:PH_Photo" (a real one needs 2+ kids)
+		PhotoSpotService.debugSolo(player, action:sub(7))
 	elseif action == "treatAsFriend" then
 		BoopService.forceFriendTier = true -- demo/test the FRIEND boop FX solo
 		TravelService.setFriendOverride(player.UserId, "friend")

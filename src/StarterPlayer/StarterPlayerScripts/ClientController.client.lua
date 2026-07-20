@@ -34,6 +34,7 @@ local BouncePads = require(here:WaitForChild("BouncePads"))
 local SoundScape = require(here:WaitForChild("SoundScape"))
 local BoopFx = require(here:WaitForChild("BoopFx"))
 local PhotoMode = require(here:WaitForChild("PhotoMode"))
+local PhotoSpots = require(here:WaitForChild("PhotoSpots"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -96,6 +97,7 @@ BouncePads.init()
 SoundScape.init()
 BoopFx.init()
 PhotoMode.init()
+PhotoSpots.mount(playerGui)
 SparkleBits.init(function(msg)
 	ToastUI.show(msg)
 end)
@@ -177,6 +179,10 @@ end)
 
 Remotes.get(Remotes.GiftReceived).OnClientEvent:Connect(function(info)
 	GiftUI.playReceived(info)
+end)
+
+Remotes.get(Remotes.PhotoMoment).OnClientEvent:Connect(function(info)
+	PhotoSpots.play(info)
 end)
 
 -- Bounce pads and slides launch the character; without this, hard landings can

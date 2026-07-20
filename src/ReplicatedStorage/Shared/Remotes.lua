@@ -41,6 +41,7 @@ Remotes.StoryPageCollected = "StoryPageCollected" -- a storybook page was found 
 Remotes.OpenGiftUI = "OpenGiftUI"       -- a 🎁 prompt asked the client to open the gift picker
 Remotes.GiftReceived = "GiftReceived"   -- a coin gift arrived (friend shares arrive as CapsuleResult)
 Remotes.BoopFx = "BoopFx"               -- a friendly Boop happened (from, to, tier) — clients play the FX
+Remotes.PhotoMoment = "PhotoMoment"     -- {frameId, land, at, occupants}: gather for a group "say sparkle!" photo
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -68,6 +69,7 @@ local ALL_EVENTS = {
 	Remotes.OpenGiftUI,
 	Remotes.GiftReceived,
 	Remotes.BoopFx,
+	Remotes.PhotoMoment,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,

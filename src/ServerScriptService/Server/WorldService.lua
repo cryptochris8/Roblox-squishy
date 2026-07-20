@@ -9,6 +9,7 @@ local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
 
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
 local SquishyData = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SquishyData"))
@@ -877,6 +878,57 @@ local GOO_PAD_OFFSETS = {
 	Vector3.new(-18, 2, 84),
 }
 
+-- A storybook picture frame around a land's prettiest view, with 3 glowing
+-- stand-pads inside it. Kids gather on the pads for a group "say sparkle!" photo
+-- moment (PhotoSpotService watches the PhotoPad tag). `atCenter` is where the
+-- frame stands; `faceToward` is the landmark it looks at. These are FINAL
+-- offsets like every landmark here — callers must NOT run them through SP/spread.
+local function buildPhotoFrame(folder: Instance, frameId: string, landName: string, atCenter: Vector3, faceToward: Vector3): { Part }
+	local face = CFrame.lookAt(
+		Vector3.new(atCenter.X, 0, atCenter.Z),
+		Vector3.new(faceToward.X, 0, faceToward.Z)
+	)
+	-- two candy posts + a top beam + a title plate = the frame
+	for _, sx in ipairs({ -1, 1 }) do
+		local post = part({
+			Name = "PhotoPost", Size = Vector3.new(0.8, 11, 0.8),
+			Color = Color3.fromRGB(255, 196, 212), Material = Enum.Material.SmoothPlastic,
+		})
+		post.CFrame = face * CFrame.new(sx * 7, 5.5, 0)
+		post.Parent = folder
+	end
+	local beam = part({
+		Name = "PhotoBeam", Size = Vector3.new(15.4, 1, 1),
+		Color = Color3.fromRGB(255, 170, 195), Material = Enum.Material.SmoothPlastic,
+	})
+	beam.CFrame = face * CFrame.new(0, 11, 0)
+	beam.Parent = folder
+	local plate = part({
+		Name = "PhotoPlate", Size = Vector3.new(6, 1.4, 0.5),
+		Color = Color3.fromRGB(255, 247, 240), Material = Enum.Material.SmoothPlastic,
+	})
+	plate.CFrame = face * CFrame.new(0, 11, 0.35)
+	plate.Parent = folder
+	floatingLabel("📸 Sparkle Photo Spot", Color3.fromRGB(225, 90, 150), plate, 2)
+	-- 3 glowing stand-pads inside the frame (CanCollide off so kids stand through
+	-- them at ground height; the server occupancy scan uses a generous Y window)
+	local pads = {}
+	for _, dx in ipairs({ -4, 0, 4 }) do
+		local p = part({
+			Name = "PhotoPad", Size = Vector3.new(4, 0.3, 4),
+			Color = Color3.fromRGB(255, 224, 150), Material = Enum.Material.Neon,
+			Transparency = 0.2, CanCollide = false,
+		})
+		p.CFrame = CFrame.new((face * CFrame.new(dx, 0, 2)).Position + Vector3.new(0, 0.15, 0))
+		p:SetAttribute("PhotoFrameId", frameId)
+		p:SetAttribute("Land", landName)
+		CollectionService:AddTag(p, "PhotoPad")
+		p.Parent = folder
+		pads[#pads + 1] = p
+	end
+	return pads
+end
+
 -- Goo Coast: a bespoke seafoam coast — a glossy gooey sea with a wooden pier out
 -- to the shard, bouncy translucent jelly dunes, tide-pools with shells, and a
 -- cheerful sandcastle. Hand-built, not a recoloured Pudding Hills.
@@ -1172,6 +1224,8 @@ local function buildGooCoast()
 	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(120, 220, 224))
 	-- travel plaza out by the rocky cove (east shore), not on the spawn sand
 	local travelPads = buildTravelHub(folder, center + Vector3.new(75, 0, -44), "Goo Coast")
+	-- Sparkle Photo Spot framing the candy-striped lighthouse
+	buildPhotoFrame(folder, "GC_Photo", "Goo Coast", center + Vector3.new(-84, 0, 24), center + Vector3.new(-110, 0, 0))
 
 	return {
 		zone = "Goo Coast",
@@ -1604,6 +1658,8 @@ local function buildMoonlitHollow()
 	-- travel plaza up by the stargazing circle (the glade's quiet north), with
 	-- the glowing stepping stones already leading the way
 	local travelPads = buildTravelHub(folder, center + Vector3.new(52, 0, -142), "Moonlit Hollow")
+	-- Sparkle Photo Spot framing the stargazing circle + crescent moon
+	buildPhotoFrame(folder, "MH_Photo", "Moonlit Hollow", center + Vector3.new(66, 0, -80), center + Vector3.new(30, 12, -125))
 
 	return {
 		zone = "Moonlit Hollow",
@@ -2474,6 +2530,8 @@ function WorldService.build()
 	local travelPads = buildTravelHub(folder, Vector3.new(116, 0, -23), "Pudding Hills")
 	-- a path spur from the picnic meadow out to the plaza
 	ribbonPath(folder, { Vector3.new(81, 0, 38), Vector3.new(108, 0, 28) }, 3, pathColor)
+	-- Sparkle Photo Spot framing the big cherry-topped pudding mountain
+	buildPhotoFrame(folder, "PH_Photo", "Pudding Hills", Vector3.new(-40, 0, 6), Vector3.new(-145, 0, -70))
 
 	local puddingHills = {
 		zone = "Pudding Hills",
