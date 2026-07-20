@@ -11,6 +11,8 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ZoneConfig"))
+local SquishyData = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SquishyData"))
+local SquishyModelFactory = require(script.Parent.SquishyModelFactory)
 
 local WorldService = {}
 
@@ -1826,19 +1828,20 @@ function WorldService.build()
 	capsulePrompt.Parent = capsuleBase
 	capsuleModel.Parent = folder
 
-	-- Soft Dumpling guide.
-	local guideModel = Instance.new("Model")
+	-- Soft Dumpling guide — the real card-faithful 3D shape (the same mesh the
+	-- squishable Soft Dumpling and the Family guardians use), not a plain ball.
+	local guideDef = SquishyData.getById("soft_dumpling")
+	local guideModel = SquishyModelFactory.build(guideDef)
 	guideModel.Name = "GuideSoftDumpling"
-	local guideBody = part({
-		Name = "Body",
-		Shape = Enum.PartType.Ball,
-		Size = Vector3.new(5, 5, 5),
-		Position = Vector3.new(-20, 2.5, 17),
-		Color = Color3.fromRGB(255, 224, 196),
-		CanCollide = false,
-	})
-	guideBody.Parent = guideModel
-	guideModel.PrimaryPart = guideBody
+	guideModel:ScaleTo(1.25) -- a little larger than a world friend (she's the greeter)
+	for _, gp in ipairs(guideModel:GetDescendants()) do
+		if gp:IsA("BasePart") then
+			gp.CanCollide = false
+			gp.CanQuery = false
+		end
+	end
+	guideModel:PivotTo(CFrame.new(-20, 2, 17))
+	local guideBody = guideModel.PrimaryPart
 	floatingLabel("Soft Dumpling", Color3.fromRGB(225, 140, 90), guideBody, 4.5)
 
 	local guidePrompt = Instance.new("ProximityPrompt")
