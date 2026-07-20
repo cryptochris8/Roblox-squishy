@@ -45,6 +45,7 @@ local BoopService = require(script.Parent.BoopService)
 local EmoteService = require(script.Parent.EmoteService)
 local RidePrefs = require(script.Parent.RidePrefs)
 local PhotoSpotService = require(script.Parent.PhotoSpotService)
+local GardenService = require(script.Parent.GardenService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -79,6 +80,7 @@ CoasterService.init() -- the Sparkle Express needs the land (and its riders) in 
 PlaygroundService.init() -- slides, bounce bog, swings, seesaw, mushroom hops
 FamilyService.init() -- the three daughter guardians, one per land
 PhotoSpotService.init() -- Sparkle Photo Spots need the land's tagged pads in place
+GardenService.init() -- the Sparkle Garden district (self-builds off Pudding Hills spawn)
 
 local zoneGroups = {}
 for _, z in ipairs(world.zones) do
@@ -224,6 +226,9 @@ end
 GiftService.onGiftSent = function(sender)
 	BadgeService.award(sender, "KindFriend")
 end
+GardenService.onHarvest = function(player)
+	BadgeService.award(player, "FirstHarvest")
+end
 TravelService.onTraveled = function(player)
 	ftue(player, 4, "first_travel")
 end
@@ -277,6 +282,7 @@ requestState.OnServerEvent:Connect(function(player)
 	TutorialService.welcome(player)
 	QuestService.checkReveal(player)
 	FamilyService.checkOwed(player) -- catch up players who restored a land pre-feature
+	GardenService.onJoin(player) -- "your garden grew while you were away!" (growth-framed)
 	MilestoneService.checkOwed(player) -- celebrate sets completed before this shipped
 	SurgeService.syncTo(player)
 	GroupEventService.syncTo(player)
@@ -299,6 +305,9 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 	elseif type(action) == "string" and action:sub(1, 6) == "photo:" then
 		-- solo photo-moment demo, e.g. "photo:PH_Photo" (a real one needs 2+ kids)
 		PhotoSpotService.debugSolo(player, action:sub(7))
+	elseif action == "gardenGrow" then
+		-- jump every planted bed to fully grown so the garden is demoable on cue
+		GardenService.debugGrow(player)
 	elseif action == "treatAsFriend" then
 		BoopService.forceFriendTier = true -- demo/test the FRIEND boop FX solo
 		TravelService.setFriendOverride(player.UserId, "friend")

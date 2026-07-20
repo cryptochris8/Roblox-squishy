@@ -25,6 +25,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 local WeeklyConfig = require(Shared:WaitForChild("WeeklyConfig"))
+local GardenConfig = require(Shared:WaitForChild("GardenConfig"))
 
 -- Analytics (first-party AnalyticsService only, all pcall-guarded): the two
 -- coin choke points below log every earn/spend so Creator Hub gets the whole
@@ -95,6 +96,17 @@ export type Profile = {
 	GiftsWeek: { week: number, count: number }, -- gifts given THIS week (the weekly-fresh Kindest board)
 	PremiumReceipts: { [string]: boolean }, -- processed Robux receipt ids (idempotence)
 	Milestones: { [string]: boolean }, -- collection celebrations already awarded
+	-- The Sparkle Garden (WO-5). beds keyed by bedId "1".."3"; growth is derived
+	-- from os.time()-plantedAt (never ticked, never wilts). The two water counters
+	-- are UTC-day rolling caps: given = waters I hand out; received = waters my
+	-- garden takes in (so a popular kid keeps her agency).
+	Garden: {
+		beds: { [string]: { seedId: string, plantedAt: number, wateredBonus: number } },
+		waterDay: number,
+		waterReceived: number,
+		waterGivenDay: number,
+		waterGivenCount: number,
+	},
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -145,6 +157,7 @@ local function newProfile(): Profile
 		GiftsWeek = { week = 0, count = 0 },
 		PremiumReceipts = {},
 		Milestones = {},
+		Garden = { beds = {}, waterDay = 0, waterReceived = 0, waterGivenDay = 0, waterGivenCount = 0 },
 	}
 end
 
@@ -203,6 +216,7 @@ local function serialize(p: Profile, raw: any)
 			GiftsWeek = p.GiftsWeek,
 		PremiumReceipts = p.PremiumReceipts,
 		Milestones = p.Milestones,
+		Garden = p.Garden,
 	}
 	for k, v in pairs(known) do
 		out[k] = v
@@ -389,6 +403,29 @@ local function deserialize(data: any): Profile
 		end
 		p.DailyQuests = dq
 	end
+	if type(data.Garden) == "table" then
+		local beds = {}
+		if type(data.Garden.beds) == "table" then
+			for bedId, bed in pairs(data.Garden.beds) do
+				-- keep only well-formed beds; an unknown seedId is tolerated at read
+				-- time (getSeed → nil → shown as empty soil), it never crashes
+				if type(bedId) == "string" and type(bed) == "table" and type(bed.seedId) == "string" then
+					beds[bedId] = {
+						seedId = bed.seedId,
+						plantedAt = tonumber(bed.plantedAt) or 0,
+						wateredBonus = tonumber(bed.wateredBonus) or 0,
+					}
+				end
+			end
+		end
+		p.Garden = {
+			beds = beds,
+			waterDay = tonumber(data.Garden.waterDay) or 0,
+			waterReceived = tonumber(data.Garden.waterReceived) or 0,
+			waterGivenDay = tonumber(data.Garden.waterGivenDay) or 0,
+			waterGivenCount = tonumber(data.Garden.waterGivenCount) or 0,
+		}
+	end
 	return p
 end
 
@@ -536,6 +573,31 @@ function PlayerDataService.get(player: Player): Profile?
 	return profiles[player]
 end
 
+-- The client-facing view of the garden: each planted bed's growth evaluated
+-- against the server's os.time() (the client resolves name/icon/colour/price from
+-- the shared GardenConfig itself, so the payload stays tiny). A bed with an
+-- unknown seedId is simply omitted (shows as empty soil).
+local function gardenView(p: Profile)
+	local now = os.time()
+	local beds = {}
+	for bedId, bed in pairs(p.Garden.beds) do
+		local seed = GardenConfig.getSeed(bed.seedId)
+		if seed then
+			local pct = GardenConfig.grownPct(seed, bed.plantedAt, bed.wateredBonus, now)
+			beds[bedId] = {
+				seedId = bed.seedId,
+				grownPct = pct,
+				stage = GardenConfig.stageFor(pct),
+				ready = pct >= 1,
+			}
+		end
+	end
+	-- waters this kid has GIVEN today (rolled to the current UTC day for display;
+	-- read-only — the real reset happens in watersGivenToday on the give path)
+	local given = if p.Garden.waterGivenDay == todayIndex() then p.Garden.waterGivenCount else 0
+	return { beds = beds, waterGiven = given, waterMax = GardenConfig.Watering.PerDay }
+end
+
 -- Build the snapshot the client needs to draw the HUD + Squishy Book.
 function PlayerDataService.snapshot(player: Player)
 	local p = profiles[player]
@@ -590,6 +652,10 @@ function PlayerDataService.snapshot(player: Player)
 		firstDay = p.FirstDayPaid,
 		-- the hidden storybook pages found so far
 		storyPages = p.StoryPages,
+		-- the Sparkle Garden: each bed's growth is evaluated SERVER-side against
+		-- os.time() here (the client has no trustworthy clock), so the size the kid
+		-- sees is authoritative and can't be faked.
+		garden = gardenView(p),
 	}
 end
 
@@ -850,6 +916,64 @@ function PlayerDataService.noteGiftSent(player: Player)
 		p.GiftsWeek.count = 0
 	end
 	p.GiftsWeek.count += 1
+end
+
+-- ── Sparkle Garden watering caps (UTC-day rolling, mirrors the gift counters) ──
+-- Two INDEPENDENT caps: waters a kid GIVES (on their own profile) and waters a
+-- garden RECEIVES (on the owner's profile) — so a popular garden hitting its
+-- receive cap never uses up the visitor's give allowance, and vice versa.
+function PlayerDataService.watersGivenToday(player: Player): number
+	local p = profiles[player]
+	if not p then
+		return 0
+	end
+	if p.Garden.waterGivenDay ~= todayIndex() then
+		p.Garden.waterGivenDay = todayIndex()
+		p.Garden.waterGivenCount = 0
+	end
+	return p.Garden.waterGivenCount
+end
+
+function PlayerDataService.noteWaterGiven(player: Player)
+	local p = profiles[player]
+	if not p then
+		return
+	end
+	if p.Garden.waterGivenDay ~= todayIndex() then
+		p.Garden.waterGivenDay = todayIndex()
+		p.Garden.waterGivenCount = 0
+	end
+	p.Garden.waterGivenCount += 1
+end
+
+function PlayerDataService.gardenReceivedToday(player: Player): number
+	local p = profiles[player]
+	if not p then
+		return 0
+	end
+	if p.Garden.waterDay ~= todayIndex() then
+		p.Garden.waterDay = todayIndex()
+		p.Garden.waterReceived = 0
+	end
+	return p.Garden.waterReceived
+end
+
+-- Record a received water: bump the per-garden daily counter and add a gentle
+-- growth nudge to every planted bed (a fully-grown bed is already clamped at
+-- 100%, so the extra seconds are harmless there — never negative, never wilts).
+function PlayerDataService.noteWaterReceived(player: Player, bonusSeconds: number)
+	local p = profiles[player]
+	if not p then
+		return
+	end
+	if p.Garden.waterDay ~= todayIndex() then
+		p.Garden.waterDay = todayIndex()
+		p.Garden.waterReceived = 0
+	end
+	p.Garden.waterReceived += 1
+	for _, bed in pairs(p.Garden.beds) do
+		bed.wateredBonus += bonusSeconds
+	end
 end
 
 function PlayerDataService.setTutorialDone(player: Player)

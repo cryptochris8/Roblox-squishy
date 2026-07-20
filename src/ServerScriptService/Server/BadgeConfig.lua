@@ -20,6 +20,7 @@
 --   AllStoryPages      "You found every page of The Lost Sparkle!"
 --   KindFriend         "You gave your first gift 💝" (kindness badge — rare on
 --                      the platform, very Squishy)
+--   FirstHarvest       "You grew and harvested your first Sparkle plant! 🌱"
 --
 -- Icon pipeline: marketing/make_product_icons.py (the same pastel style that
 -- already cleared moderation for the Phase D product icons).
@@ -41,4 +42,5 @@ return {
 	AllSparkleBits = 0,
 	AllStoryPages = 0,
 	KindFriend = 0,
+	FirstHarvest = 0,
 }

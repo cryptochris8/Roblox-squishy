@@ -9,14 +9,15 @@ local DailyQuestConfig = {}
 
 DailyQuestConfig.PerDay = 3
 
--- `type` matches the events DailyService tracks: "pop", "bit", "capsule", "discover".
--- `text` is a format string; %d is filled with the goal.
+-- `type` matches the events DailyService tracks: "pop", "bit", "capsule", "discover", "water".
+-- `text` is a format string; %d is filled with the goal (a text with no %d is fine).
 DailyQuestConfig.Quests = {
 	{ id = "wake",     type = "pop",      goal = 10, reward = 50, text = "Wake %d sleepy friends" },
 	{ id = "explore",  type = "bit",      goal = 2,  reward = 45, text = "Find %d hidden Sparkle Bits" },
 	{ id = "open",     type = "capsule",  goal = 2,  reward = 35, text = "Open %d Sparkle Capsules" },
 	{ id = "discover", type = "discover", goal = 1,  reward = 60, text = "Discover a new friend" },
 	{ id = "wakemore", type = "pop",      goal = 20, reward = 70, text = "Wake %d sleepy friends" },
+	{ id = "water",    type = "water",    goal = 1,  reward = 55, text = "Water a friend's garden" },
 }
 
 -- The PerDay quests active on a given UTC day index — a rotating window, so the

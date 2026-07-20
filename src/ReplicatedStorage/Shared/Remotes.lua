@@ -27,6 +27,9 @@ Remotes.SendGift = "SendGift"                        -- (recipientUserId, kind, 
 Remotes.BuyPremium = "BuyPremium"                    -- itemId: prompt a Robux purchase of a premium cosmetic
 Remotes.BuyPass = "BuyPass"                          -- passKey: prompt a Robux Game Pass purchase
 Remotes.SetRidePref = "SetRidePref"                  -- bool: "Faster Rides" toggle on/off
+Remotes.PlantSeed = "PlantSeed"                      -- (bedId, seedId): buy-if-affordable + plant a Sparkle Seed
+Remotes.HarvestPlant = "HarvestPlant"                -- bedId: harvest a fully-bloomed plant
+Remotes.WaterGarden = "WaterGarden"                  -- ownerUserId: water a friend's garden (kindness)
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -42,6 +45,8 @@ Remotes.OpenGiftUI = "OpenGiftUI"       -- a 🎁 prompt asked the client to ope
 Remotes.GiftReceived = "GiftReceived"   -- a coin gift arrived (friend shares arrive as CapsuleResult)
 Remotes.BoopFx = "BoopFx"               -- a friendly Boop happened (from, to, tier) — clients play the FX
 Remotes.PhotoMoment = "PhotoMoment"     -- {frameId, land, at, occupants}: gather for a group "say sparkle!" photo
+Remotes.OpenGardenUI = "OpenGardenUI"   -- a garden bed prompt asked the client to open the Sparkle Garden panel
+Remotes.WaterFx = "WaterFx"             -- {fromUserId,toUserId,fromName}: sparkle-heart FX for a garden watering
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -61,6 +66,9 @@ local ALL_EVENTS = {
 	Remotes.BuyPremium,
 	Remotes.BuyPass,
 	Remotes.SetRidePref,
+	Remotes.PlantSeed,
+	Remotes.HarvestPlant,
+	Remotes.WaterGarden,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
@@ -70,6 +78,8 @@ local ALL_EVENTS = {
 	Remotes.GiftReceived,
 	Remotes.BoopFx,
 	Remotes.PhotoMoment,
+	Remotes.OpenGardenUI,
+	Remotes.WaterFx,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,
