@@ -1,0 +1,494 @@
+<title>Squishy Smash — Go-Viral Playbook</title>
+<style>
+  :root {
+    /* Storybook Day (light) — from the game's UiTheme */
+    --paper:#FFF7F0; --surface:#FFFFFF; --surface-2:#FFF1F6;
+    --ink:#4A3A4E; --ink-soft:#8A7A8C; --border:#F0DCE6;
+    --rose:#E15A96; --rose-bright:#FF8AB4;
+    --pudding:#DE8E1F; --goo:#1794A6; --moonlit:#8A5FD0;
+    --good:#2FA277; --shadow:0 1px 2px rgba(74,58,78,.05), 0 8px 24px -12px rgba(225,90,150,.18);
+    --maxw:1080px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Moonlit Hollow Night (dark) */
+      --paper:#1B1524; --surface:#261D33; --surface-2:#2E2340;
+      --ink:#F4EAF2; --ink-soft:#B6A2BF; --border:#382B47;
+      --rose:#FF9EC4; --rose-bright:#FFB9D6;
+      --pudding:#F3C468; --goo:#5DD2E0; --moonlit:#BB93F2;
+      --good:#57C99A; --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#FFF7F0; --surface:#FFFFFF; --surface-2:#FFF1F6;
+    --ink:#4A3A4E; --ink-soft:#8A7A8C; --border:#F0DCE6;
+    --rose:#E15A96; --rose-bright:#FF8AB4;
+    --pudding:#DE8E1F; --goo:#1794A6; --moonlit:#8A5FD0;
+    --good:#2FA277; --shadow:0 1px 2px rgba(74,58,78,.05), 0 8px 24px -12px rgba(225,90,150,.18);
+  }
+  :root[data-theme="dark"] {
+    --paper:#1B1524; --surface:#261D33; --surface-2:#2E2340;
+    --ink:#F4EAF2; --ink-soft:#B6A2BF; --border:#382B47;
+    --rose:#FF9EC4; --rose-bright:#FFB9D6;
+    --pudding:#F3C468; --goo:#5DD2E0; --moonlit:#BB93F2;
+    --good:#57C99A; --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.55);
+  }
+
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(120% 80% at 82% -8%, color-mix(in srgb,var(--rose) 12%, transparent), transparent 60%),
+      radial-gradient(90% 70% at 8% 4%, color-mix(in srgb,var(--pudding) 9%, transparent), transparent 55%);
+    background-attachment:fixed;
+  }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:0 24px; }
+  section { padding:52px 0; }
+  h1,h2,h3 { text-wrap:balance; margin:0; line-height:1.1; letter-spacing:-.02em; }
+  p { margin:0; }
+
+  .eyebrow {
+    font-size:.72rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-soft); display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before { content:""; width:22px; height:2px; border-radius:2px; background:var(--rose); }
+
+  /* sparkle glyph (CSS, not emoji) */
+  .spark { display:inline-block; width:.62em; height:.62em; vertical-align:baseline; position:relative; }
+  .spark::before, .spark::after {
+    content:""; position:absolute; inset:0; background:currentColor;
+    clip-path:polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  }
+  .spark::after { transform:scale(.5) rotate(15deg); opacity:.7; }
+
+  /* ---------- HERO ---------- */
+  .hero { position:relative; padding-top:64px; padding-bottom:20px; overflow:hidden; }
+  #sparkles { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+  .hero .wrap { position:relative; z-index:1; }
+  .brandrow { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:40px; }
+  .wordmark { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; display:flex; align-items:center; gap:.4em; }
+  .wordmark .gm {
+    background:linear-gradient(96deg,var(--rose),var(--moonlit));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .wordmark .spark { color:var(--pudding); width:.8em; height:.8em; }
+  .stamp { font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft);
+    border:1px solid var(--border); border-radius:999px; padding:7px 14px; background:var(--surface); }
+
+  .thesis { font-size:clamp(2.1rem,5.2vw,3.6rem); font-weight:800; max-width:16ch; }
+  .thesis .a { color:var(--ink-soft); }
+  .thesis .b { color:var(--rose); }
+  .lede { margin-top:22px; font-size:clamp(1.02rem,2vw,1.2rem); color:var(--ink-soft); max-width:56ch; }
+  .lede strong { color:var(--ink); font-weight:700; }
+
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:40px; }
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px 18px; box-shadow:var(--shadow); }
+  .stat .n { font-size:clamp(1.9rem,4vw,2.7rem); font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums; line-height:1; }
+  .stat:nth-child(1) .n{ color:var(--pudding);} .stat:nth-child(2) .n{ color:var(--goo);}
+  .stat:nth-child(3) .n{ color:var(--moonlit);} .stat:nth-child(4) .n{ color:var(--rose);}
+  .stat .l { margin-top:8px; font-size:.82rem; color:var(--ink-soft); font-weight:600; }
+
+  /* ---------- generic cards ---------- */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px; box-shadow:var(--shadow); }
+  .sec-head { margin-bottom:26px; }
+  .sec-head h2 { font-size:clamp(1.5rem,3vw,2rem); font-weight:800; margin-top:12px; }
+  .sec-head p { color:var(--ink-soft); margin-top:10px; max-width:60ch; }
+
+  /* ---------- BIG BET ---------- */
+  .bet { background:
+      linear-gradient(180deg, color-mix(in srgb,var(--rose) 8%, var(--surface)), var(--surface));
+    border:1px solid color-mix(in srgb,var(--rose) 30%, var(--border)); position:relative; overflow:hidden; }
+  .bet .quote { font-size:clamp(1.25rem,2.7vw,1.7rem); font-weight:700; line-height:1.35; max-width:32ch; }
+  .bet .quote .hl { color:var(--rose); }
+  .bet .why { margin-top:18px; color:var(--ink-soft); max-width:62ch; }
+  .cards-row { display:flex; gap:18px; margin-top:24px; flex-wrap:wrap; }
+  .mini { flex:1 1 200px; background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:16px 18px; }
+  .mini .t { font-weight:700; font-size:.95rem; }
+  .mini .d { color:var(--ink-soft); font-size:.86rem; margin-top:4px; }
+
+  /* ---------- FLYWHEEL ---------- */
+  .flow { display:flex; flex-wrap:wrap; gap:12px; align-items:stretch; }
+  .node { flex:1 1 200px; min-width:190px; background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:16px 16px 16px 16px; position:relative; box-shadow:var(--shadow); }
+  .node .step { font-size:.72rem; font-weight:800; letter-spacing:.08em; color:var(--rose);
+    display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:8px;
+    background:color-mix(in srgb,var(--rose) 14%, var(--surface)); font-variant-numeric:tabular-nums; }
+  .node .h { font-weight:700; font-size:.98rem; margin-top:12px; }
+  .node .s { color:var(--ink-soft); font-size:.85rem; margin-top:4px; }
+  .node.loop { background:color-mix(in srgb,var(--moonlit) 12%, var(--surface)); border-color:color-mix(in srgb,var(--moonlit) 34%, var(--border)); }
+  .node.loop .step { color:var(--moonlit); background:color-mix(in srgb,var(--moonlit) 18%, var(--surface)); }
+  .props { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+  .prop { font-size:.8rem; font-weight:600; color:var(--ink); background:var(--surface-2);
+    border:1px solid var(--border); border-radius:999px; padding:8px 15px; display:flex; align-items:center; gap:8px; }
+  .prop .dot { width:9px; height:9px; border-radius:50%; }
+
+  /* ---------- ROADMAP ---------- */
+  .phases { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .phase { border-radius:20px; padding:24px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow);
+    position:relative; overflow:hidden; }
+  .phase::before { content:""; position:absolute; left:0; top:0; bottom:0; width:5px; }
+  .phase.p1::before{ background:var(--pudding);} .phase.p2::before{ background:var(--goo);} .phase.p3::before{ background:var(--moonlit);}
+  .phase .win { font-size:.74rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  .phase.p1 .win{ color:var(--pudding);} .phase.p2 .win{ color:var(--goo);} .phase.p3 .win{ color:var(--moonlit);}
+  .phase h3 { font-size:1.18rem; margin-top:10px; font-weight:800; }
+  .phase .goal { color:var(--ink-soft); font-size:.9rem; margin-top:10px; padding-bottom:16px; border-bottom:1px dashed var(--border); }
+  .phase ul { list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column; gap:11px; }
+  .phase li { font-size:.9rem; padding-left:22px; position:relative; }
+  .phase li::before { content:""; position:absolute; left:0; top:.5em; width:9px; height:9px; border-radius:3px; transform:rotate(45deg); }
+  .phase.p1 li::before{ background:color-mix(in srgb,var(--pudding) 70%,transparent);}
+  .phase.p2 li::before{ background:color-mix(in srgb,var(--goo) 70%,transparent);}
+  .phase.p3 li::before{ background:color-mix(in srgb,var(--moonlit) 70%,transparent);}
+  .phase li b { font-weight:700; color:var(--ink); }
+
+  /* ---------- ENGINE + WHEEL ---------- */
+  .engine-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:22px; align-items:start; }
+  .steps { list-style:none; margin:0; padding:0; counter-reset:s; display:flex; flex-direction:column; gap:2px; }
+  .steps li { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .steps li:last-child { border-bottom:0; }
+  .steps li::before { counter-increment:s; content:counter(s); flex:0 0 auto; width:26px; height:26px; border-radius:9px;
+    background:color-mix(in srgb,var(--goo) 14%, var(--surface)); color:var(--goo); font-weight:800; font-size:.85rem;
+    display:flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
+  .steps .k { font-weight:700; font-size:.94rem; }
+  .steps .v { color:var(--ink-soft); font-size:.86rem; }
+  .wheel { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .fmt { background:var(--surface-2); border:1px solid var(--border); border-radius:13px; padding:13px 14px; }
+  .fmt .num { font-size:.72rem; font-weight:800; color:var(--rose); font-variant-numeric:tabular-nums; }
+  .fmt .name { font-weight:700; font-size:.9rem; margin-top:3px; }
+  .fmt .tag { color:var(--ink-soft); font-size:.78rem; margin-top:2px; }
+  .cadence { margin-top:18px; font-size:.9rem; color:var(--ink-soft); background:color-mix(in srgb,var(--pudding) 8%,var(--surface));
+    border:1px solid color-mix(in srgb,var(--pudding) 26%,var(--border)); border-radius:14px; padding:14px 16px; }
+  .cadence b { color:var(--ink); }
+
+  /* ---------- WEEK 1 CHECKLIST ---------- */
+  .checks { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px; }
+  .check { display:flex; gap:12px; align-items:flex-start; padding:11px 0; border-bottom:1px solid var(--border); }
+  .check .box { flex:0 0 auto; width:20px; height:20px; border-radius:7px; border:2px solid color-mix(in srgb,var(--good) 55%,var(--border)); margin-top:2px; }
+  .check .box::after { content:""; display:block; width:5px; height:9px; margin:1px auto; border:solid var(--good); border-width:0 2px 2px 0; transform:rotate(40deg); opacity:.28; }
+  .check .t { font-size:.9rem; }
+  .check .t b { font-weight:700; }
+  .check code { font-family:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace; font-size:.82em;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:1px 6px; color:var(--rose); }
+
+  /* ---------- KPI ---------- */
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:var(--shadow); }
+  .kpi .lab { font-size:.74rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+  .kpi .big { font-size:1.06rem; font-weight:800; margin-top:8px; line-height:1.25; }
+  .kpi.north { background:linear-gradient(160deg,color-mix(in srgb,var(--rose) 14%,var(--surface)),var(--surface)); border-color:color-mix(in srgb,var(--rose) 32%,var(--border)); }
+  .kpi.north .big { color:var(--rose); }
+
+  /* ---------- GUARDRAILS ---------- */
+  .guard { background:color-mix(in srgb,var(--moonlit) 7%, var(--surface)); border:1px solid color-mix(in srgb,var(--moonlit) 26%, var(--border)); }
+  .glist { display:grid; grid-template-columns:1fr 1fr; gap:14px 22px; margin-top:4px; }
+  .g { display:flex; gap:12px; }
+  .g .shield { flex:0 0 auto; width:26px; height:26px; color:var(--moonlit); }
+  .g .gt { font-weight:700; font-size:.92rem; }
+  .g .gd { color:var(--ink-soft); font-size:.85rem; margin-top:2px; }
+
+  .foot { border-top:1px solid var(--border); margin-top:20px; padding:26px 0 60px; color:var(--ink-soft); font-size:.84rem; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .foot .src code { font-family:"Cascadia Code",ui-monospace,monospace; color:var(--rose); }
+
+  /* reveal */
+  .reveal { opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in { opacity:1; transform:none; }
+  a { color:var(--rose); }
+  :focus-visible { outline:2px solid var(--rose); outline-offset:3px; border-radius:6px; }
+
+  @media (max-width:860px){
+    .stats,.kpis{ grid-template-columns:repeat(2,1fr);}
+    .phases{ grid-template-columns:1fr;}
+    .engine-grid{ grid-template-columns:1fr;}
+    .checks,.glist{ grid-template-columns:1fr;}
+    .wheel{ grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion:reduce){ .reveal{ transition:none; opacity:1; transform:none; } }
+</style>
+
+<header class="hero">
+  <canvas id="sparkles" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="wordmark"><span class="spark"></span> <span class="gm">Squishy&nbsp;Smash</span></div>
+      <div class="stamp">Go-Viral Playbook · 90 Days</div>
+    </div>
+
+    <p class="eyebrow">The whole plan in one breath</p>
+    <h1 class="thesis"><span class="a">The squish gets the click.</span> <span class="b">The story gets the share.</span></h1>
+    <p class="lede">Any account can post a satisfying squish. Only Squishy&nbsp;Smash can tell the true one — <strong>a solo dad built a whole cross-media universe for his three daughters and hid them inside it as collectible characters.</strong> That story is the one thing no competitor can copy: it turns a trend into shares, parent trust, and free press.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">3</div><div class="l">hand-built lands</div></div>
+      <div class="stat"><div class="n">56</div><div class="l">friends to collect</div></div>
+      <div class="stat"><div class="n">1</div><div class="l">dad, no studio</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">loot boxes, ever</div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ONE BIG BET -->
+  <section>
+    <div class="wrap reveal">
+      <div class="card bet">
+        <p class="eyebrow">If you do only one thing</p>
+        <p class="quote">Shoot <span class="hl">one anchor video</span> — “I taught myself to build a video game for my 3 daughters, and hid them inside it” — and pin it to every profile forever.</p>
+        <p class="why">60–90s, dad to camera over gameplay B-roll, ending on the Apple&nbsp;Addy / Eggy&nbsp;Ellie / Hot&nbsp;Dog&nbsp;Heidi card reveal. No kids' faces needed — the cards <em>are</em> the reveal. Run daily squish-ASMR beneath it as the volume floor. Everything else is distribution and plumbing for this one story.</p>
+        <div class="cards-row">
+          <div class="mini"><div class="t">Un-copyable</div><div class="d">Every squishy account posts a squish. Only this one has the story.</div></div>
+          <div class="mini"><div class="t">Parent-shareable</div><div class="d">The narrative parents reshare and press re-tell for free.</div></div>
+          <div class="mini"><div class="t">Creator-magnetic</div><div class="d">The exact hook family creators say yes to.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLYWHEEL -->
+  <section>
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <p class="eyebrow">The engine</p>
+        <h2>One flywheel, stitched by the Magic Words you already built</h2>
+        <p>Four properties feed each other. The in-game promo-code system turns every view into a measurable play, every play into a return, and every parent into an owned email — the one audience no algorithm can tax.</p>
+      </div>
+      <div class="flow">
+        <div class="node"><span class="step">1</span><div class="h">Post a short</div><div class="s">Squish-ASMR or dad-story, on <em>owned</em> SFX — takedown-proof, duet-able.</div></div>
+        <div class="node"><span class="step">2</span><div class="h">Route to /play</div><div class="s">A Netlify redirect you control — never a raw platform link.</div></div>
+        <div class="node"><span class="step">3</span><div class="h">First 15 seconds pay off</div><div class="s">Squish → Happy Pop → coins → free capsule. The trend payoff <em>is</em> the onboarding.</div></div>
+        <div class="node"><span class="step">4</span><div class="h">Drop a Magic Word</div><div class="s">“Type TIKTOK for 250 coins” — a return reason and per-channel attribution in one.</div></div>
+        <div class="node"><span class="step">5</span><div class="h">Route the parent</div><div class="s">At the finale, “ask a grown-up to read the story” sends the adult off-platform, safely.</div></div>
+        <div class="node"><span class="step">6</span><div class="h">Own the contact</div><div class="s">Parent-gated email → the monthly Sparkle Letter. Compounding, un-rented reach.</div></div>
+        <div class="node loop"><span class="step">↺</span><div class="h">Repeat monthly</div><div class="s">A new word ships in-game + by email + Discord + Group shout — and cross-sells the book & app.</div></div>
+      </div>
+      <div class="props">
+        <span class="prop"><span class="dot" style="background:var(--rose)"></span>Roblox game — free mass top-of-funnel</span>
+        <span class="prop"><span class="dot" style="background:var(--goo)"></span>iOS app — pocket collection</span>
+        <span class="prop"><span class="dot" style="background:var(--pudding)"></span>Two Amazon books — parent trust</span>
+        <span class="prop"><span class="dot" style="background:var(--moonlit)"></span>squishysmash.com — the owned hub</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <p class="eyebrow">90 days, in the order discovery rewards</p>
+        <h2>Build the funnel, then pour volume, then spend the first paid dollar last</h2>
+        <p>The three phases follow the game's own land progression — Pudding&nbsp;Hills → Goo&nbsp;Coast → Moonlit&nbsp;Hollow.</p>
+      </div>
+      <div class="phases">
+        <div class="phase p1">
+          <div class="win">Days 1–30</div>
+          <h3>Foundation &amp; the Anchor</h3>
+          <p class="goal">Make the funnel real before pouring traffic into it.</p>
+          <ul>
+            <li>Lock <b>one positioning</b> across every bio, store page, hub &amp; book blurb</li>
+            <li><b>Post the finished cuts today</b> — the promo videos already exist</li>
+            <li>Turn on Roblox <b>Thumbnail + Icon A/B</b> — zero new production</li>
+            <li>Tune the <b>first 15 seconds</b> so the squish payoff lands fast</li>
+            <li>Ship the <b>redirect layer + 4-button hub</b> + per-channel Magic Words</li>
+            <li><b>Shoot the founder anchor video</b>; pin it everywhere</li>
+          </ul>
+        </div>
+        <div class="phase p2">
+          <div class="win">Days 31–60</div>
+          <h3>Volume &amp; Community</h3>
+          <p class="goal">Run the engine at full tilt; find the winning format.</p>
+          <ul>
+            <li>Hit <b>5–10 shorts/week</b> from one Sunday batch</li>
+            <li>Stand up the <b>Roblox Group</b> (kids) + <b>parent Discord</b> (grown-ups)</li>
+            <li>Launch the <b>“No-Losers” UGC engine</b>, every entry wins a code</li>
+            <li>DM the <b>first 10 micro-creators</b> — free in-game cameo, no cash</li>
+            <li>Turn on the <b>monthly Sparkle Letter</b> + first seasonal Event</li>
+            <li>Start the <b>Book 1 launch runway</b> + ARC reader squad</li>
+          </ul>
+        </div>
+        <div class="phase p3">
+          <div class="win">Days 61–90</div>
+          <h3>Amplify &amp; Tentpole</h3>
+          <p class="goal">Spend earned wins into a launch, a PR spike &amp; the first ad.</p>
+          <ul>
+            <li>Launch <b>Book 1</b> as a dated tentpole with a printed Magic Word</li>
+            <li>Send <b>5 PR pitches</b> — local news, parenting media, Show HN</li>
+            <li>Publish the free <b>dad's-voice read-along</b> lead magnet</li>
+            <li><b>First paid dollar:</b> Roblox Ads on the proven thumbnail only</li>
+            <li>Small <b>Amazon Ads</b> after 15+ honest reviews land</li>
+            <li>Relaunch the <b>Book 2 reprint</b> as a “2nd edition” glow-up</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENT ENGINE + WHEEL -->
+  <section>
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <p class="eyebrow">Because time is the scarcest resource</p>
+        <h2>One 2–3 hour Sunday batch → a week of daily posts</h2>
+        <p>Never a daily scramble. Capture once, chop, voice, assemble from reusable templates, schedule the week.</p>
+      </div>
+      <div class="engine-grid">
+        <div class="card">
+          <ol class="steps">
+            <li><div><div class="k">Capture · ~25 min</div><div class="v">One screen-grab pass in the live game for fresh B-roll.</div></div></li>
+            <li><div><div class="k">Chop</div><div class="v">CapCut clip bin: squish / pop / reveal / POV / page.</div></div></li>
+            <li><div><div class="k">Voice</div><div class="v">All week's scripts through ElevenLabs in one dad-voice session — owned, zero takedown risk.</div></div></li>
+            <li><div><div class="k">Assemble</div><div class="v">Fill the 8 templates; brand overlay + owned stinger as the end-button. Frame 1 is already mid-motion.</div></div></li>
+            <li><div><div class="k">Schedule</div><div class="v">Load the week into Metricool — after-school + evening + weekend mornings, tied to the week's code.</div></div></li>
+            <li><div><div class="k">Distribute owned</div><div class="v">Mirror to Discord, one Reddit devlog, the hub, the Group shout.</div></div></li>
+          </ol>
+          <div class="cadence"><b>Cadence:</b> launch sprint 1/day cross-posted (weeks 1–4) → sustained floor 5/week. Promise “one batch a week, posts land daily” — never “daily forever.” If a dad-week hits, the scheduled queue keeps the account alive.</div>
+        </div>
+        <div>
+          <div class="wheel">
+            <div class="fmt"><div class="num">01</div><div class="name">Squish → Happy-Pop ASMR</div><div class="tag">the daily heartbeat</div></div>
+            <div class="fmt"><div class="num">02</div><div class="name">Free Capsule Reveal</div><div class="tag">“actually free” suspense</div></div>
+            <div class="fmt"><div class="num">03</div><div class="name">“Which Squishy are you?”</div><div class="tag">picker → comments &amp; duets</div></div>
+            <div class="fmt"><div class="num">04</div><div class="name">Dad devlog</div><div class="tag">“I built this for my girls”</div></div>
+            <div class="fmt"><div class="num">05</div><div class="name">“I put my kids in the game”</div><div class="tag">the card-reveal reaction</div></div>
+            <div class="fmt"><div class="num">06</div><div class="name">Collection completion</div><div class="tag">fill the 56-friend book</div></div>
+            <div class="fmt"><div class="num">07</div><div class="name">Storybook → Roblox</div><div class="tag">book page becomes a place</div></div>
+            <div class="fmt"><div class="num">08</div><div class="name">Feature-flex POV</div><div class="tag">rideable coaster · grow-a-garden</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEEK ONE -->
+  <section>
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <p class="eyebrow">Start here — assets already exist</p>
+        <h2>Week 1 checklist</h2>
+      </div>
+      <div class="card">
+        <div class="checks">
+          <div class="check"><div class="box"></div><div class="t"><b>Secure @squishysmash</b> on TikTok/Reels/YouTube and post the two finished cuts today.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Rewrite every surface</b> to the positioning + “free capsules forever, no loot boxes.”</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Turn on Thumbnail + Icon A/B</b> in the Roblox Creator Dashboard.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Mint per-channel Magic Words</b> in <code>CodeService</code> + add the end-card CTA.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Cut the owned stinger</b> + upload one signature squish as a TikTok “original sound.”</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Batch 3–5 squish-ASMR loops</b> from existing recordings → schedule in Metricool.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Ship the redirects</b> (<code>/play</code> <code>/book</code> <code>/app</code> <code>/listen</code>) + the 4-button hub with a parent-gated email box.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Pin the “Our Promise”</b> trust post on every channel.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Post the devlog to r/daddit</b> — the highest-ROI free reach available.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Create the “Squishy Smash” Roblox Group</b> + first Group Shout code.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Time the first 30 seconds</b> in Studio; add a glowing arrow to the first sleepy friend.</div></div>
+          <div class="check"><div class="box"></div><div class="t"><b>Write the anchor-video script tonight</b>; book Sunday's shoot.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPIs -->
+  <section>
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <p class="eyebrow">What to watch</p>
+        <h2>Measure the funnel, not the vanity</h2>
+      </div>
+      <div class="kpis">
+        <div class="kpi north"><div class="lab">North Star</div><div class="big">Roblox daily active players</div></div>
+        <div class="kpi"><div class="lab">Compounding</div><div class="big">Parent email list</div></div>
+        <div class="kpi"><div class="lab">Story is working</div><div class="big">Shares-per-view</div></div>
+        <div class="kpi"><div class="lab">Funnel proof</div><div class="big">Per-channel code redemptions</div></div>
+      </div>
+      <div class="kpis" style="margin-top:14px">
+        <div class="kpi"><div class="lab">Hook lands</div><div class="big">Anchor watch-through &gt; 50%</div></div>
+        <div class="kpi"><div class="lab">Retention</div><div class="big">D1 &amp; D7 return</div></div>
+        <div class="kpi"><div class="lab">Book → game</div><div class="big">Printed-code redemptions</div></div>
+        <div class="kpi"><div class="lab">Go / kill on ads</div><div class="big">Cost per qualified play</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUARDRAILS -->
+  <section>
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <p class="eyebrow">Non-negotiable — the Law of marketing</p>
+        <h2>The kid-safety guardrails</h2>
+        <p>The safe version is more on-brand <em>and</em> more shareable. These aren't a tax — they're the wedge.</p>
+      </div>
+      <div class="card guard">
+        <div class="glist">
+          <div class="g"><svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><div><div class="gt">Characters, not faces</div><div class="gd">The girls appear only as their in-game cards + a first name. No faces, no real-child voices, no school or location. Co-creators, never the punchline.</div></div></div>
+          <div class="g"><svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><div><div class="gt">Never collect data from kids</div><div class="gd">Email opt-in is parent-gated only. In-game CTAs only ever say “ask a grown-up.” Book &amp; code funnels are data-free by design.</div></div></div>
+          <div class="g"><svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><div><div class="gt">Kids stay on Roblox</div><div class="gd">Community for 6–9s lives in the Roblox Group + in-game. Discord is 13+ — parent/creator-only, never dangled at kids.</div></div></div>
+          <div class="g"><svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><div><div class="gt">“No loot boxes” stays literally true</div><div class="gd">Capsules free forever; codes grant small coin gifts; style &amp; convenience only. It's enforced in code — never let gacha-FOMO framing creep in.</div></div></div>
+          <div class="g"><svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><div><div class="gt">Own your audio</div><div class="gd">Lead with owned SFX &amp; music (takedown-proof); apply trend sounds only to interactive formats. Keep making-of content general-audience.</div></div></div>
+          <div class="g"><svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><div><div class="gt">Ride the category, not a trademark</div><div class="gd">Own the original “Squishy Smash” world &amp; its names. Never imply affiliation with Squishmallows; never name a competitor.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="foot">
+      <div>Squishy Smash · a wholesome squishy universe built by one dad for his three daughters.</div>
+      <div class="src">Full playbook: <code>marketing/GO_VIRAL_PLAN.md</code></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  // Scroll reveal
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) {
+    items.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold:0.12 });
+    items.forEach(function(el){ io.observe(el); });
+  }
+
+  // Hero sparkle field — gentle, drifting, brand-tinted (respects reduced motion)
+  var cv = document.getElementById('sparkles');
+  if (!cv) return;
+  var ctx = cv.getContext('2d'), W, H, dpr = Math.min(window.devicePixelRatio||1, 2), stars = [];
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  var palette = ['--rose','--pudding','--moonlit','--goo'];
+  function resize(){
+    var r = cv.getBoundingClientRect(); W = r.width; H = r.height;
+    cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function seed(){
+    stars = [];
+    var n = Math.max(14, Math.min(34, Math.floor(W/40)));
+    for (var i=0;i<n;i++){
+      stars.push({ x:Math.random()*W, y:Math.random()*H,
+        s:Math.random()*2.2+1, a:Math.random()*Math.PI*2,
+        tw:Math.random()*0.02+0.005, v:Math.random()*0.12+0.02,
+        c:css(palette[i % palette.length]) || '#E15A96' });
+    }
+  }
+  function star(x,y,r,rot,color,alpha){
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.globalAlpha=alpha; ctx.fillStyle=color;
+    ctx.beginPath();
+    for (var i=0;i<8;i++){ var ang=i*Math.PI/4, rad=(i%2===0)?r:r*0.4;
+      ctx.lineTo(Math.cos(ang)*rad, Math.sin(ang)*rad); }
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  var t=0, raf=null;
+  function frame(){
+    ctx.clearRect(0,0,W,H); t+=1;
+    for (var i=0;i<stars.length;i++){ var p=stars[i];
+      var alpha = 0.25 + 0.55*(0.5+0.5*Math.sin(t*p.tw*6 + p.a));
+      p.y -= p.v; if (p.y < -6) { p.y = H+6; p.x = Math.random()*W; }
+      star(p.x, p.y, p.s, p.a + t*0.002, p.c, alpha*0.5);
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function start(){ resize(); seed(); if(!reduce){ if(raf) cancelAnimationFrame(raf); frame(); } else { ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){var p=stars[i]; star(p.x,p.y,p.s,p.a,p.c,0.28);} } }
+  window.addEventListener('resize', function(){ resize(); seed(); });
+  start();
+})();
+</script>
