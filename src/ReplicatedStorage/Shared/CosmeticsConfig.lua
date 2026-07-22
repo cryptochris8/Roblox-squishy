@@ -91,6 +91,12 @@ local catalog: { Cosmetic } = {
 	{ id = "hat_rainbow_keeper", name = "Rainbow Keeper Crown", icon = "🌈", type = "hat",
 		reward = true,
 		color = Color3.fromRGB(255, 214, 90) },
+	-- Book-exclusive keepsake: obtainable ONLY by a Magic Word printed in the
+	-- picture books (see CodeService). Never bought with coins or Robux — it's
+	-- the "I read the story" badge of honor, so it stays on the reward shelf.
+	{ id = "hat_storybook_halo", name = "Storybook Halo", icon = "📖", type = "hat",
+		reward = true,
+		color = Color3.fromRGB(255, 226, 150), color2 = Color3.fromRGB(190, 150, 255) },
 }
 CosmeticsConfig.Catalog = catalog
 

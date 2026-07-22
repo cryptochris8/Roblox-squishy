@@ -14,13 +14,30 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local CodeService = {}
 
--- magic word -> Sparkle Coins (doc 09: small and safe, no power)
-local CODES: { [string]: number } = {
-	SPLOINK = 150,
-	THUP = 150,
-	PMF = 200,
-	EVERYSQUISH = 250,
-	LOSTSPARKLE = 300,
+-- Wired by Main so a code-granted cosmetic can appear on the buddy right away.
+CodeService.onCosmeticGranted = nil :: ((player: Player) -> ())?
+
+-- A magic word grants a small, safe Sparkle Coin gift (doc 09: small, no power),
+-- and OPTIONALLY a cosmetic. The table lives server-side only, so kids have to
+-- find the words in the books / videos — which is the whole point, and lets each
+-- channel's word double as an attribution counter (redemptions persist per code).
+type CodeReward = { coins: number, cosmetic: string? }
+local CODES: { [string]: CodeReward } = {
+	-- Storybook words (printed in the picture books). The two BOOK words each
+	-- grant the exclusive Storybook Halo — a keepsake you can't get any other way.
+	SPLOINK = { coins = 150 },
+	THUP = { coins = 150 },
+	PMF = { coins = 200 },
+	EVERYSQUISH = { coins = 250 },
+	LOSTSPARKLE = { coins = 300, cosmetic = "hat_storybook_halo" }, -- Book 2 "The Lost Sparkle"
+	MEETTHESQUISHIES = { coins = 300, cosmetic = "hat_storybook_halo" }, -- Book 1 "Meet the Squishies"
+	-- Channel words (end-cards on the videos) — coins only; redemptions per code
+	-- tell us which channel actually drives real plays.
+	TIKTOK = { coins = 250 },
+	SHORTS = { coins = 250 },
+	YOUTUBE = { coins = 250 },
+	DISCORD = { coins = 250 },
+	SPARKLE = { coins = 200 },
 }
 
 local toastEvent: RemoteEvent
@@ -48,7 +65,7 @@ local function onRedeem(player: Player, text: any)
 
 	local reward = CODES[code]
 	if not reward then
-		toastEvent:FireClient(player, "Hmm, that's not a magic word... check The Lost Sparkle storybook!")
+		toastEvent:FireClient(player, "Hmm, that's not a magic word... check a Squishy storybook!")
 		return
 	end
 	if PlayerDataService.hasRedeemedCode(player, code) then
@@ -57,9 +74,30 @@ local function onRedeem(player: Player, text: any)
 	end
 
 	PlayerDataService.markCodeRedeemed(player, code)
-	PlayerDataService.addCoins(player, reward)
-	toastEvent:FireClient(player, "✨ " .. code .. " is a magic word!  +" .. reward .. " Sparkle Coins!")
+	PlayerDataService.addCoins(player, reward.coins)
+
+	-- A book word can also grant its keepsake cosmetic — auto-wear it on the
+	-- hat slot (the premium/crown pattern), then refresh the buddy so it shows.
+	local gotCosmetic = false
+	if reward.cosmetic and not PlayerDataService.ownsCosmetic(player, reward.cosmetic) then
+		PlayerDataService.grantCosmetic(player, reward.cosmetic)
+		PlayerDataService.setEquippedCosmetic(player, "hat", reward.cosmetic)
+		gotCosmetic = true
+	end
+
+	if gotCosmetic then
+		toastEvent:FireClient(
+			player,
+			"📖 " .. code .. " is a magic word!  +" .. reward.coins .. " Sparkle Coins + the Storybook Halo!",
+			"celebration"
+		)
+	else
+		toastEvent:FireClient(player, "✨ " .. code .. " is a magic word!  +" .. reward.coins .. " Sparkle Coins!")
+	end
 	PlayerDataService.sync(player)
+	if gotCosmetic and CodeService.onCosmeticGranted then
+		CodeService.onCosmeticGranted(player)
+	end
 end
 
 function CodeService.init()

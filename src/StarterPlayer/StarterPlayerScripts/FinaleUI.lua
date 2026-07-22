@@ -50,16 +50,16 @@ function FinaleUI.play(info)
 	local panel = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(0, 380),
+		Size = UDim2.fromOffset(0, 448),
 		BackgroundColor3 = UiTheme.Colors.Cream,
 		radius = 28,
 	})
 	panel.Parent = layer
 	UiTheme.stroke(UiTheme.Colors.Coin, 4, panel)
 	UiTheme.gradient(Color3.fromRGB(255, 246, 222), Color3.fromRGB(255, 220, 242), 120, panel)
-	UiTheme.autoFit(panel, 580, 380)
+	UiTheme.autoFit(panel, 580, 448)
 	TweenService:Create(panel, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.fromOffset(580, 380),
+		Size = UDim2.fromOffset(580, 448),
 	}):Play()
 
 	local title = Instance.new("TextLabel")
@@ -95,6 +95,21 @@ function FinaleUI.play(info)
 		reward.Text = "🎉 +" .. info.reward .. " Sparkle Coins!"
 		reward.Parent = panel
 	end
+
+	-- Game → book, at the highest-intent moment. Gentle, non-clickable, and
+	-- "ask a grown-up" framed (kids never get sent off-platform themselves).
+	local bookCard = Instance.new("TextLabel")
+	bookCard.BackgroundColor3 = UiTheme.Colors.Panel
+	bookCard.BackgroundTransparency = 0.15
+	bookCard.Position = UDim2.fromOffset(36, 296)
+	bookCard.Size = UDim2.new(1, -72, 0, 66)
+	bookCard.Font = UiTheme.BodyFont
+	bookCard.TextSize = 17
+	bookCard.TextWrapped = true
+	bookCard.TextColor3 = UiTheme.Colors.Ink
+	bookCard.Text = "📖 You found the whole story! Read The Lost Sparkle with a grown-up — ask them to visit squishysmash.com"
+	bookCard.Parent = panel
+	UiTheme.corner(16, bookCard)
 
 	local yay = Instance.new("TextButton")
 	yay.AnchorPoint = Vector2.new(0.5, 1)

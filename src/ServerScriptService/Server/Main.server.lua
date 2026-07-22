@@ -214,6 +214,9 @@ end
 MilestoneService.onCosmeticsChanged = function(player)
 	BuddyService.refresh(player)
 end
+CodeService.onCosmeticGranted = function(player)
+	BuddyService.refresh(player) -- a book word granted the Storybook Halo — show it now
+end
 SparkleBitService.onCollected = function(player, all)
 	DailyService.noteEvent(player, "bit")
 	if all then
@@ -228,6 +231,9 @@ GiftService.onGiftSent = function(sender)
 end
 GardenService.onHarvest = function(player)
 	BadgeService.award(player, "FirstHarvest")
+end
+FamilyService.onWholeFamily = function(player)
+	BadgeService.award(player, "TheWholeFamily")
 end
 TravelService.onTraveled = function(player)
 	ftue(player, 4, "first_travel")

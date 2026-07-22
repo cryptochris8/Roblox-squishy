@@ -329,6 +329,25 @@ local HAT_BUILDERS: { [string]: (Model, CFrame, any) -> () } = {
 			point.CFrame = top * CFrame.new(math.cos(angle) * 0.62, 0.45, math.sin(angle) * 0.62)
 		end
 	end,
+	-- The Storybook Halo: a soft floating ring alternating the two storybook
+	-- colours (warm gold + dreamy violet), crowned with a little star — a gentle
+	-- "I read the story" glow. Book-code only (see CodeService).
+	hat_storybook_halo = function(model, top, item)
+		local color2 = item.color2 or item.color
+		for i = 1, 10 do
+			local angle = (i / 10) * math.pi * 2
+			local bead = prop(model, {
+				Name = "StorybookBead", Shape = Enum.PartType.Ball, Size = Vector3.new(0.2, 0.2, 0.2),
+				Color = (i % 2 == 1) and item.color or color2, Material = Enum.Material.Neon,
+			})
+			bead.CFrame = top * CFrame.new(math.cos(angle) * 0.7, 0.62, math.sin(angle) * 0.7)
+		end
+		local star = prop(model, {
+			Name = "StorybookStar", Shape = Enum.PartType.Ball, Size = Vector3.new(0.34, 0.34, 0.34),
+			Color = item.color, Material = Enum.Material.Neon,
+		})
+		star.CFrame = top * CFrame.new(0, 0.92, 0)
+	end,
 }
 
 local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds"

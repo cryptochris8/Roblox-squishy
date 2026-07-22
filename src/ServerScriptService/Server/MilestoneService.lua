@@ -101,6 +101,19 @@ function MilestoneService.check(player: Player)
 	local changed = false
 	local launch = SquishyData.getLaunchRoster()
 
+	-- Game → app cross-sell, once, at a moment of real collecting momentum: a kid
+	-- who's found ~15 friends is invested enough to want them in their pocket.
+	-- Soft, "ask a grown-up" framed, no reward attached, fires a single time.
+	if profile.DiscoveredCount >= 15 and not profile.Milestones["app_nudge"] then
+		profile.Milestones["app_nudge"] = true
+		toastEvent:FireClient(
+			player,
+			"💛 Loving your collection? Keep the Squishy Friends in your pocket — ask a grown-up about the Squishy Smash app!",
+			"info"
+		)
+		changed = true
+	end
+
 	for zone, defs in pairs(rosters()) do
 		if allDiscovered(profile, defs) then
 			changed = award(player, profile, "zone_discovered_" .. zone, ZONE_COMPLETE_COINS,

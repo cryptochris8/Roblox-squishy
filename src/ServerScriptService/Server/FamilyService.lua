@@ -23,8 +23,22 @@ local SquishyModelFactory = require(script.Parent.SquishyModelFactory)
 
 local FamilyService = {}
 
+-- Wired by Main: fires ONCE, on the grant that completes all three daughters
+-- (grant() returns early for an already-known daughter, so it can't double-fire).
+FamilyService.onWholeFamily = nil :: ((player: Player) -> ())?
+
 local toastEvent: RemoteEvent
 local capsuleResultEvent: RemoteEvent
+
+-- True once every Family daughter has been befriended.
+local function hasWholeFamily(player: Player): boolean
+	for _, def in ipairs(SquishyData.getFamilyRoster()) do
+		if not PlayerDataService.hasDiscovered(player, def.Id) then
+			return false
+		end
+	end
+	return true
+end
 
 -- which daughter guards which land
 local BY_ZONE: { [string]: string } = {
@@ -105,6 +119,9 @@ function FamilyService.grant(player: Player, zoneName: string, silent: boolean?)
 		end
 	end
 	PlayerDataService.sync(player)
+	if hasWholeFamily(player) and FamilyService.onWholeFamily then
+		FamilyService.onWholeFamily(player)
+	end
 	return true
 end
 
@@ -133,6 +150,13 @@ function FamilyService.checkOwed(player: Player)
 		if #names > 0 then
 			toastEvent:FireClient(player, "💛 " .. table.concat(names, " & ") .. " " ..
 				(#names == 1 and "is waiting" or "are waiting") .. " in your ⭐ Family book!")
+		end
+		-- Backfill TheWholeFamily for anyone who ALREADY had all three before the
+		-- badge existed (grant()'s hook only fires on the completing grant). Safe
+		-- to call every join: BadgeService.award is idempotent + session-cached,
+		-- and no-ops entirely while the id is still 0.
+		if hasWholeFamily(player) and FamilyService.onWholeFamily then
+			FamilyService.onWholeFamily(player)
 		end
 	end)
 end
