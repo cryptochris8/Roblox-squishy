@@ -789,10 +789,38 @@ local function makeCapsule(folder: Instance, pos: Vector3, displayName: string, 
 	return prompt
 end
 
-local function makeGuide(folder: Instance, pos: Vector3, name: string, color: Color3): ProximityPrompt
-	local body = part({ Name = "Body", Shape = Enum.PartType.Ball, Size = Vector3.new(5, 5, 5), Position = pos, Color = color })
-	body.Parent = folder
-	floatingLabel(name, color, body, 3.5)
+-- A land's storybook GUIDE (the "Talk" greeter). When `defId` names a real
+-- friend, the guide gets that friend's card-faithful 3D shape (the same mesh the
+-- squishable friends + Family guardians use) — the greeter, not a plain ball.
+-- Falls back to the soft ball if the def/model can't be built. Mirrors the Soft
+-- Dumpling guide fix so every land's guide reads as a real character.
+local function makeGuide(folder: Instance, pos: Vector3, name: string, color: Color3, defId: string?): ProximityPrompt
+	local body: BasePart? = nil
+	local def = if defId then SquishyData.getById(defId) else nil
+	if def then
+		local model = SquishyModelFactory.build(def)
+		if model.PrimaryPart then
+			model.Name = "Guide" .. (string.gsub(name, "%s+", ""))
+			model:ScaleTo(1.25) -- a little larger than a world friend (the greeter)
+			for _, gp in ipairs(model:GetDescendants()) do
+				if gp:IsA("BasePart") then
+					gp.CanCollide = false
+					gp.CanQuery = false
+				end
+			end
+			model:PivotTo(CFrame.new(pos.X, pos.Y - 0.5, pos.Z))
+			model.Parent = folder
+			body = model.PrimaryPart
+		else
+			model:Destroy()
+		end
+	end
+	if not body then
+		local ball = part({ Name = "Body", Shape = Enum.PartType.Ball, Size = Vector3.new(5, 5, 5), Position = pos, Color = color })
+		ball.Parent = folder
+		body = ball
+	end
+	floatingLabel(name, color, body, if def then 4.5 else 3.5)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ObjectText = name
 	prompt.ActionText = "Talk"
@@ -1220,7 +1248,7 @@ local function buildGooCoast()
 	makeLandingPad(folder, zone.spawn, Color3.fromRGB(120, 220, 224))
 	-- the capsule keeps the sandcastle company (the western beach district)
 	local capsulePrompt = makeCapsule(folder, center + Vector3.new(-55, 3.5, 49), "Goo Capsule", Color3.fromRGB(120, 220, 200))
-	local guidePrompt = makeGuide(folder, center + Vector3.new(15, 2.5, 20), "Bloop the Goo Guide", Color3.fromRGB(150, 226, 234))
+	local guidePrompt = makeGuide(folder, center + Vector3.new(15, 2.5, 20), "Bloop the Goo Guide", Color3.fromRGB(150, 226, 234), "bubble_blob")
 	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(120, 220, 224))
 	-- travel plaza out by the rocky cove (east shore), not on the spawn sand
 	local travelPads = buildTravelHub(folder, center + Vector3.new(75, 0, -44), "Goo Coast")
@@ -1653,7 +1681,7 @@ local function buildMoonlitHollow()
 	makeLandingPad(folder, zone.spawn, Color3.fromRGB(196, 166, 255))
 	-- the capsule glows beside the cozy log (the glade's eastern district)
 	local capsulePrompt = makeCapsule(folder, center + Vector3.new(49, 3.5, 49), "Moonlit Capsule", Color3.fromRGB(150, 120, 210))
-	local guidePrompt = makeGuide(folder, center + Vector3.new(-20, 2.5, 23), "Nox the Night Guide", Color3.fromRGB(176, 152, 224))
+	local guidePrompt = makeGuide(folder, center + Vector3.new(-20, 2.5, 23), "Nox the Night Guide", Color3.fromRGB(176, 152, 224), "puff_ghost")
 	makeShardPedestal(folder, zone.shardSpot, Color3.fromRGB(196, 166, 255))
 	-- travel plaza up by the stargazing circle (the glade's quiet north), with
 	-- the glowing stepping stones already leading the way
