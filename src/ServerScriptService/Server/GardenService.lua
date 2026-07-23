@@ -34,10 +34,11 @@ local toastEvent: RemoteEvent
 local openEvent: RemoteEvent
 local waterFxEvent: RemoteEvent
 
--- The district sits SOUTHEAST of the Pudding Hills spawn (0,0.5,34), on the walk
--- toward the orchard + first shard (so kids find it), in a spot verified CLEAR of
--- every other structure. FINAL offsets — never run through ZoneConfig spread.
-local DISTRICT_ORIGIN = Vector3.new(40, 0, -20)
+-- The district sits due SOUTH of the Pudding Hills spawn (0,0.5,34), out in the
+-- big open south apron inside the coaster's south rim — its own roomy home, dead
+-- ahead of spawn behind the new caramel spine + donut-arch gateway. Footprint
+-- X[-24..24] Z[80..110]. FINAL offsets — never run through ZoneConfig spread.
+local DISTRICT_ORIGIN = Vector3.new(0, 0, 95)
 local PLOT_SPACING_X = 10
 local PLOT_SPACING_Z = 11
 local COLS = 4

@@ -1948,17 +1948,20 @@ function WorldService.build()
 		-- starter cluster (visible from spawn, by the guide + capsule)
 		Vector3.new(-8, 2, 6), Vector3.new(10, 2, 2), Vector3.new(2, 2, -8),
 		-- the cottage village lane (south-west)
-		Vector3.new(-66, 2, 32), Vector3.new(-80, 2, 44),
+		Vector3.new(-80, 2, 44),
 		-- under the orchard trees (north-east, by the shard pedestal)
 		Vector3.new(44, 2, -34), Vector3.new(56, 2, -48),
-		-- the windmill field, deep across the river (north-west)
-		Vector3.new(-16, 2, -68), Vector3.new(8, 2, -52),
-		-- beside the flower garden (north-west)
-		Vector3.new(-34, 2, -46),
 		-- the picnic clearing (east, past the boutique)
 		Vector3.new(68, 2, 22),
 		-- the far eastern rise, on the way to the Goo Coast gate
 		Vector3.new(84, 2, -8),
+		-- the NEW south Sparkle-Garden apron: four friends populate the spread-out
+		-- south, two in each pocket flanking the garden. Literals are PRE-DIVIDED by
+		-- Spread (1.45) so SP() lands them on their finals: west (-38,100)/(-38,115),
+		-- east (40,90)/(40,115). (Moved out of the over-dense windmill/flower/village
+		-- clusters up north — the "use the whole land" spread.)
+		Vector3.new(-26.21, 2, 68.97), Vector3.new(-26.21, 2, 79.31),
+		Vector3.new(27.59, 2, 62.07), Vector3.new(27.59, 2, 79.31),
 	}
 	local pads = {}
 	for i, posRaw in ipairs(padPositions) do
@@ -2533,7 +2536,7 @@ function WorldService.build()
 	for i, at in ipairs(SPL({
 		Vector3.new(-24, 0, 26), Vector3.new(34, 0, 20), Vector3.new(-52, 0, -18),
 		Vector3.new(20, 0, -44), Vector3.new(64, 0, -28), Vector3.new(-72, 0, 18),
-		Vector3.new(8, 0, 44), Vector3.new(-44, 0, 48),
+		Vector3.new(16.55, 0, 40), Vector3.new(-44, 0, 48), -- (16.55,40)->final (24,58): east of the new gateway
 	})) do
 		cloudBush(folder, at, Color3.fromRGB(255, 252, 248), bushFlowers[(i % #bushFlowers) + 1])
 	end
@@ -2552,6 +2555,26 @@ function WorldService.build()
 	end
 	macaronBalloon(folder, Vector3.new(0, 0, 0), 85, 105, Color3.fromRGB(255, 170, 195), Color3.fromRGB(255, 226, 150), 0)
 	macaronBalloon(folder, Vector3.new(0, 0, 0), 60, 88, Color3.fromRGB(170, 200, 255), Color3.fromRGB(255, 250, 240), math.pi)
+
+	-- ── South-apron spread (2026-07-23) ────────────────────────────────────────
+	-- The relocated Sparkle Garden (now at 0,95) anchors the big empty south. A
+	-- spawn-facing donut-arch GATEWAY + a caramel SPINE turn the north-facing
+	-- spawn toward it; pocket spurs reach the four new south friend pads; a cloud
+	-- hedge borders the garden's back fence against the coaster. All RAW/final
+	-- (NOT SPL'd — these are hand-placed like the other beauty-pass props).
+	donutArch(folder, Vector3.new(0, 0, 64), Vector3.new(0, 0, 95)) -- gateway on the spine, framing the walk south
+	ribbonPath(folder, { Vector3.new(0, 0, 42), Vector3.new(0, 0, 64), Vector3.new(0, 0, 80) }, 3, pathColor) -- spawn -> gateway -> garden
+	ribbonPath(folder, { Vector3.new(-24, 0, 90), Vector3.new(-38, 0, 100), Vector3.new(-38, 0, 115) }, 3, pathColor) -- garden -> west pads
+	ribbonPath(folder, { Vector3.new(24, 0, 90), Vector3.new(40, 0, 90), Vector3.new(40, 0, 115) }, 3, pathColor) -- garden -> east pads
+	for _, lampAt in ipairs({ Vector3.new(-10, 0, 74), Vector3.new(10, 0, 74), Vector3.new(-38, 0, 108) }) do
+		gumballLamp(folder, lampAt) -- the gateway pair + a west-pocket light
+	end
+	for _, at in ipairs({
+		Vector3.new(-16, 0, 117), Vector3.new(-6, 0, 119), Vector3.new(6, 0, 117),
+		Vector3.new(16, 0, 119), Vector3.new(0, 0, 116),
+	}) do
+		cloudBush(folder, at, Color3.fromRGB(255, 252, 248), bushFlowers[1]) -- low hedge along the garden's south fence
+	end
 
 	-- Travel Plaza: the hub lives out on the eastern rise (the road toward the
 	-- old Goo Coast gate), its own destination instead of spawn furniture.
