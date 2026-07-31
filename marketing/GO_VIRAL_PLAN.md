@@ -104,7 +104,7 @@ The four properties feed each other, stitched by the **Magic Words** promo-code 
 
 **Moves:**
 - Set a firm **Book 1 launch date** in the back-to-school gifting window; finalize KDP metadata + A+ Content (Canva from `final_48` card art + the 4 land thumbnails); print a `MEETTHESQUISHIES` Magic Word + `/play` QR in the back matter.
-- Run the **ARC review push** compliantly (free digital ARC, "Request a Review" button, never paid/required/family) — target 25+ honest reviews at 4.5+.
+- Run the **ARC review push** compliantly (free digital ARC; ask = "an honest review if you're willing", never paid/required/family — NOTE the Amazon "Request a Review" button is Seller Central-only, KDP authors don't have it; the ask rides the ARC email + back-matter QR instead) — target 25+ honest reviews at 4.5+.
 - Send the **5 PR pitches** in one sitting (local morning shows + metro parent mag = fastest yes; Common Sense + Fatherly/Motherly/Romper = no-loot-box angle; Show HN + Product Hunt + AI newsletters = solo-dad-built-with-AI angle).
 - Publish the free **dad's-voice read-along** at `/listen` as the parent lead magnet + cut 45–60s read-along Shorts (FFmpeg-synced spread art + narration).
 - **ONLY after** a CTR winner + healthy D1: run **$10–20/day Roblox Sponsored Ads** on the winning thumbnail; watch cost-per-qualified-play daily; scale if retention holds, kill fast if not.
@@ -246,7 +246,7 @@ These aren't just compliance; the safe version is *more on-brand and more sharea
 - **Paid Random Items policy (audience 6–9):** Capsules stay **FREE forever**; codes grant only small coin gifts; monetization = style/convenience only. This is enforced in code AND is the marketing wedge — never let any "code = loot" or gacha-FOMO framing creep in. Keep the claim literally true across all four properties (it's a legal-grade promise).
 - **Trending-audio takedowns + YouTube "Made for Kids":** lead with **owned SFX/music** (takedown-proof); apply trend sounds only to interactive formats. Keep dad-story/making-of content general-audience; reserve strict MFK only for kid-directed in-game trailers.
 - **Brand-tone + trademark:** gate every post against the storybook vocabulary (squish/sparkle/kindness/collect/friendship) — no rage-bait. **Never imply affiliation with Squishmallows** — own the original "Squishy Smash" universe and its own character names; ride the *category*, not any trademark. Keep the "antidote to loot-box games" angle positive; never name a competitor.
-- **Amazon reviews + burnout:** run the ARC squad arm's-length (only the "Request a Review" button; no paid/required/positive/family reviews). Protect against overpromise with the weekly-batch + reusable-templates + evergreen-queue system — a sustainable 5/week beats a heroic-then-abandoned daily.
+- **Amazon reviews + burnout:** run the ARC squad arm's-length (a single uncoerced ask via the ARC email/back-matter QR — the "Request a Review" button is Seller Central-only, not available to KDP authors; no paid/required/positive/family reviews). Protect against overpromise with the weekly-batch + reusable-templates + evergreen-queue system — a sustainable 5/week beats a heroic-then-abandoned daily.
 
 ---
 
