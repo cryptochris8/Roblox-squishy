@@ -709,6 +709,18 @@ against 3 pages (start/mid/end).
    gallery building — hero renders, the all-48 poster, coloring-pack "how a
    squishy gets its colors" corner, Squishkeeper plaques, a physical Lost
    Sparkle book model (cover art). Image uploads = low risk, trickled.
+10. **Replay the Story (effort S — the non-destructive answer to "I want to
+    start over," see §7):** a "Tell it again! 📖" prompt (guide dialogue or
+    the storyteller stump from item 4 / the Story Nook from item 9) that
+    RE-RUNS the Lost Sparkle beats as a memory — tutorial welcome, each
+    land's clue dialogue, the shard-appears moment, the Restore-the-Sparkle
+    celebration (FinaleUI replay) — while touching NOTHING: no profile
+    writes, no coins (economy-neutral so it can't be farmed), collection
+    and shards stay exactly as they are. Pure story theater driven by the
+    existing QuestService/TutorialService/FinaleService dialogue + FX with
+    a replay flag. Kid-need served: re-feeling the beginning without losing
+    anything. Nice stream demo, too. Acceptance: run a full replay on a
+    completed profile → StateSync snapshot byte-identical before/after.
 
 *Verify (per item shipped):* ride/play each new apparatus end-to-end in
 Studio; Tuck-In idle-through test; jelly-dune bounce heights logged client vs
@@ -807,3 +819,13 @@ suggest a platform Event post + one "watch for this" note for the girls.
 - Batch uploads of images/meshes (audio follows §2's slow cadence only).
 - Renaming "creepy_cute" pack surfaces in kid-facing UI without Chris — the
   in-game surfaces already use friend-level names; leave internal ids alone.
+- **Player-facing reset/wipe button** (considered + rejected 2026-08-01):
+  a self-serve reset deletes Robux-purchased premium cosmetics that the
+  idempotent ProcessReceipt will never re-grant (real-money loss), is the
+  most off-Law control possible ("nothing visible ever goes backward"), and
+  the 6-9 audience + shared family devices guarantee accidental/sibling
+  wipes of whole collections. The real kid-need ("feel the beginning again")
+  is WO-9.10 Replay the Story; a true fresh start is an alt account
+  (Roblox-native, what every collection game relies on). The OWNER-only
+  reset button stays — it's a demo/playtest tool, double-gated so kids can
+  never trigger it.
