@@ -88,6 +88,48 @@ Night one stacks too many unverified surfaces (giveaway-disclosure rules, addres
 
 Single-digit (including zero) viewers for the first several lives is the universal experience — the algorithm needs multiple sessions to learn who to route in. **Win condition for live #1: the tech worked, 60 minutes streamed, 1–3 highlights captured, the next live is scheduled.** Not a viewer number. The compounding loop (fixed slot + LIVE Events + clips between lives + the magic-word attribution) is what turns week 4 into something different from week 1 — this is also the fastest realistic route to the go-viral plan's "first 1k followers in 6–8 weeks" target.
 
+## RETENTION TOOLKIT (researched 2026-08-02 — 3 web passes + adversarial verify, fixes applied)
+
+### The gift answer, settled (Chris asked about gift goals + gifting)
+- **Gift Goals: permanently off the table for this brand.** The native LIVE Goal widget is TikTok-sanctioned and technically compliant, but it's a persistent "send gifts" scoreboard with top-3-contributor prizes — a leaderboard of spenders on a channel whose promise to parents is "we never ask for anything." There is no viewer-count at which this becomes on-brand, and **never map gifts to anything in the game** (no "if the goal fills, I build X in-game") — that's the gift→reward pattern the Monetization Guidelines police, landing inside a game played by 6-9-year-olds.
+- **Gifts stay passive:** enabled, never mentioned. When one arrives (senders are 18+ by TikTok rule — any gift is by definition from an adult), thank them warmly by name once, move on. Note: gift receiving has its own eligibility gate — if the account isn't gift-enabled yet, the whole topic is moot; check LIVE Center. Reality check: ~1.5–4% of live viewers ever gift, mostly 1-coin Roses — at this size, gift revenue is statistically zero regardless of tactics.
+- **"Gifting others" — the one on-brand version:** viewer-to-viewer gifting doesn't exist natively. What DOES work: **Chris drops a 1-coin Rose in other wholesome family-gaming creators' LIVEs** — they thank "@squishysmash's builder" by name in front of their audience. Cheapest networking a 5-viewer channel has, and it's kindness, which is the brand.
+- **Battles / LIVE Match: hard no, forever.** The format is a timed gift-spending competition — pressure by design. Viewer Wishes (gift-mapped requests) and the top-gifters Viewer Ranking widget: same skip.
+
+### Do-now list (ranked for a 1–10 viewer room)
+1. **LIVE Events every week** (Tue + Fri, scheduled 1h–10d ahead) — the only native mechanism that push-notifies people you're live. Zero cost, zero risk.
+2. **The pin + Q&A mode.** Pin the Magic Word CTA; turn on Q&A so parents' questions ("is it safe? does it push purchases?") become structured on-screen content — trust is the product.
+3. **Curated co-hosting** (up to 4 on split screen, works from LIVE Studio): the only real *discovery* lever at this size — borrow a like-minded family-gaming or indie-dev host's audience. Outreach required. Never random matching; never battles.
+4. **Follower goal via the native Goal widget** — officially supports follower goals, not just gift goals (per the Add-widgets help article). "Road to 100 sparkle friends 🌟" is a shared micro-mission with zero pressure. Confirm the toggle in your build.
+5. **Guessing Game** if the account has it (points-based prediction widget rolling out to select gaming creators): "Will this capsule be a Rainbow? Yes/No" is exactly what it's for. [VERIFY IN APP]
+6. **Fan Club:** leave enabled if offered (badges/entrance spotlights for regulars = real community value), **never pitch the join path on-mic** (joining runs through a small gift). Super Fan ($9.99 paid tier, replaced LIVE Subscriptions Sept 2025): premature; paywalled closeness sits awkwardly with a kids brand.
+
+### LIVE Studio scene collection (build once, ~30 min)
+Portrait canvas (1080×1920 30fps; run the built-in speed test). TikTok's app owns the bottom third (its own comment layer — put NOTHING there, and skip the Chatbox overlay in Portrait; it double-chats) and the top strip. Four scenes, hotkeyed F1–F4:
+1. **Open** — go live already in-game and talking, or ≤60–90 s of key art WITH face cam + voice over it. Never minutes of static "starting soon" — FYP drops viewers mid-stream; a static screen is an instant scroll.
+2. **MAIN** — Window Capture of Roblox (not Display — no notification leaks) · face cam top-right ~20% (non-negotiable: the dad IS the brand) · magic-word banner upper-middle, always on, readable at phone size · follower-goal widget · land banner mid-left ("🍮 Exploring: Pudding Hills" — one Text source per land, toggle visibility) · Alert source: follows ON (every 1, gentle sound), gifts quiet-OK, viewer-ranking OFF.
+3. **BRB** — art + "Refilling the cocoa — back in 2 min! 🍫" + the magic-word banner still earning.
+4. **Ending** (last 2–3 min every stream) — "Next LIVE: Friday 8:30 PM ET" card. This converts tonight's handful into Friday's returners.
+Countdown source rule: **informational countdowns fine** (pre-show timer, "capsule at :45"); urgency-styled countdowns attached to asks are off-Law. Local recording ON every stream. Chatbox overlay's real use: Landscape scenes + baked-in chat context on highlight clips.
+
+### Session structure (the craft that holds people)
+- **The rolling reset:** every 10–15 min, 20 seconds of "just arrived?" — name, "this is the game I built for my daughters," what's happening, what's next. Viewers land mid-stream with ~3–10 s of patience; the algorithm widens distribution on 30-s+ dwell.
+- **Promised payoff:** announce a concrete centerpiece up top and in every reset ("at the top of the hour we open the rainbow capsule"). Capsule reveals at :15/:45 as ritual beats.
+- **THE GARDEN IS THE CLIFFHANGER MACHINE:** plant on Tuesday's live → os.time() offline growth → **the harvest is literally ready Friday 8:30**. "The berries we planted Tuesday are ready — we harvest live" is a built-in come-back mechanic almost no streamer has. End every stream on this hook.
+- **Small-room loops:** greet by name within 30 s (100% coverage is possible at this size) · read comments ALOUD and restate before answering · **chat as game-director** — binary choices that work at n=1 ("Goo Coast or Moonlit Hollow?", a named viewer picks the capsule) · empty-room protocol: narrate decisions as if to one person; occasional playful one-tap asks TO THE ROOM ("tap if you think this one's a Rainbow") — never a standing like-meter, never like-thresholds that trigger in-game events (firing Everybody Squish via OwnerDebug is a treat you give, not a meter viewers fill).
+- **Pre-live post:** a short video ~1 h before going live — engagers are far likelier to be shown the LIVE ring.
+
+### Anti-patterns (ranked retention killers)
+Dead air (narration IS the stream) · menus/settings on camera · reading chat silently · alt-tabbing (dev machine = repo/keys exposure risk; everything lives in scenes) · over-asking (gift-begging is an enforceable violation; ONE soft follow-ask per 15–30 min max) · speaking URLs (say "link in my bio") · bad audio (viewers forgive pixels, not crackle) · 15–20 min without format variation · visibly reacting to the viewer count.
+
+### Game-side hooks (the structural advantage — he owns the code)
+- Works today: garden cliffhanger · capsule ritual beats · Friend of the Week as the fixed Friday segment · OwnerDebug-fired Everybody Squish as the top-of-hour spectacle (framed as a treat).
+- **BLOCKED until Streamer Mode exists:** the "walk up to viewers' kids in-server on camera" segment. As-is it broadcasts children's Roblox usernames three ways (overhead names, gift-card reveals, server-wide shout-outs). Candidate small feature: a stream-mode flag that hides overhead names + masks player names in shout-outs/gift cards (show buddy names only). Until then: solo private server on camera, public-server play off-camera.
+- Cheap build-once idea: pre-seed dated stream words in ONE publish (TIKTOK0805, TIKTOK0808… activated by date via os.time) — per-stream attribution without a code-edit+Alt+P before every stream.
+
+### Analytics to actually watch (LIVE Center, ~60 days history)
+**Average watch time, week over week** — that's the retention number; viewer count is noise at this size. Then: new followers per live, and which highlight clips drove entrances. Post 1–3 highlights after every stream (Ctrl+1 saves the past 2 min; auto-highlights + trim/captions/post tools in LIVE Center). No second-by-second LIVE retention curve exists — don't hunt for one.
+
 ## [VERIFY IN APP] — the 10-minute checks tonight
 
 1. Which account shows LIVE on the + screen (step zero). 2. Studios account: Business or Personal. 3. LIVE Studio login grants Go-LIVE (else: in-app application; else: Rig B). 4. Phone Mobile Gaming mode appears. 5. Replay/save toggle ON pre-stream. 6. Moderator add flow (mutual follow first). 7. Whether mod pin/mute works from the browser (else spare-device console). 8. Real title character limit. 9. LIVE Event scheduling path. 10. Roblox chat-hide toggle location.
