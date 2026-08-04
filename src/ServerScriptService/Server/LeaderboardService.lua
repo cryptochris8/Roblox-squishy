@@ -293,6 +293,9 @@ local function buildBoard(parent: Instance, spec: BoardSpec, position: Vector3, 
 		rank.Parent = row
 
 		local name = Instance.new("TextLabel")
+		-- Named so the client's Streamer Mode can find these: a board row can hold
+		-- a player from ANOTHER server, who it has no other way to recognise.
+		name.Name = "EntryName"
 		name.BackgroundTransparency = 1
 		name.Size = UDim2.new(1, -140, 1, 0)
 		name.Position = UDim2.fromOffset(48, 0)

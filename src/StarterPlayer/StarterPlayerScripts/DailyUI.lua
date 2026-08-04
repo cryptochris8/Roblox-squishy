@@ -11,6 +11,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local DailyQuestConfig = require(Shared:WaitForChild("DailyQuestConfig"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local UiTheme = require(script.Parent.UiTheme)
+local ToastUI = require(script.Parent.ToastUI)
+local StreamerMode = require(script.Parent.StreamerMode)
 
 local DailyUI = {}
 
@@ -152,13 +154,13 @@ function DailyUI.mount(playerGui)
 	panel = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(480, 420),
+		Size = UDim2.fromOffset(480, 456),
 		BackgroundColor3 = UiTheme.Colors.Cream,
 		radius = 24,
 	})
 	panel.Parent = root
 	UiTheme.stroke(UiTheme.Colors.Accent, 3, panel)
-	UiTheme.autoFit(panel, 480, 420)
+	UiTheme.autoFit(panel, 480, 456)
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
@@ -261,6 +263,41 @@ function DailyUI.mount(playerGui)
 		paintFast()
 	end)
 	paintFast()
+
+	-- Streamer Mode: hide every OTHER player's name on this screen (they become
+	-- storybook aliases) so the game is safe to record or stream. Client-side
+	-- only — nobody else's game changes. Session-scoped like the two above.
+	local streamBtn = Instance.new("TextButton")
+	streamBtn.Name = "StreamerMode"
+	streamBtn.Position = UDim2.fromOffset(20, 414)
+	streamBtn.Size = UDim2.fromOffset(440, 30)
+	streamBtn.BackgroundColor3 = UiTheme.Colors.Panel
+	streamBtn.BorderSizePixel = 0
+	streamBtn.Font = UiTheme.BodyFont
+	streamBtn.TextSize = 15
+	streamBtn.TextXAlignment = Enum.TextXAlignment.Left
+	streamBtn.Parent = panel
+	UiTheme.corner(12, streamBtn)
+	local spad = Instance.new("UIPadding")
+	spad.PaddingLeft = UDim.new(0, 12)
+	spad.Parent = streamBtn
+	-- 📸 rather than 🎥: this game has a proven-good glyph list, and an untested
+	-- emoji renders as an empty box in Roblox's fonts.
+	local function paintStream()
+		local on = StreamerMode.isOn()
+		streamBtn.Text = on and "📸 Streamer Mode: On (names hidden)"
+			or "📸 Streamer Mode: Off (names showing)"
+		streamBtn.TextColor3 = on and UiTheme.Colors.AccentDeep or UiTheme.Colors.SoftInk
+	end
+	streamBtn.Activated:Connect(function()
+		local on = StreamerMode.toggle()
+		paintStream()
+		ToastUI.show(on
+			and "📸 Streamer Mode is on — everyone else shows as a storybook name."
+			or "📸 Streamer Mode is off — real names are showing again.")
+	end)
+	StreamerMode.onChanged(paintStream)
+	paintStream()
 end
 
 return DailyUI

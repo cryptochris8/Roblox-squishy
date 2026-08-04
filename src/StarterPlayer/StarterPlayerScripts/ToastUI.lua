@@ -10,6 +10,7 @@
 
 local TweenService = game:GetService("TweenService")
 local UiTheme = require(script.Parent.UiTheme)
+local StreamerMode = require(script.Parent.StreamerMode)
 
 local ToastUI = {}
 
@@ -118,6 +119,10 @@ function ToastUI.show(text, kind)
 	if not frame or type(text) ~= "string" or text == "" then
 		return
 	end
+	-- Streamer Mode: the server bakes player names straight into shout-outs
+	-- ("Emily discovered ..."), so every toast is masked here — one choke point
+	-- for all of them. A no-op while the mode is off.
+	text = StreamerMode.mask(text)
 	-- coalesce: the same message showing or already waiting never stacks
 	if text == currentText then
 		return

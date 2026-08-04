@@ -12,6 +12,7 @@ local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UiTheme = require(script.Parent.UiTheme)
+local StreamerMode = require(script.Parent.StreamerMode)
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GiftConfig = require(Shared:WaitForChild("GiftConfig"))
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
@@ -428,7 +429,9 @@ function GiftUI.open(info)
 	end
 	target = {
 		userId = info.userId,
-		name = tostring(info.name or "your friend"),
+		-- masked once here, so every place the picker prints the recipient
+		-- (title, both confirm lines) is camera-safe
+		name = StreamerMode.mask(tostring(info.name or "your friend")),
 		theyKnow = type(info.theyKnow) == "table" and info.theyKnow or {},
 		remaining = tonumber(info.remaining) or GiftConfig.DailyGiftLimit,
 	}
@@ -501,7 +504,8 @@ function GiftUI.playReceived(info)
 	msg.TextSize = 21
 	msg.TextWrapped = true
 	msg.TextColor3 = UiTheme.Colors.AccentDeep
-	msg.Text = "+" .. (tonumber(info.amount) or 0) .. " Sparkle Coins\nfrom " .. tostring(info.fromName or "a friend") .. "! 💝"
+	msg.Text = "+" .. (tonumber(info.amount) or 0) .. " Sparkle Coins\nfrom "
+		.. StreamerMode.mask(tostring(info.fromName or "a friend")) .. "! 💝"
 	msg.ZIndex = 62
 	msg.Parent = box
 

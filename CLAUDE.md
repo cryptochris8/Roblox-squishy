@@ -112,6 +112,7 @@ src/StarterPlayer/StarterPlayerScripts/   (client; runs once, respawn-safe)
   CodesUI.lua              the "Magic Words" panel (type a storybook code; feedback arrives as a toast)
   GiftUI.lua               the gift picker (coin presets + share-a-friend card grid, picture confirm, "N gifts left" pill) + the 🎁 "gift arrived" pop; hides your own GiftPrompt locally
   BouncePads.lua           applies bounce launches for the LOCAL character (client owns its physics — server velocity writes don't stick); reads SquishyBouncy tags + BounceVelocity/PartyUntil attrs
+  StreamerMode.lua         the "safe to put on camera" toggle (Today's Quests): on YOUR screen only, every OTHER player becomes a storybook alias ("Bubble Friend") — Roblox player list hidden, overhead names off, chat prefix+body masked, and every toast/world label/prompt/leaderboard row rewritten; ToastUI/GiftUI/CapsuleRevealUI call StreamerMode.mask() at their render points
 ```
 
 ### Contract (server <-> client)

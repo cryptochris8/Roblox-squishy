@@ -8,6 +8,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UiTheme = require(script.Parent.UiTheme)
+local StreamerMode = require(script.Parent.StreamerMode)
 local VariantConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("VariantConfig"))
 local SoundConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("SoundConfig"))
 
@@ -200,7 +201,7 @@ function CapsuleRevealUI.play(result, onClose)
 				bigHeadline.TextStrokeColor3 = UiTheme.Colors.AccentDeep
 				bigHeadline.TextStrokeTransparency = 0.15
 				if result.giftFrom then
-					bigHeadline.Text = "💝 A gift from " .. result.giftFrom .. "!"
+					bigHeadline.Text = "💝 A gift from " .. StreamerMode.mask(result.giftFrom) .. "!"
 				elseif result.isNew then
 					bigHeadline.Text = "New Friend Discovered!"
 				elseif variantUpgraded then
@@ -279,7 +280,7 @@ function CapsuleRevealUI.play(result, onClose)
 			headline.TextSize = 24
 			headline.TextColor3 = UiTheme.Colors.AccentDeep
 			if result.giftFrom then
-				headline.Text = "💝 A gift from " .. result.giftFrom .. "!"
+				headline.Text = "💝 A gift from " .. StreamerMode.mask(result.giftFrom) .. "!"
 			elseif result.isNew then
 				headline.Text = "New Friend Discovered!"
 			elseif variantUpgraded then

@@ -124,7 +124,8 @@ Dead air (narration IS the stream) · menus/settings on camera · reading chat s
 
 ### Game-side hooks (the structural advantage — he owns the code)
 - Works today: garden cliffhanger · capsule ritual beats · Friend of the Week as the fixed Friday segment · OwnerDebug-fired Everybody Squish as the top-of-hour spectacle (framed as a treat).
-- **BLOCKED until Streamer Mode exists:** the "walk up to viewers' kids in-server on camera" segment. As-is it broadcasts children's Roblox usernames three ways (overhead names, gift-card reveals, server-wide shout-outs). Candidate small feature: a stream-mode flag that hides overhead names + masks player names in shout-outs/gift cards (show buddy names only). Until then: solo private server on camera, public-server play off-camera.
+- **Streamer Mode — BUILT (2026-08-03), unblocks the "play with viewers on camera" segment once it's published.** Today's Quests → **📸 Streamer Mode**. On YOUR screen only, every other player becomes a storybook alias ("Bubble Friend", "Cozy Friend") — the Roblox player list is hidden, overhead names go away, chat is masked (sender + body), and every shout-out, gift card, buddy tag, prompt and leaderboard row is rewritten. Your own name stays visible; nobody else's game changes. **Live-check before every stream: flip it on, confirm the Roblox player list disappears** (the instant confirmation, even solo), then look at one other player. Aliases are stable for the session, so you can say "nice find, Bubble Friend!" and mean one person.
+  - Still true regardless: never say a kid's name out loud, and the daughters stay off the streamed server entirely (that rule is about minors on LIVE, not about usernames).
 - Cheap build-once idea: pre-seed dated stream words in ONE publish (TIKTOK0805, TIKTOK0808… activated by date via os.time) — per-stream attribution without a code-edit+Alt+P before every stream.
 
 ### Analytics to actually watch (LIVE Center, ~60 days history)
