@@ -65,10 +65,13 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
   9-lens adversarial review + 12 skeptic verifications: all confirmed findings
   fixed (incl. same-frame Sound landmine → warm templates; stranger-safe cheer
   names; silent Open-another rejections → gentle toast). 94 files compile.
-  Accepted-as-designed: optimistic "Sent 💖", newest-wins reveal queue. Studio
-  MCP was unregistered this session — **Chris's spot-check: press ⭐ Reveal
-  (cycles tiers), open a real capsule, tap mid-ceremony (skip), check phone
-  layout via ForceCompactHud + a real phone.** Same session: doc 14 §1 Law
+  Accepted-as-designed: optimistic "Sent 💖", newest-wins reveal queue.
+  **STUDIO-VERIFIED by Chris same day (2026-08-06):** played it live — the
+  ⭐ Reveal practice cycle behaves (free, unlimited, Practice ribbon, grants
+  nothing) and the REAL capsule path "works great" (charges, reveals, Book).
+  Remaining playtest items: cheer toast/aggregation + gift-reveal skin (need a
+  2nd player — family playtest), phone-emulator layout pass. Same session:
+  doc 14 §1 Law
   amended (Chris approved kid-safe spare-copy swaps; negotiated trading banned
   forever) — the Switcheroo Station (doc 15 §6) is next up.
 - **2026-06-11 (Phase D — monetization, built on the live products):** The
