@@ -672,4 +672,93 @@ function SquishyModelFactory.applyGolden(model: Model)
 	end
 end
 
+-- Dress a friend in a Sparkle Pattern (doc 15 §7.1). A pattern is an ACCENT,
+-- not a repaint: part-built bodies get a gentle tint blend (Material preserved
+-- so glass/neon friends stay readable); mesh bodies KEEP their card-true
+-- textures (stripping a SurfaceAppearance is applyGolden's full-repaint move)
+-- and show the pattern through its sparkle + glow instead. Golden Crumb IS the
+-- full-gold repaint, via the proven applyGolden path. Emitter/light names are
+-- fresh ("PatternSparkle"/"PatternGlow") — SkinSparkle/SkinGlow/VariantAura/
+-- VipAura are taken. Never rotates or re-CFrames the Body part.
+function SquishyModelFactory.applyPattern(model: Model, patternId: string?)
+	if not patternId then
+		return
+	end
+	local PatternConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("PatternConfig"))
+	local pat = PatternConfig.get(patternId)
+	if not pat then
+		return
+	end
+	if pat.golden then
+		SquishyModelFactory.applyGolden(model)
+		return
+	end
+	local isMesh = model:GetAttribute("BakedFace") == true
+	if not isMesh and pat.tint then
+		for _, p in ipairs(model:GetDescendants()) do
+			if p:IsA("BasePart") then
+				p.Color = p.Color:Lerp(pat.tint, pat.tintStrength or 0.35)
+			end
+		end
+	end
+	local body = model.PrimaryPart
+	if not body then
+		return
+	end
+	-- Signature materials (Honey Glaze's glass sheen, Galaxy Swirl's shimmer)
+	-- go on the BODY only — decorations keep their own materials so the friend
+	-- stays readable — and never on mesh bodies (their card-true textures win).
+	if not isMesh and pat.material then
+		body.Material = pat.material
+	end
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "PatternSparkle"
+	emitter.Texture = SPARKLE_TEX
+	emitter.LightEmission = 0.85
+	emitter.Color = ColorSequence.new(pat.particleColor or pat.tint or WHITE, WHITE)
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.4, 0.7),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.3),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Lifetime = NumberRange.new(0.9, 1.6)
+	emitter.SpreadAngle = Vector2.new(180, 180)
+	-- Each pattern moves differently, so the coat reads even at a glance.
+	if pat.particle == "drip" then
+		emitter.Rate = 3
+		emitter.Speed = NumberRange.new(0.4, 1)
+		emitter.Acceleration = Vector3.new(0, -2.2, 0)
+	elseif pat.particle == "freckle" then
+		emitter.Rate = 6
+		emitter.Speed = NumberRange.new(0.1, 0.4)
+		emitter.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.4, 0.35),
+			NumberSequenceKeypoint.new(1, 0),
+		})
+	elseif pat.particle == "spiral" then
+		emitter.Rate = 6
+		emitter.Speed = NumberRange.new(1.5, 3)
+		emitter.RotSpeed = NumberRange.new(-120, 120)
+	else -- "drift"
+		emitter.Rate = 4
+		emitter.Speed = NumberRange.new(0.6, 1.6)
+		emitter.Acceleration = Vector3.new(0, 0.8, 0)
+	end
+	emitter.Parent = body
+	if pat.light then
+		local light = Instance.new("PointLight")
+		light.Name = "PatternGlow"
+		light.Color = pat.light.color
+		light.Brightness = pat.light.brightness or 0.8
+		light.Range = pat.light.range or 9
+		light.Parent = body
+	end
+end
+
 return SquishyModelFactory

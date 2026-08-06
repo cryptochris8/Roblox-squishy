@@ -25,6 +25,7 @@ local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
 local RevealConfig = require(Shared:WaitForChild("RevealConfig"))
 local RarityConfig = require(Shared:WaitForChild("RarityConfig"))
+local PatternConfig = require(Shared:WaitForChild("PatternConfig"))
 
 local CapsuleRevealUI = {}
 
@@ -205,6 +206,8 @@ end
 local function headlineText(result, variantIcon, variantName)
 	if result.giftFrom then
 		return "💝 A gift from " .. StreamerMode.mask(result.giftFrom) .. "!"
+	elseif result.switcherooStamp then
+		return "🚂 A traveler stepped off the Express!"
 	elseif result.isNew then
 		return "New Friend Discovered!"
 	elseif result.variantUpgraded then
@@ -401,6 +404,10 @@ function CapsuleRevealUI.play(result, onClose)
 	task.spawn(function()
 		local ok, err = pcall(function()
 			-- ── Intro: drop in ──────────────────────────────────────────────
+			-- A traveler arrives by train: the toy whistle announces the Express.
+			if result.switcherooStamp and not tl.skipped then
+				uiSound(SoundConfig.TrainWhistle, 0.45)
+			end
 			tl:tween(group, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 				Position = UDim2.new(0.5, 0, 0.5, -28),
 			})
@@ -703,7 +710,39 @@ function CapsuleRevealUI.play(result, onClose)
 				end
 			end
 
-			if (result.bonusCoins or 0) > 0 then
+			-- ── Sparkle Pattern beat: a NEW pattern shimmers onto the card ──
+			if result.patternIsNew and result.patternId then
+				local pat = PatternConfig.get(result.patternId)
+				if pat then
+					tl:wait(0.2)
+					local pBadge = Instance.new("TextLabel")
+					pBadge.AnchorPoint = Vector2.new(1, 0)
+					pBadge.Position = UDim2.new(0.5, cardW / 2 + 46, 0.5, -(cardH / 2) + 56)
+					pBadge.Size = UDim2.fromOffset(118, 28)
+					pBadge.BackgroundColor3 = pat.badgeColor
+					pBadge.BorderSizePixel = 0
+					pBadge.Font = UiTheme.HeaderFont
+					pBadge.TextSize = 13
+					pBadge.TextColor3 = WHITE
+					pBadge.Text = "✨ " .. pat.name
+					pBadge.ZIndex = 12
+					pBadge.Parent = stage
+					UiTheme.corner(14, pBadge)
+					UiTheme.stroke(WHITE, 2, pBadge)
+					if not tl.skipped then
+						pBadge.Size = UDim2.fromOffset(170, 40)
+						tl:tween(pBadge, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+							Size = UDim2.fromOffset(118, 28),
+						})
+						RevealFx.burst(stage, UDim2.new(0.5, cardW / 2 - 13, 0.5, -(cardH / 2) + 70), 12, pat.badgeColor)
+						RevealFx.shineSweep(content, 0.45)
+						chime(1.6, 0.35)
+					end
+				end
+			end
+
+			local totalCoins = (result.bonusCoins or 0) + (result.patternBonusCoins or 0)
+			if totalCoins > 0 then
 				local coinLine = Instance.new("TextLabel")
 				coinLine.AnchorPoint = Vector2.new(0.5, 0.5)
 				coinLine.Position = UDim2.new(0.5, 0, 0.5, (cardH / 2) + 28)
@@ -718,14 +757,46 @@ function CapsuleRevealUI.play(result, onClose)
 				coinLine.Text = "+0 Sparkle Coins"
 				coinLine.Parent = stage
 				if tl.skipped then
-					coinLine.Text = "+" .. result.bonusCoins .. " Sparkle Coins"
+					coinLine.Text = "+" .. totalCoins .. " Sparkle Coins"
 				else
-					RevealFx.countUp(coinLine, 0, result.bonusCoins, 0.5, function(v)
+					RevealFx.countUp(coinLine, 0, totalCoins, 0.5, function(v)
 						return "+" .. v .. " Sparkle Coins"
 					end, function()
 						chime(1.8, 0.15)
 					end)
 				end
+			end
+
+			-- ── Switcheroo traveler: the Travel Stamp line ABOVE the headline
+			-- (below the card it z-fought the buttons — review catch). The
+			-- from-name is a CROSS-SERVER name StreamerMode.mask can't alias
+			-- (it only knows this server's players), so Streamer Mode hides it
+			-- outright; it only exists for Roblox friends in the first place.
+			if type(result.switcherooStamp) == "table" then
+				local stamp = result.switcherooStamp
+				local text
+				if type(stamp.from) == "string" and stamp.from ~= "" then
+					if StreamerMode.isOn() then
+						text = "🚂 Once loved by a faraway friend!"
+					else
+						text = "🚂 Once loved by " .. stamp.from .. "!"
+					end
+				else
+					text = "🚂 A traveler from a faraway world!"
+				end
+				local stampLine = Instance.new("TextLabel")
+				stampLine.AnchorPoint = Vector2.new(0.5, 0.5)
+				stampLine.Position = UDim2.new(0.5, 0, 0.5, -(cardH / 2) - 62)
+				stampLine.Size = UDim2.fromOffset(460, 26)
+				stampLine.BackgroundTransparency = 1
+				stampLine.Font = UiTheme.BodyFont
+				stampLine.TextSize = 16
+				stampLine.TextColor3 = WHITE
+				stampLine.TextStrokeColor3 = UiTheme.Colors.Shade
+				stampLine.TextStrokeTransparency = 0.3
+				stampLine.ZIndex = 11
+				stampLine.Text = text
+				stampLine.Parent = stage
 			end
 
 			-- ── Buttons ─────────────────────────────────────────────────────

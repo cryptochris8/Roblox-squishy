@@ -9,7 +9,8 @@ local DailyQuestConfig = {}
 
 DailyQuestConfig.PerDay = 3
 
--- `type` matches the events DailyService tracks: "pop", "bit", "capsule", "discover", "water".
+-- `type` matches the events DailyService tracks: "pop", "bit", "capsule",
+-- "discover", "water", "switcheroo".
 -- `text` is a format string; %d is filled with the goal (a text with no %d is fine).
 DailyQuestConfig.Quests = {
 	{ id = "wake",     type = "pop",      goal = 10, reward = 50, text = "Wake %d sleepy friends" },
@@ -18,6 +19,9 @@ DailyQuestConfig.Quests = {
 	{ id = "discover", type = "discover", goal = 1,  reward = 60, text = "Discover a new friend" },
 	{ id = "wakemore", type = "pop",      goal = 20, reward = 70, text = "Wake %d sleepy friends" },
 	{ id = "water",    type = "water",    goal = 1,  reward = 55, text = "Water a friend's garden" },
+	-- "switcheroo" also ticks on every capsule open (Main), so a spare-less kid
+	-- can always complete it — the Station is a bonus path, never a gate.
+	{ id = "adventure", type = "switcheroo", goal = 1, reward = 60, text = "Visit the Switcheroo Station or open a capsule" },
 }
 
 -- The PerDay quests active on a given UTC day index — a rotating window, so the

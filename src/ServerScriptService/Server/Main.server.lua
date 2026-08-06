@@ -50,6 +50,7 @@ local RidePrefs = require(script.Parent.RidePrefs)
 local PhotoSpotService = require(script.Parent.PhotoSpotService)
 local GardenService = require(script.Parent.GardenService)
 local CheerService = require(script.Parent.CheerService)
+local SwitcherooService = require(script.Parent.SwitcherooService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -77,6 +78,7 @@ BoopService.init()
 EmoteService.init()
 RidePrefs.init()
 CheerService.init()
+SwitcherooService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -108,6 +110,9 @@ end
 -- dedupe keeps analytics calls off the hot paths (every squish hits step 1);
 -- sessionId = UserId makes each step once-ever per player server-side too.
 local ftueSent: { [Player]: { [number]: boolean } } = {}
+local likeAskedSession: { [Player]: boolean } = {}
+local joinedAt: { [Player]: number } = {}
+local firstRevealLogged: { [Player]: boolean } = {}
 local function ftue(player: Player, step: number, name: string)
 	local sent = ftueSent[player]
 	if not sent then
@@ -122,7 +127,39 @@ local function ftue(player: Player, step: number, name: string)
 end
 Players.PlayerRemoving:Connect(function(player)
 	ftueSent[player] = nil
+	likeAskedSession[player] = nil
+	joinedAt[player] = nil
+	firstRevealLogged[player] = nil
 end)
+
+-- The ethical like-ask (doc 15 §7.3): a small thank-you-shaped nudge after a
+-- genuinely joyful, EARNED beat. Never incentivized, never a button that pays,
+-- at most once per session and TWO in a player's whole life. Delayed a few
+-- seconds so it never stomps the celebration it rides behind.
+local function maybeLikeAsk(player: Player)
+	if likeAskedSession[player] or PlayerDataService.likeAsks(player) >= 2 then
+		return
+	end
+	likeAskedSession[player] = true
+	task.delay(4, function()
+		-- Spend a lifetime slot only when the toast actually renders — a kid
+		-- who left during the delay keeps her ask for another joy peak.
+		if player.Parent then
+			PlayerDataService.noteLikeAsk(player)
+			toastEvent:FireClient(player,
+				"Having fun in Pudding Hills? A thumbs-up helps other families find Squishy Smash! 💖")
+		end
+	end)
+end
+
+-- D1 metric (doc 15 §7.3): how long a fresh session takes to reach its first
+-- capsule reveal. The weekly number to watch is the median for NEW players.
+Players.PlayerAdded:Connect(function(player)
+	joinedAt[player] = os.clock()
+end)
+for _, player in ipairs(Players:GetPlayers()) do
+	joinedAt[player] = joinedAt[player] or os.clock()
+end
 
 -- A Happy Pop nudges the tutorial + the land's shard quest along, and feeds the
 -- server-wide Sparkle Surge meter.
@@ -194,6 +231,9 @@ end
 CapsuleService.onOpened = function(player, isNew, def, info)
 	FirstDayService.check(player)
 	DailyService.noteEvent(player, "capsule")
+	-- The "adventure" daily quest ticks on capsules too, so a spare-less kid
+	-- can always finish it (the Station is a bonus path, never a gate).
+	DailyService.noteEvent(player, "switcheroo")
 	local rank = (def and RarityConfig[def.Rarity] and RarityConfig[def.Rarity].SortOrder) or 1
 	local beaconWorthy = def
 		and ((isNew and rank >= RevealConfig.BeaconMinSortOrder)
@@ -239,6 +279,17 @@ CapsuleService.onOpened = function(player, isNew, def, info)
 		end
 		if lvl >= 2 then
 			BadgeService.award(player, "FirstRainbow")
+			if info and info.variantUpgraded then
+				maybeLikeAsk(player) -- a first 🌈 is a real joy peak
+			end
+		end
+	end
+	-- time-to-first-reveal, once per session (the D1 funnel's yardstick)
+	if not firstRevealLogged[player] then
+		firstRevealLogged[player] = true
+		local t0 = joinedAt[player]
+		if t0 then
+			Telemetry.custom(player, "TimeToFirstReveal", math.floor(os.clock() - t0))
 		end
 	end
 end
@@ -247,6 +298,16 @@ end
 -- should appear on the buddy right away.
 GiftService.onFriendShared = function(recipient)
 	MilestoneService.check(recipient)
+end
+
+-- A Switcheroo traveler can complete a set too, and a NEW discovery via the
+-- Express is server news just like a capsule discovery.
+SwitcherooService.onSwap = function(player, isNew, def)
+	MilestoneService.check(player)
+	if isNew and def then
+		DailyService.noteEvent(player, "discover")
+		shoutToOthers(player, "🚂 " .. player.DisplayName .. " welcomed " .. def.DisplayName .. " off the Sparkle Express!")
+	end
 end
 MilestoneService.onCosmeticsChanged = function(player)
 	BuddyService.refresh(player)
@@ -268,6 +329,7 @@ GiftService.onGiftSent = function(sender)
 end
 GardenService.onHarvest = function(player)
 	BadgeService.award(player, "FirstHarvest")
+	maybeLikeAsk(player) -- a first harvest lands warm too (lifetime cap: 2)
 end
 FamilyService.onWholeFamily = function(player)
 	BadgeService.award(player, "TheWholeFamily")
@@ -292,6 +354,7 @@ QuestService.onAllShardsRecovered = function(player)
 	EmoteService.onSparkleRestored(player)
 	BadgeService.award(player, "SparkleRestored")
 	ftue(player, 5, "sparkle_restored")
+	maybeLikeAsk(player) -- the finale is the game's biggest earned joy
 end
 
 -- The reveal's "Open another!" chain: same open as walking up and pressing the

@@ -32,6 +32,8 @@ Remotes.HarvestPlant = "HarvestPlant"                -- bedId: harvest a fully-b
 Remotes.WaterGarden = "WaterGarden"                  -- ownerUserId: water a friend's garden (kindness)
 Remotes.OpenCapsuleAgain = "OpenCapsuleAgain"        -- capsuleKey: the reveal's "Open another!" chain (range+rate checked)
 Remotes.CheerDiscovery = "CheerDiscovery"            -- revealId: one-tap Cheer on a Sparkle Beacon
+Remotes.WearPattern = "WearPattern"                  -- (friendId, patternId?): wear an owned Sparkle Pattern / back to Classic
+Remotes.SwitcherooDeposit = "SwitcherooDeposit"      -- defId: send a spare friend on an Express adventure (atomic swap)
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -51,6 +53,8 @@ Remotes.OpenGardenUI = "OpenGardenUI"   -- a garden bed prompt asked the client 
 Remotes.WaterFx = "WaterFx"             -- {fromUserId,toUserId,fromName}: sparkle-heart FX for a garden watering
 Remotes.SparkleBeacon = "SparkleBeacon" -- {revealId,byUserId,byName,friendName,rarity,pos}: an epic+ discovery lit its capsule
 Remotes.CheerArrived = "CheerArrived"   -- {fromName}: someone cheered YOUR discovery (client aggregates)
+Remotes.OpenSwitcheroo = "OpenSwitcheroo"     -- {spares,adventuresLeft}: the depot desk opened the Station panel
+Remotes.SwitcherooResult = "SwitcherooResult" -- CapsuleResult-shaped traveler + {stamp,adventuresLeft}: who stepped off the Express
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -75,6 +79,8 @@ local ALL_EVENTS = {
 	Remotes.WaterGarden,
 	Remotes.OpenCapsuleAgain,
 	Remotes.CheerDiscovery,
+	Remotes.WearPattern,
+	Remotes.SwitcherooDeposit,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
@@ -88,6 +94,8 @@ local ALL_EVENTS = {
 	Remotes.WaterFx,
 	Remotes.SparkleBeacon,
 	Remotes.CheerArrived,
+	Remotes.OpenSwitcheroo,
+	Remotes.SwitcherooResult,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,

@@ -40,6 +40,9 @@ local WaterFx = require(here:WaitForChild("WaterFx"))
 local StreamerMode = require(here:WaitForChild("StreamerMode"))
 local OddsUI = require(here:WaitForChild("OddsUI"))
 local BeaconFx = require(here:WaitForChild("BeaconFx"))
+local SwitcherooUI = require(here:WaitForChild("SwitcherooUI"))
+local CapsuleTrail = require(here:WaitForChild("CapsuleTrail"))
+local InviteNudge = require(here:WaitForChild("InviteNudge"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -55,6 +58,8 @@ local ownerDebug = Remotes.get(Remotes.OwnerDebug)
 ToastUI.mount(playerGui)
 CollectionBookUI.mount(playerGui, function(defId)
 	equipBuddyRequest:FireServer(defId)
+end, function(friendId, patternId)
+	Remotes.get(Remotes.WearPattern):FireServer(friendId, patternId)
 end)
 DailyUI.mount(playerGui)
 FinaleUI.mount(playerGui)
@@ -108,6 +113,10 @@ CapsuleRevealUI.mount(playerGui, {
 BeaconFx.mount(playerGui, function(revealId)
 	Remotes.get(Remotes.CheerDiscovery):FireServer(revealId)
 end)
+SwitcherooUI.mount(playerGui, function(defId)
+	Remotes.get(Remotes.SwitcherooDeposit):FireServer(defId)
+end)
+InviteNudge.mount(playerGui)
 SquishFx.init()
 BouncePads.init()
 SoundScape.init()
@@ -151,6 +160,7 @@ Remotes.get(Remotes.StateSync).OnClientEvent:Connect(function(state)
 	GiftUI.update(state)
 	SparkleBits.syncCollected(state.sparkleBits)
 	StoryPagesUI.syncCollected(state.storyPages)
+	CapsuleTrail.update(state)
 	-- Ring the shard chime the moment a land's Sparkle shard is newly recovered
 	-- (skipped on the first sync so already-recovered shards stay silent).
 	if state.shards then
@@ -172,6 +182,7 @@ Remotes.get(Remotes.SquishResult).OnClientEvent:Connect(function(result)
 end)
 
 Remotes.get(Remotes.CapsuleResult).OnClientEvent:Connect(function(result)
+	CapsuleTrail.onCapsuleOpened() -- the calling beam's job is done
 	CapsuleRevealUI.play(result)
 end)
 
@@ -207,10 +218,18 @@ end)
 
 Remotes.get(Remotes.GiftReceived).OnClientEvent:Connect(function(info)
 	GiftUI.playReceived(info)
+	-- a gift is a friendship peak — offer the platform's invite sheet (capped)
+	task.delay(5.5, function()
+		InviteNudge.maybe("gift")
+	end)
 end)
 
 Remotes.get(Remotes.PhotoMoment).OnClientEvent:Connect(function(info)
 	PhotoSpots.play(info)
+	-- after the group photo wraps (cheer + confetti run ~2.6s), same idea
+	task.delay(3.2, function()
+		InviteNudge.maybe("photo")
+	end)
 end)
 
 Remotes.get(Remotes.SparkleBeacon).OnClientEvent:Connect(function(info)
@@ -219,6 +238,16 @@ end)
 
 Remotes.get(Remotes.CheerArrived).OnClientEvent:Connect(function(info)
 	BeaconFx.cheerArrived(info)
+end)
+
+Remotes.get(Remotes.OpenSwitcheroo).OnClientEvent:Connect(function(info)
+	SwitcherooUI.open(info)
+end)
+
+-- A traveler stepping off the Express gets the full reveal ceremony (the
+-- payload is CapsuleResult-shaped, plus its Travel Stamp).
+Remotes.get(Remotes.SwitcherooResult).OnClientEvent:Connect(function(result)
+	CapsuleRevealUI.play(result)
 end)
 
 -- Bounce pads and slides launch the character; without this, hard landings can

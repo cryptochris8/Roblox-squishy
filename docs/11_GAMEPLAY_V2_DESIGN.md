@@ -38,6 +38,55 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **✅ Phase D — Monetization — DONE (2026-06-11, built against the LIVE products):** Chris created the 9 products in Creator Hub (guide: doc 13) and the build wired them end to end. Extra Buddy Slot 99 R$ / Coin Boost +25% 149 R$ / Sparkle Club VIP 249 R$ (passes) + 6 premium cosmetics 79–249 R$ (Developer Products), sold from the Boutique's 👑 Premium Sparkles and ✨ Sparkle Passes shelves. **No coin packs** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed.
 
 ### Build log
+- **2026-08-06 (THE BIG BUILD — Sparkle Patterns + the Switcheroo Station +
+  the D1 funnel, doc 15 §6-7):** The full doc-15 build-out in one session,
+  under the freshly amended doc-14 Law (spare-copy swaps allowed; negotiated
+  trading banned forever). **Foundation:** per-friend `Copies` (banked BEFORE
+  discover/variant logic on every capsule open AND gift share — beyond-Rainbow
+  dupes now pay coins AND bank a spare), pure-upside migration (old saves seed
+  copies from what discovery+variants prove), spares DERIVED by arithmetic so
+  the last copy can never travel; Stamps/Stories/Patterns/WornPatterns/LikeAsks
+  profile fields + full service API. **Sparkle Patterns:** 8-pattern third
+  collection axis (`PatternConfig`, per-10,000 odds: Berry/Mint ~1/6 →
+  Golden Crumb ~1/250; land-biased ×2/×3, all sums verified < 10,000), rolled
+  server-side with EVERY open, +15 flat new-pattern coins, chips + wardrobe in
+  the Book detail (server-validated `WearPattern`, ✓ moves only via StateSync),
+  worn patterns ride the buddy (`applyPattern`: tint+material on part bodies,
+  particles/glow on mesh bodies whose card textures stay intact; Golden Crumb =
+  the proven applyGolden), a shimmer beat in the reveal, odds footnote.
+  **The Switcheroo Station:** candy-striped depot + hand-built Whistlestop owl
+  at (112,0,-52) south of the Travel Plaza (clearance recomputed vs plaza/
+  boards/rim; track stub corrected to local -X = east), spare-picker panel +
+  calm confirm ("All aboard! ✨"), atomic deposit (traveler-in-hand BEFORE
+  consumeSpare; per-player in-flight flag because the pool draw yields past
+  the debounce; pool entries restored VERBATIM on the race path — never
+  pushToPool, which would corrupt provenance), cross-server rarity pools via
+  UpdateAsync (transform PURITY fixed after review caught the retry-stale-pick
+  double-grant: `picked` resets per invocation, bail paths return nil to
+  cancel), Whistlestop's Pouch fallback (LAUNCH roster only — never free-mints
+  weekly exclusives; randomized in-band), Travel Stamps (names friend-gated
+  server-side AND hidden by Streamer Mode client-side — cross-server names are
+  the one surface mask() can't alias), 3/day cap promising tomorrow,
+  saveNow after every swap (the pool committed durably), "adventure" daily
+  quest that capsules ALSO tick (no kid gated). **D1 funnel + substrate:**
+  CapsuleTrail (post-tutorial calling beam + sparkle breadcrumbs until the
+  first open), TimeToFirstReveal telemetry, Wonder Compass HUD chip (desktop
+  only per Addy's phone-declutter rule; launch-only capsule math;
+  adventuresLeft-gated), ethical like-ask (2/lifetime, slot spent only when
+  the toast renders), InviteNudge (tappable chip → the platform's consented
+  invite sheet — review demoted the auto-opening sheet as pressure), codes
+  extracted to server-only `CodesConfig` (+`SPARKLEPATTERNS`/`ALLABOARD`).
+  20-agent adversarial review (6 lenses + skeptics): 14 confirmed findings all
+  fixed. Accepted-as-designed: the 7th daily quest shifts the current day's
+  rotation once at publish; pool draws can return a friend id you deposited
+  (harmless dupe→shine); pool block-list filtering is impossible server-side
+  (GetBlockedUserIds is client-only — names are friend-gated instead, blocked
+  players arrive anonymous); Golden Crumb on mesh bodies uses the established
+  event-gold look. 101 files compile. **UNPUBLISHED; Studio spot-check:
+  capsule → pattern roll + Book chips; depot at the plaza's south side →
+  deposit a spare → traveler ceremony; ⭐ Reveal still cycles; DataStore
+  pools need API access ON (Studio) — pouch covers if off.** Cross-server
+  pool round-trip + 2-kid depot etiquette = family-playtest items.
 - **2026-08-06 (Reveal v2 — "The Wobble Count", doc 15 §5):** The Sparkle
   Capsule ceremony rebuilt around honest suspense: the capsule now starts PEARL
   (identical for every tier) and **every extra wobble means a better friend**

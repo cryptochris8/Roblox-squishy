@@ -507,7 +507,7 @@ local function applyCosmetics(model: Model, body: BasePart, equipped: { [string]
 	end
 end
 
-local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { [string]: string }, isVip: boolean, dressUp: boolean): Model
+local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { [string]: string }, isVip: boolean, dressUp: boolean, wornPatternId: string?): Model
 	-- The buddy IS the friend's real shape, just companion-sized.
 	local model = SquishyModelFactory.build(def)
 	model.Name = "Buddy"
@@ -530,6 +530,11 @@ local function buildBuddy(def, owner: Player, variantLevel: number, equipped: { 
 		addFace(body)
 	end
 	addVariantAura(body, variantLevel)
+	-- The worn Sparkle Pattern rides the companion (its sparkle/glow parent to
+	-- the Body part, so they pivot along; a Golden Crumb goes full gold).
+	if wornPatternId then
+		SquishyModelFactory.applyPattern(model, wornPatternId)
+	end
 	if isVip then
 		addVipAura(body)
 	end
@@ -608,7 +613,8 @@ function BuddyService.refresh(player: Player)
 		local def = defId and SquishyData.getById(defId)
 		if def then
 			local model = buildBuddy(def, player, PlayerDataService.getVariant(player, defId),
-				PlayerDataService.getEquippedCosmetics(player), isVip, slot == 1)
+				PlayerDataService.getEquippedCosmetics(player), isVip, slot == 1,
+				PlayerDataService.getWornPattern(player, defId))
 			model.Parent = buddyFolder
 			slots[slot] = model
 			-- Snap it next to the character right away so it doesn't fly in from origin.

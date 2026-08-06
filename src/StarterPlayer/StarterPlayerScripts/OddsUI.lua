@@ -194,7 +194,7 @@ function OddsUI.show(capsuleKey)
 	local notes = Instance.new("TextLabel")
 	notes.BackgroundTransparency = 1
 	notes.Position = UDim2.fromOffset(16, y + 90)
-	notes.Size = UDim2.new(1, -32, 0, 150)
+	notes.Size = UDim2.new(1, -32, 0, 190)
 	notes.Font = UiTheme.BodyFont
 	notes.TextSize = 14
 	notes.TextWrapped = true
@@ -204,6 +204,7 @@ function OddsUI.show(capsuleKey)
 	notes.Text = "Sometimes more, sometimes fewer — every capsule is a surprise!\n\n"
 		.. "Capsules always open with Sparkle Coins you earn by playing. Never Robux.\n\n"
 		.. "Already know the friend? They shine up ✨ → 🌈 and you get bonus Sparkle Coins. There are no misses.\n\n"
+		.. "Sometimes a friend arrives wearing a Sparkle Pattern — Berry Swirl (about 1 in 6) all the way to Golden Crumb (about 1 in 250). Patterns are never lost, and every pattern can appear in every capsule, always.\n\n"
 		.. "Family friends aren't in capsules — you earn them by restoring the lands, and they'll always be waiting for you."
 	notes.ZIndex = 21
 	notes.Parent = panel

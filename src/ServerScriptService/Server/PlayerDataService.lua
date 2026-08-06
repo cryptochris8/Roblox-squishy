@@ -26,6 +26,8 @@ local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
 local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 local WeeklyConfig = require(Shared:WaitForChild("WeeklyConfig"))
 local GardenConfig = require(Shared:WaitForChild("GardenConfig"))
+local SwitcherooConfig = require(Shared:WaitForChild("SwitcherooConfig"))
+local PatternConfig = require(Shared:WaitForChild("PatternConfig"))
 
 -- Analytics (first-party AnalyticsService only, all pcall-guarded): the two
 -- coin choke points below log every earn/spend so Creator Hub gets the whole
@@ -107,6 +109,23 @@ export type Profile = {
 		waterGivenDay: number,
 		waterGivenCount: number,
 	},
+	-- The Switcheroo Station foundation (doc 15 §6). Copies = total copies EVER
+	-- obtained per friend; spares are DERIVED, never stored:
+	--   spares(id) = max(0, Copies[id] - (1 + Variants[id] or 0))
+	-- so the last copy is unswappable by arithmetic. Stamps = Travel Stamp
+	-- provenance per friend. Switcheroo = the daily adventure counter + the
+	-- Swap Stories ring buffer (30 max, oldest out).
+	Copies: { [string]: number },
+	Stamps: { [string]: { travels: number, from: string?, fromIsFriend: boolean? } },
+	Switcheroo: { DayIndex: number, UsedToday: number, Stories: { any } },
+	-- Sparkle Patterns (doc 15 §7.1): per-friend SET of owned pattern ids
+	-- (Classic is implicit — every discovered friend has it), plus which owned
+	-- pattern each friend is wearing (absent = Classic). Purely additive.
+	Patterns: { [string]: { [string]: boolean } },
+	WornPatterns: { [string]: string },
+	-- Ethical like-ask (doc 15 §7.3): asked only at genuine joy peaks, never
+	-- incentivized, MAX TWO in a player's whole life. This counts them.
+	LikeAsks: number,
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -158,6 +177,12 @@ local function newProfile(): Profile
 		PremiumReceipts = {},
 		Milestones = {},
 		Garden = { beds = {}, waterDay = 0, waterReceived = 0, waterGivenDay = 0, waterGivenCount = 0 },
+		Copies = {},
+		Stamps = {},
+		Switcheroo = { DayIndex = 0, UsedToday = 0, Stories = {} },
+		Patterns = {},
+		WornPatterns = {},
+		LikeAsks = 0,
 	}
 end
 
@@ -217,6 +242,12 @@ local function serialize(p: Profile, raw: any)
 		PremiumReceipts = p.PremiumReceipts,
 		Milestones = p.Milestones,
 		Garden = p.Garden,
+		Copies = p.Copies,
+		Stamps = p.Stamps,
+		Switcheroo = p.Switcheroo,
+		Patterns = p.Patterns,
+		WornPatterns = p.WornPatterns,
+		LikeAsks = p.LikeAsks,
 	}
 	for k, v in pairs(known) do
 		out[k] = v
@@ -293,6 +324,96 @@ local function deserialize(data: any): Profile
 		end
 		p.Variants = variants
 	end
+	-- Copies (Switcheroo foundation). Older saves have none: seed every
+	-- discovered friend with the copies their variant level PROVES they pulled
+	-- (base discovery + one per variant step). Pure upside — nobody starts with
+	-- fewer than they visibly have, nobody loses anything. Runs after the
+	-- Discovered + Variants blocks above because it derives from both.
+	if type(data.Copies) == "table" then
+		local copies = {}
+		for id, n in pairs(data.Copies) do
+			local c = tonumber(n)
+			if type(id) == "string" and c and c >= 1 then
+				copies[id] = math.floor(c)
+			end
+		end
+		p.Copies = copies
+	else
+		for id in pairs(p.Discovered) do
+			p.Copies[id] = 1 + (p.Variants[id] or 0)
+		end
+	end
+	-- A discovered friend can never have FEWER copies than discovery + variants
+	-- prove (guards a corrupt/hand-edited save from creating negative spares).
+	for id in pairs(p.Discovered) do
+		local floor = 1 + (p.Variants[id] or 0)
+		if (p.Copies[id] or 0) < floor then
+			p.Copies[id] = floor
+		end
+	end
+	if type(data.Stamps) == "table" then
+		local stamps = {}
+		for id, s in pairs(data.Stamps) do
+			if type(id) == "string" and type(s) == "table" then
+				local travels = tonumber(s.travels)
+				if travels and travels >= 1 then
+					stamps[id] = {
+						travels = math.floor(travels),
+						from = if type(s.from) == "string" then s.from else nil,
+						fromIsFriend = s.fromIsFriend == true,
+					}
+				end
+			end
+		end
+		p.Stamps = stamps
+	end
+	if type(data.Switcheroo) == "table" then
+		local stories = {}
+		if type(data.Switcheroo.Stories) == "table" then
+			for _, entry in ipairs(data.Switcheroo.Stories) do
+				if type(entry) == "table" and type(entry.defId) == "string" then
+					table.insert(stories, entry)
+					if #stories >= SwitcherooConfig.StoriesMax then
+						break
+					end
+				end
+			end
+		end
+		p.Switcheroo = {
+			DayIndex = tonumber(data.Switcheroo.DayIndex) or 0,
+			UsedToday = tonumber(data.Switcheroo.UsedToday) or 0,
+			Stories = stories,
+		}
+	end
+	if type(data.Patterns) == "table" then
+		local pats = {}
+		for friendId, set in pairs(data.Patterns) do
+			if type(friendId) == "string" and type(set) == "table" then
+				local owned = {}
+				for patternId, has in pairs(set) do
+					if type(patternId) == "string" and has == true and PatternConfig.get(patternId) then
+						owned[patternId] = true
+					end
+				end
+				if next(owned) then
+					pats[friendId] = owned
+				end
+			end
+		end
+		p.Patterns = pats
+	end
+	if type(data.WornPatterns) == "table" then
+		local worn = {}
+		for friendId, patternId in pairs(data.WornPatterns) do
+			-- only keep a wear the friend actually owns (Classic = no entry)
+			if type(friendId) == "string" and type(patternId) == "string"
+				and p.Patterns[friendId] and p.Patterns[friendId][patternId] then
+				worn[friendId] = patternId
+			end
+		end
+		p.WornPatterns = worn
+	end
+	p.LikeAsks = math.max(0, math.floor(tonumber(data.LikeAsks) or 0))
 	p.LastDailyCapsuleDay = tonumber(data.LastDailyCapsuleDay) or 0
 	p.StreakDays = tonumber(data.StreakDays) or 0
 	p.LastPlayDay = tonumber(data.LastPlayDay) or 0
@@ -656,6 +777,22 @@ function PlayerDataService.snapshot(player: Player)
 		-- os.time() here (the client has no trustworthy clock), so the size the kid
 		-- sees is authoritative and can't be faked.
 		garden = gardenView(p),
+		-- Switcheroo foundation: total copies per friend (the Book derives spare
+		-- badges: spares = copies - 1 - variantLevel), Travel Stamps, and how many
+		-- Express adventures remain today (never shown as a countdown — the cap
+		-- copy promises tomorrow).
+		copies = p.Copies,
+		stamps = p.Stamps,
+		switcheroo = {
+			adventuresLeft = if p.Switcheroo.DayIndex == todayIndex()
+				then math.max(0, SwitcherooConfig.DailyCap - p.Switcheroo.UsedToday)
+				else SwitcherooConfig.DailyCap,
+			dailyCap = SwitcherooConfig.DailyCap,
+		},
+		-- Sparkle Patterns: owned sets + what each friend is wearing (absent =
+		-- Classic). The Book renders chips; the buddy wears the worn pattern.
+		patterns = p.Patterns,
+		wornPatterns = p.WornPatterns,
 	}
 end
 
@@ -721,6 +858,138 @@ end
 function PlayerDataService.hasDiscovered(player: Player, defId: string): boolean
 	local p = profiles[player]
 	return (p ~= nil) and (p.Discovered[defId] == true)
+end
+
+-- ── Switcheroo foundation: copies, spares, adventures, stamps, stories ───────
+
+-- Every copy obtained (capsule pull OR gift share received) banks here, BEFORE
+-- the discover/variant logic runs (doc 15 §6 2.2).
+function PlayerDataService.addCopy(player: Player, defId: string)
+	local p = profiles[player]
+	if not p then return end
+	p.Copies[defId] = (p.Copies[defId] or 0) + 1
+end
+
+-- Spares are derived, never stored: the last copy is not a spare by arithmetic.
+function PlayerDataService.getSpares(player: Player, defId: string): number
+	local p = profiles[player]
+	if not p or not p.Discovered[defId] then
+		return 0
+	end
+	local consumed = 1 + (p.Variants[defId] or 0)
+	return math.max(0, (p.Copies[defId] or 0) - consumed)
+end
+
+-- Debit one spare (the deposit side of a swap). Returns false if no spare
+-- exists — the collection itself (Discovered + Variants) is untouchable here.
+function PlayerDataService.consumeSpare(player: Player, defId: string): boolean
+	local p = profiles[player]
+	if not p or PlayerDataService.getSpares(player, defId) < 1 then
+		return false
+	end
+	p.Copies[defId] -= 1
+	return true
+end
+
+-- Adventures used today (UTC day-rolled, same pattern as gifting).
+function PlayerDataService.switcherooLeftToday(player: Player): number
+	local p = profiles[player]
+	if not p then
+		return 0
+	end
+	if p.Switcheroo.DayIndex ~= todayIndex() then
+		return SwitcherooConfig.DailyCap
+	end
+	return math.max(0, SwitcherooConfig.DailyCap - p.Switcheroo.UsedToday)
+end
+
+function PlayerDataService.noteSwitcheroo(player: Player)
+	local p = profiles[player]
+	if not p then return end
+	local today = todayIndex()
+	if p.Switcheroo.DayIndex ~= today then
+		p.Switcheroo.DayIndex = today
+		p.Switcheroo.UsedToday = 0
+	end
+	p.Switcheroo.UsedToday += 1
+end
+
+-- Stamp an arriving traveler's provenance. Travels only ever counts up.
+function PlayerDataService.addTravelStamp(player: Player, defId: string, travels: number, fromName: string?, fromIsFriend: boolean?)
+	local p = profiles[player]
+	if not p then return end
+	local existing = p.Stamps[defId]
+	p.Stamps[defId] = {
+		travels = math.max(travels, existing and existing.travels or 0),
+		from = fromName,
+		fromIsFriend = fromIsFriend == true,
+	}
+end
+
+function PlayerDataService.pushSwapStory(player: Player, entry: any)
+	local p = profiles[player]
+	if not p then return end
+	table.insert(p.Switcheroo.Stories, entry)
+	while #p.Switcheroo.Stories > SwitcherooConfig.StoriesMax do
+		table.remove(p.Switcheroo.Stories, 1)
+	end
+end
+
+-- ── Sparkle Patterns ─────────────────────────────────────────────────────────
+
+-- Grant a pattern to a friend. Returns true if it's NEW for that friend.
+function PlayerDataService.grantPattern(player: Player, friendId: string, patternId: string): boolean
+	local p = profiles[player]
+	if not p or not PatternConfig.get(patternId) then
+		return false
+	end
+	local set = p.Patterns[friendId]
+	if not set then
+		set = {}
+		p.Patterns[friendId] = set
+	end
+	if set[patternId] then
+		return false
+	end
+	set[patternId] = true
+	return true
+end
+
+-- Wear an owned pattern (or nil / "classic" to go back to Classic). Server-
+-- validated: you can only wear what that friend owns.
+function PlayerDataService.setWornPattern(player: Player, friendId: string, patternId: string?): boolean
+	local p = profiles[player]
+	if not p or not p.Discovered[friendId] then
+		return false
+	end
+	if patternId == nil or patternId == PatternConfig.ClassicId then
+		p.WornPatterns[friendId] = nil
+		return true
+	end
+	if p.Patterns[friendId] and p.Patterns[friendId][patternId] then
+		p.WornPatterns[friendId] = patternId
+		return true
+	end
+	return false
+end
+
+function PlayerDataService.getWornPattern(player: Player, friendId: string): string?
+	local p = profiles[player]
+	return p and p.WornPatterns[friendId] or nil
+end
+
+-- ── The ethical like-ask counter (lifetime, max 2 — enforced by the caller) ──
+
+function PlayerDataService.likeAsks(player: Player): number
+	local p = profiles[player]
+	return p and p.LikeAsks or 0
+end
+
+function PlayerDataService.noteLikeAsk(player: Player)
+	local p = profiles[player]
+	if p then
+		p.LikeAsks += 1
+	end
 end
 
 function PlayerDataService.hasSparkleBit(player: Player, id: string): boolean

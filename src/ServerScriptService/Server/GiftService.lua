@@ -157,6 +157,9 @@ local function onSendGift(sender: Player, recipientUserId: any, kind: any, value
 			toastEvent:FireClient(sender, recipient.DisplayName .. " already knows " .. def.DisplayName .. " — pick another friend to share!")
 			return
 		end
+		-- The copy banks BEFORE discovery (Switcheroo foundation, doc 15 §6 2.2).
+		-- The GIVER's copies are untouched — gifts stay non-destructive forever.
+		PlayerDataService.addCopy(recipient, defId)
 		PlayerDataService.discoverCard(recipient, defId)
 		DailyService.noteEvent(recipient, "discover")
 		toastEvent:FireClient(sender, "💝 You shared " .. def.DisplayName .. " with " .. recipient.DisplayName .. " — sharing is caring!")

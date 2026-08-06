@@ -13,6 +13,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
 local CapsuleConfig = require(Shared:WaitForChild("CapsuleConfig"))
 local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
+local PatternConfig = require(Shared:WaitForChild("PatternConfig"))
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -99,6 +100,39 @@ function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverrid
 	local bucket = byRarity[rarity]
 	local def = bucket[rng:NextInteger(1, #bucket)]
 
+	-- Every copy banks BEFORE the discover/variant logic (doc 15 §6 2.2): a
+	-- beyond-Rainbow duplicate now pays its coins AND becomes a spare for the
+	-- Switcheroo Station — strictly better than before.
+	PlayerDataService.addCopy(player, def.Id)
+
+	-- Sparkle Patterns roll alongside the friend on EVERY open (doc 15 §7.1).
+	-- A roll landing nothing (or a pattern this friend already owns) is a quiet
+	-- non-event, never a miss. Server RNG; land bias via the capsule key.
+	local patternId: string? = nil
+	local patternIsNew = false
+	local patternBonusCoins = 0
+	do
+		local weights = PatternConfig.weightsFor(key)
+		local roll = rng:NextInteger(1, PatternConfig.TotalWeight)
+		local acc = 0
+		for _, pat in ipairs(PatternConfig.Patterns) do
+			acc += weights[pat.id]
+			if roll <= acc then
+				patternId = pat.id
+				break
+			end
+		end
+		if patternId then
+			patternIsNew = PlayerDataService.grantPattern(player, def.Id, patternId)
+			if patternIsNew then
+				patternBonusCoins = PatternConfig.NewPatternBonusCoins
+				PlayerDataService.addCoins(player, patternBonusCoins)
+			else
+				patternId = nil -- already owned: stay quiet, no beat, no miss
+			end
+		end
+	end
+
 	local isNew = PlayerDataService.discoverCard(player, def.Id)
 	local bonusCoins = 0
 	local variantLevel = 0
@@ -135,6 +169,11 @@ function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverrid
 		capsuleKey = key,
 		cost = cfg.Cost,
 		coinsAfter = PlayerDataService.getCoins(player),
+		-- Sparkle Patterns: set only when a NEW pattern landed on this friend —
+		-- the reveal plays its shimmer beat off these.
+		patternId = patternId,
+		patternIsNew = patternIsNew,
+		patternBonusCoins = patternBonusCoins,
 	})
 	PlayerDataService.sync(player)
 	if CapsuleService.onOpened then

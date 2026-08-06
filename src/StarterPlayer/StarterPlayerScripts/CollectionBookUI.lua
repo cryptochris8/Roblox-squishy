@@ -9,7 +9,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SquishyData = require(Shared:WaitForChild("SquishyData"))
 local VariantConfig = require(Shared:WaitForChild("VariantConfig"))
+local PatternConfig = require(Shared:WaitForChild("PatternConfig"))
+local SwitcherooConfig = require(Shared:WaitForChild("SwitcherooConfig"))
 local UiTheme = require(script.Parent.UiTheme)
+local StreamerMode = require(script.Parent.StreamerMode)
 
 local CollectionBookUI = {}
 
@@ -19,8 +22,45 @@ local tabButtons = {}
 local currentTab = "All"
 local lastState = nil
 local onEquipCb = nil
+local onWearCb = nil -- fn(friendId, patternId?) -> WearPattern remote
 local openDetailDef = nil -- the friend whose detail card is currently open
 local openEquipBtn = nil  -- its Equip Buddy button (reconciled from server state)
+local openDetailSig = nil -- pattern/copy/stamp signature; detail re-renders on change
+
+-- How many SPARE copies of a friend the player holds (the Switcheroo currency):
+-- copies minus what discovery + variant progression consumed. Mirrors the
+-- server's arithmetic exactly.
+local function sparesFor(defId)
+	if not lastState or not lastState.discovered or not lastState.discovered[defId] then
+		return 0
+	end
+	local copies = (lastState.copies and lastState.copies[defId]) or 0
+	local consumed = 1 + ((lastState.variants and lastState.variants[defId]) or 0)
+	return math.max(0, copies - consumed)
+end
+
+-- A cheap change-signature for the open detail card's dynamic bits (worn
+-- pattern, owned patterns, copies, variant, stamp) so the detail re-renders
+-- only when something it shows actually changed — not on every coin tick.
+local function detailSig(state, defId)
+	if not state then
+		return ""
+	end
+	local ownedCount = 0
+	if state.patterns and state.patterns[defId] then
+		for _ in pairs(state.patterns[defId]) do
+			ownedCount += 1
+		end
+	end
+	local stamp = state.stamps and state.stamps[defId]
+	return table.concat({
+		tostring(state.wornPatterns and state.wornPatterns[defId]),
+		ownedCount,
+		tostring(state.copies and state.copies[defId]),
+		tostring(state.variants and state.variants[defId]),
+		tostring(stamp and stamp.travels),
+	}, "|")
+end
 
 local TABS = { "All", "Pudding Hills", "Goo Coast", "Moonlit Hollow", "Events", "⭐ Family" }
 
@@ -204,7 +244,23 @@ local function makeCell(def)
 	UiTheme.corner(11, vBadge)
 	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 1, vBadge)
 
-	local function refresh(discovered, variantLevel)
+	-- Spare-copy ribbon (Switcheroo currency), bottom-left; ZIndex 3 beats FullCard.
+	local sBadge = Instance.new("TextLabel")
+	sBadge.Name = "SpareBadge"
+	sBadge.Position = UDim2.fromOffset(6, 170)
+	sBadge.Size = UDim2.fromOffset(66, 20)
+	sBadge.BackgroundColor3 = UiTheme.Colors.CoinDeep
+	sBadge.BorderSizePixel = 0
+	sBadge.Font = UiTheme.HeaderFont
+	sBadge.TextSize = 12
+	sBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
+	sBadge.ZIndex = 3
+	sBadge.Visible = false
+	sBadge.Parent = frame
+	UiTheme.corner(10, sBadge)
+	UiTheme.stroke(Color3.fromRGB(255, 255, 255), 1, sBadge)
+
+	local function refresh(discovered, variantLevel, spares)
 		local vl = variantLevel or 0
 		local hasArt = discovered and isRealImage(def.ImageAssetId)
 		fullImg.Visible = hasArt
@@ -213,6 +269,11 @@ local function makeCell(def)
 		art.Visible = not hasArt
 		nameLbl.Visible = not hasArt
 		numLbl.Visible = not hasArt
+		local sp = spares or 0
+		sBadge.Visible = discovered and sp >= 1
+		if sBadge.Visible then
+			sBadge.Text = sp == 1 and "1 spare" or (sp .. " spares")
+		end
 		if discovered and vl >= 1 then
 			stroke.Color = VariantConfig.colorFor(vl)
 			vBadge.Visible = true
@@ -266,9 +327,11 @@ function CollectionBookUI.openDetail(def)
 		detailHolder:ClearAllChildren()
 		openDetailDef = nil
 		openEquipBtn = nil
+		openDetailSig = nil
 	end)
 
 	openDetailDef = def
+	openDetailSig = detailSig(lastState, def.Id)
 
 	-- Equip Buddy button, shared by both layouts. Its text is reconciled from the
 	-- server's authoritative StateSync in update(), so it can never falsely claim
@@ -295,19 +358,99 @@ function CollectionBookUI.openDetail(def)
 		end)
 	end
 
+	-- The Sparkle Pattern wardrobe: Classic + every pattern this friend owns,
+	-- as tappable chips (the worn one wears a ✓ + white ring). Tapping asks the
+	-- SERVER to wear it; the row repaints from the next StateSync — never
+	-- optimistically.
+	local function makePatternRow(parent, y)
+		local ownedSet = (lastState and lastState.patterns and lastState.patterns[def.Id]) or {}
+		local worn = lastState and lastState.wornPatterns and lastState.wornPatterns[def.Id] or nil
+		-- A horizontal SCROLL, not a plain row: eight owned chips overflow a
+		-- 360px card edge-to-edge (review catch) — swiping chips is kid-natural.
+		local row = Instance.new("ScrollingFrame")
+		row.BackgroundTransparency = 1
+		row.BorderSizePixel = 0
+		row.Position = UDim2.fromOffset(6, y)
+		row.Size = UDim2.new(1, -12, 0, 34)
+		row.ScrollBarThickness = 4
+		row.ScrollingDirection = Enum.ScrollingDirection.X
+		row.AutomaticCanvasSize = Enum.AutomaticSize.X
+		row.CanvasSize = UDim2.new(0, 0, 0, 0)
+		row.Parent = parent
+		local layout = Instance.new("UIListLayout")
+		layout.FillDirection = Enum.FillDirection.Horizontal
+		layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		layout.VerticalAlignment = Enum.VerticalAlignment.Top
+		layout.Padding = UDim.new(0, 6)
+		layout.Parent = row
+		local function chip(patternId, name, color)
+			local isWorn = (patternId == PatternConfig.ClassicId and worn == nil) or worn == patternId
+			local c = Instance.new("TextButton")
+			c.AutomaticSize = Enum.AutomaticSize.X
+			c.Size = UDim2.fromOffset(0, 28)
+			c.BackgroundColor3 = color
+			c.BorderSizePixel = 0
+			c.Font = UiTheme.HeaderFont
+			c.TextSize = 13
+			c.TextColor3 = Color3.fromRGB(255, 255, 255)
+			c.Text = (isWorn and " ✓ " or " ") .. name .. " "
+			c.Parent = row
+			UiTheme.corner(14, c)
+			UiTheme.stroke(Color3.fromRGB(255, 255, 255), isWorn and 3 or 1, c)
+			c.Activated:Connect(function()
+				if onWearCb and not isWorn then
+					onWearCb(def.Id, patternId ~= PatternConfig.ClassicId and patternId or nil)
+				end
+			end)
+		end
+		chip(PatternConfig.ClassicId, PatternConfig.ClassicName, UiTheme.Colors.SoftInk)
+		for _, pat in ipairs(PatternConfig.Patterns) do
+			if ownedSet[pat.id] then
+				chip(pat.id, pat.name, pat.badgeColor)
+			end
+		end
+		return row
+	end
+
+	-- The Switcheroo line: spares ready for the Express + the Travel Stamp.
+	local function stampText()
+		local pieces = {}
+		local sp = sparesFor(def.Id)
+		if sp >= 1 then
+			table.insert(pieces, sp == 1 and "1 spare ready for the Express" or (sp .. " spares ready for the Express"))
+		end
+		local stamp = lastState and lastState.stamps and lastState.stamps[def.Id]
+		if stamp and (stamp.travels or 0) >= 1 then
+			local t = stamp.travels
+			local tierName = SwitcherooConfig.stampTierName(t)
+			local s = "🚂 visited " .. t .. (t == 1 and " world" or " worlds")
+			if tierName then
+				s = s .. " — " .. tierName .. "!"
+			end
+			if stamp.from and stamp.fromIsFriend then
+				-- a CROSS-server name: StreamerMode.mask only aliases players in
+				-- this server, so Streamer Mode hides the name outright
+				local who = StreamerMode.isOn() and "a faraway friend" or stamp.from
+				s = s .. "  once loved by " .. who
+			end
+			table.insert(pieces, s)
+		end
+		return table.concat(pieces, "  •  ")
+	end
+
 	if isRealImage(def.ImageAssetId) then
 		-- The full uploaded card render is the star (it already has the name,
-		-- rarity, stats, lore, and number baked in), so we just frame it + Equip.
+		-- rarity, stats, lore, and number baked in), framed with the pattern
+		-- wardrobe + Switcheroo line + Equip.
 		local holder = Instance.new("Frame")
 		holder.AnchorPoint = Vector2.new(0.5, 0.5)
 		holder.Position = UDim2.fromScale(0.5, 0.5)
-		holder.Size = UDim2.fromOffset(372, 548)
+		holder.Size = UDim2.fromOffset(372, 620)
 		holder.BackgroundTransparency = 1
 		holder.Parent = detailHolder
-		-- Shrink-to-fit on small screens so the card AND its Equip Buddy button
-		-- (pinned to the bottom) stay on-screen on phones — the fixed 548-tall
-		-- card otherwise runs its bottom (the button) off a short mobile viewport.
-		UiTheme.autoFit(holder, 372, 548)
+		-- Shrink-to-fit on small screens so the card AND its rows AND the Equip
+		-- button (pinned to the bottom) stay on-screen on phones.
+		UiTheme.autoFit(holder, 372, 620)
 
 		local img = Instance.new("ImageLabel")
 		img.AnchorPoint = Vector2.new(0.5, 0)
@@ -317,6 +460,22 @@ function CollectionBookUI.openDetail(def)
 		img.ScaleType = Enum.ScaleType.Fit
 		img.Image = def.ImageAssetId
 		img.Parent = holder
+
+		makePatternRow(holder, 486)
+		local extra = stampText()
+		if extra ~= "" then
+			local line = Instance.new("TextLabel")
+			line.BackgroundTransparency = 1
+			line.Position = UDim2.fromOffset(6, 522)
+			line.Size = UDim2.new(1, -12, 0, 22)
+			line.Font = UiTheme.BodyFont
+			line.TextSize = 14
+			line.TextColor3 = Color3.fromRGB(255, 255, 255)
+			line.TextStrokeColor3 = UiTheme.Colors.Shade
+			line.TextStrokeTransparency = 0.35
+			line.Text = extra
+			line.Parent = holder
+		end
 
 		makeEquip(holder, UDim2.new(0.5, 0, 1, 0))
 		return
@@ -362,7 +521,8 @@ function CollectionBookUI.openDetail(def)
 	sub.TextColor3 = UiTheme.Colors.AccentDeep
 	local detailVl = (lastState and lastState.variants and lastState.variants[def.Id]) or 0
 	local variantPrefix = detailVl >= 1 and (VariantConfig.iconFor(detailVl) .. " " .. VariantConfig.nameFor(detailVl) .. "  •  ") or ""
-	sub.Text = variantPrefix .. UiTheme.rarityLabel(def.Rarity) .. "  •  " .. (def.PackName or "") .. "  •  " .. (def.Zone or "")
+	local sparesSuffix = sparesFor(def.Id) >= 1 and ("  •  " .. sparesFor(def.Id) .. " spare") or ""
+	sub.Text = variantPrefix .. UiTheme.rarityLabel(def.Rarity) .. "  •  " .. (def.PackName or "") .. "  •  " .. (def.Zone or "") .. sparesSuffix
 	sub.Parent = card
 
 	local lore = Instance.new("TextLabel")
@@ -455,7 +615,8 @@ function CollectionBookUI.refresh()
 		local visible = cellMatchesTab(entry.def)
 		entry.frame.Visible = visible
 		if visible then
-			entry.refresh(discoveredSet[entry.def.Id] == true, variantSet[entry.def.Id] or 0)
+			entry.refresh(discoveredSet[entry.def.Id] == true, variantSet[entry.def.Id] or 0,
+				sparesFor(entry.def.Id))
 		end
 	end
 
@@ -471,6 +632,15 @@ function CollectionBookUI.update(state)
 	-- Keep an open detail card's Equip button honest with the authoritative state.
 	if openEquipBtn and openDetailDef then
 		openEquipBtn.Text = (state and (state.equippedBuddyId == openDetailDef.Id or state.equippedBuddyId2 == openDetailDef.Id)) and "★ Your Buddy" or "Equip Buddy"
+	end
+	-- Re-render the open detail when its pattern/spare/stamp facts changed (a
+	-- chip tap round-trips through the server; the ✓ moves here, honestly).
+	if openDetailDef and root and root.Visible then
+		local sig = detailSig(state, openDetailDef.Id)
+		if sig ~= openDetailSig then
+			openDetailSig = sig
+			CollectionBookUI.openDetail(openDetailDef)
+		end
 	end
 	if root and root.Visible then
 		CollectionBookUI.refresh()
@@ -496,12 +666,14 @@ function CollectionBookUI.hide()
 		detailHolder:ClearAllChildren()
 		openDetailDef = nil
 		openEquipBtn = nil
+		openDetailSig = nil
 		root.Visible = false
 	end
 end
 
-function CollectionBookUI.mount(playerGui, onEquip)
+function CollectionBookUI.mount(playerGui, onEquip, onWear)
 	onEquipCb = onEquip
+	onWearCb = onWear
 
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "SquishyBook"

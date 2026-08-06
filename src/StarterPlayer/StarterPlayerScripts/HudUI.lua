@@ -27,6 +27,7 @@ local lastState
 local compactNow = false
 
 local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
+local compassLabel -- the Wonder Compass chip (desktop layout only)
 local dailyBtn, dailyPulse, dailyBaseSize
 local coinPillScale -- UIScale on the coin pill, for the earn "bounce"
 local prevCoins -- last coin total shown (nil until the first sync)
@@ -411,6 +412,33 @@ local function build()
 	bitsLabel = statPill(screen, C, "BitsPill", 120, 78, UiTheme.Colors.Coin)
 	bitsLabel.TextColor3 = UiTheme.Colors.CoinDeep
 	bitsLabel.Text = "✨ Bits 0/" .. SparkleBitConfig.count()
+
+	-- The Wonder Compass (doc 15 §7.3): one gentle "here's a next wonder" chip
+	-- under the pill column. Desktop only — phones are deliberately decluttered
+	-- (Addy's rule) — and it suggests, never counts down, never nags. It sits
+	-- below SocialUI's Surge pill (which ends at y≈214 in its own ScreenGui).
+	compassLabel = nil
+	if not C then
+		local pill = UiTheme.panel({
+			Name = "CompassPill",
+			Position = UDim2.fromOffset(16, 222),
+			Size = UDim2.fromOffset(176, 46),
+			radius = 20,
+		})
+		pill.Parent = screen
+		UiTheme.stroke(UiTheme.Colors.Accent, 2, pill)
+		compassLabel = Instance.new("TextLabel")
+		compassLabel.BackgroundTransparency = 1
+		compassLabel.Size = UDim2.new(1, -20, 1, -6)
+		compassLabel.Position = UDim2.fromOffset(10, 3)
+		compassLabel.Font = UiTheme.BodyFont
+		compassLabel.TextSize = 13
+		compassLabel.TextWrapped = true
+		compassLabel.TextXAlignment = Enum.TextXAlignment.Left
+		compassLabel.TextColor3 = UiTheme.Colors.Ink
+		compassLabel.Text = ""
+		compassLabel.Parent = pill
+	end
 	questBanner(screen, C)
 
 	if C then
@@ -589,6 +617,66 @@ function HudUI.update(state)
 		else
 			questFrame.Visible = false
 		end
+	end
+
+	-- The Wonder Compass: one "next wonder" from what this player hasn't done,
+	-- rotating gently every few minutes (a suggestion carousel, never a timer).
+	if compassLabel then
+		local wonders = {}
+		local garden = state.garden
+		if garden and garden.beds then
+			local bedCount, anyReady = 0, false
+			for _, bed in pairs(garden.beds) do
+				bedCount += 1
+				if bed.ready then
+					anyReady = true
+				end
+			end
+			if anyReady then
+				table.insert(wonders, "✨ Your garden is ready to harvest!")
+			elseif bedCount < 3 then
+				table.insert(wonders, "🌱 A garden bed is waiting for a Sparkle Seed!")
+			end
+		end
+		if state.dailyCapsuleReady == true then
+			table.insert(wonders, "🎁 Your free Daily Gift capsule is waiting!")
+		end
+		local adventuresLeft = (state.switcheroo and state.switcheroo.adventuresLeft) or 0
+		if adventuresLeft > 0 and state.copies and state.discovered then
+			for defId, copies in pairs(state.copies) do
+				local consumed = 1 + ((state.variants and state.variants[defId]) or 0)
+				if state.discovered[defId] and copies > consumed then
+					table.insert(wonders, "🚂 A spare friend would love an Express adventure!")
+					break
+				end
+			end
+		end
+		local bitsFound = 0
+		if state.sparkleBits then
+			for _ in pairs(state.sparkleBits) do
+				bitsFound += 1
+			end
+		end
+		if bitsFound < SparkleBitConfig.count() then
+			table.insert(wonders, "✨ Sparkle Bits are hiding around the lands...")
+		end
+		-- capsules hold only the 48 LAUNCH friends (discoveredCount also counts
+		-- event + family friends, so it over-counts for this question)
+		local launchFound = 0
+		if state.discovered then
+			for _, def in ipairs(SquishyData.getLaunchRoster()) do
+				if state.discovered[def.Id] then
+					launchFound += 1
+				end
+			end
+		end
+		if launchFound < 48 then
+			table.insert(wonders, "✨ A new friend is waiting in a Sparkle Capsule!")
+		end
+		if #wonders == 0 then
+			table.insert(wonders, "🚂 Ride the Sparkle Express, or find a photo spot!")
+		end
+		compassLabel.Text = wonders[(math.floor(os.time() / 300) % #wonders) + 1]
 	end
 end
 
