@@ -45,7 +45,15 @@ day-ish), L (multi-day). Risk notes flag anything touching uploads/moderation.
   Discovered (not won/pulled).
 - **Sparkle Capsules stay FREE forever** (earned coins only). No paid
   randomness of any kind, ever. Every friend stays earnable.
-- **NO trading.** Gifts only — sharing a friend never costs the giver theirs.
+- **No negotiated trading, ever.** *(Amended 2026-08-06 by Chris — was "NO
+  trading"; doc 15 §4 has the decision record.)* Swaps move only SPARE copies
+  (per-friend copy counts beyond what discovery + variants consumed), only
+  through atomic server rituals (the Switcheroo Station, doc 15 §6), and the
+  collection itself (Discovered + Variants) can never shrink — the last copy
+  is unswappable by arithmetic, rarity is always exact-matched, and no swap
+  may ever end in loss. Multi-slot boards, counter-offers, player-set values,
+  and any negotiated exchange stay banned forever — that is where the scams
+  live. Gifts are unchanged: sharing a friend never costs the giver theirs.
 - **Monetization sells style & convenience only.** No coin packs, no power.
 - **No pressure mechanics.** Nothing decays, nothing is ever lost for taking a
   day off, **nothing visible ever counts down or goes backward**, no
@@ -806,7 +814,11 @@ suggest a platform Event post + one "watch for this" note for the girls.
 ## 7. EXPLICIT SKIP LIST (documented decisions — do not build)
 
 - Experience-notification opt-in (13+ only; core audience can't receive).
-- Trading, in any form. Theft/steal mechanics (GaG's spice — wrong for 6-9).
+- NEGOTIATED trading: multi-slot trade boards, counter-offers, player-set
+  values, lending, "trust trades" — permanently out of scope even though
+  spare-copy Switcheroo swaps are now allowed (2026-08-06 amendment, doc 15).
+  Do not "improve" a negotiation surface back in. Theft/steal mechanics
+  (GaG's spice — wrong for 6-9).
 - Paid randomness, coin packs, luck boosts. Capsules stay free.
 - Hunger/decay/neglect states; visible streak resets or ANY on-screen number
   that can go down; "LAST CHANCE" anything; expiring one-shot promo codes

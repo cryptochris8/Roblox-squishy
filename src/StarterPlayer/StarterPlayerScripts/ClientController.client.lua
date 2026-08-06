@@ -38,6 +38,8 @@ local PhotoSpots = require(here:WaitForChild("PhotoSpots"))
 local GardenUI = require(here:WaitForChild("GardenUI"))
 local WaterFx = require(here:WaitForChild("WaterFx"))
 local StreamerMode = require(here:WaitForChild("StreamerMode"))
+local OddsUI = require(here:WaitForChild("OddsUI"))
+local BeaconFx = require(here:WaitForChild("BeaconFx"))
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -94,7 +96,18 @@ end, function(id)
 end, function(passKey)
 	Remotes.get(Remotes.BuyPass):FireServer(passKey)
 end)
-CapsuleRevealUI.mount(playerGui)
+OddsUI.mount(playerGui)
+CapsuleRevealUI.mount(playerGui, {
+	onOpenAgain = function(capsuleKey)
+		Remotes.get(Remotes.OpenCapsuleAgain):FireServer(capsuleKey)
+	end,
+	onShowOdds = function(capsuleKey)
+		OddsUI.show(capsuleKey)
+	end,
+})
+BeaconFx.mount(playerGui, function(revealId)
+	Remotes.get(Remotes.CheerDiscovery):FireServer(revealId)
+end)
 SquishFx.init()
 BouncePads.init()
 SoundScape.init()
@@ -198,6 +211,14 @@ end)
 
 Remotes.get(Remotes.PhotoMoment).OnClientEvent:Connect(function(info)
 	PhotoSpots.play(info)
+end)
+
+Remotes.get(Remotes.SparkleBeacon).OnClientEvent:Connect(function(info)
+	BeaconFx.play(info)
+end)
+
+Remotes.get(Remotes.CheerArrived).OnClientEvent:Connect(function(info)
+	BeaconFx.cheerArrived(info)
 end)
 
 -- Bounce pads and slides launch the character; without this, hard landings can

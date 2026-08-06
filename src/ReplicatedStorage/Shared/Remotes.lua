@@ -30,6 +30,8 @@ Remotes.SetRidePref = "SetRidePref"                  -- bool: "Faster Rides" tog
 Remotes.PlantSeed = "PlantSeed"                      -- (bedId, seedId): buy-if-affordable + plant a Sparkle Seed
 Remotes.HarvestPlant = "HarvestPlant"                -- bedId: harvest a fully-bloomed plant
 Remotes.WaterGarden = "WaterGarden"                  -- ownerUserId: water a friend's garden (kindness)
+Remotes.OpenCapsuleAgain = "OpenCapsuleAgain"        -- capsuleKey: the reveal's "Open another!" chain (range+rate checked)
+Remotes.CheerDiscovery = "CheerDiscovery"            -- revealId: one-tap Cheer on a Sparkle Beacon
 
 -- server -> client
 Remotes.StateSync = "StateSync"         -- full player snapshot (coins, discovered, quest...)
@@ -47,6 +49,8 @@ Remotes.BoopFx = "BoopFx"               -- a friendly Boop happened (from, to, t
 Remotes.PhotoMoment = "PhotoMoment"     -- {frameId, land, at, occupants}: gather for a group "say sparkle!" photo
 Remotes.OpenGardenUI = "OpenGardenUI"   -- a garden bed prompt asked the client to open the Sparkle Garden panel
 Remotes.WaterFx = "WaterFx"             -- {fromUserId,toUserId,fromName}: sparkle-heart FX for a garden watering
+Remotes.SparkleBeacon = "SparkleBeacon" -- {revealId,byUserId,byName,friendName,rarity,pos}: an epic+ discovery lit its capsule
+Remotes.CheerArrived = "CheerArrived"   -- {fromName}: someone cheered YOUR discovery (client aggregates)
 Remotes.Toast = "Toast"                 -- a small friendly message
 
 local ALL_EVENTS = {
@@ -69,6 +73,8 @@ local ALL_EVENTS = {
 	Remotes.PlantSeed,
 	Remotes.HarvestPlant,
 	Remotes.WaterGarden,
+	Remotes.OpenCapsuleAgain,
+	Remotes.CheerDiscovery,
 	Remotes.StateSync,
 	Remotes.SocialSync,
 	Remotes.OpenBoutique,
@@ -80,6 +86,8 @@ local ALL_EVENTS = {
 	Remotes.PhotoMoment,
 	Remotes.OpenGardenUI,
 	Remotes.WaterFx,
+	Remotes.SparkleBeacon,
+	Remotes.CheerArrived,
 	Remotes.SquishResult,
 	Remotes.CapsuleResult,
 	Remotes.SparkleBitCollected,

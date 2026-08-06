@@ -7,6 +7,9 @@ local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local RarityConfig = require(Shared:WaitForChild("RarityConfig"))
+local RevealConfig = require(Shared:WaitForChild("RevealConfig"))
+local SquishyData = require(Shared:WaitForChild("SquishyData"))
 
 -- 1) Create the RemoteEvents first, before anything tries to use them.
 Remotes.setupServer()
@@ -46,6 +49,7 @@ local EmoteService = require(script.Parent.EmoteService)
 local RidePrefs = require(script.Parent.RidePrefs)
 local PhotoSpotService = require(script.Parent.PhotoSpotService)
 local GardenService = require(script.Parent.GardenService)
+local CheerService = require(script.Parent.CheerService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -72,6 +76,7 @@ MilestoneService.init()
 BoopService.init()
 EmoteService.init()
 RidePrefs.init()
+CheerService.init()
 
 -- 4) Build all the lands, then spawn each land's sleepy friends on its pads.
 local world = WorldService.build()
@@ -169,14 +174,46 @@ MonetizationService.onPassesChanged = function(player)
 	BuddyService.refresh(player)
 end
 
+-- The Sparkle Beacon (doc 15 §5): an epic+ NEW discovery — or a Rainbow
+-- shine-up — lights a beam at that land's capsule for everyone, with a one-tap
+-- Cheer. It REPLACES the plain text shout for those pulls (no double-toast);
+-- commons/rares keep the friendly text shout-out.
+local sparkleBeaconEvent = Remotes.get(Remotes.SparkleBeacon)
+local capsulePosByKey: { [string]: Vector3 } = {}
+for _, z in ipairs(world.zones) do
+	if z.capsuleKey and z.capsulePrompt then
+		local part = z.capsulePrompt.Parent
+		if part and part:IsA("BasePart") then
+			capsulePosByKey[z.capsuleKey] = part.Position
+		end
+	end
+end
+
 -- Daily-quest tracking: a capsule open (and any new discovery), and Sparkle Bits.
 -- A NEW discovery is also a show-off moment for the rest of the server.
-CapsuleService.onOpened = function(player, isNew, def)
+CapsuleService.onOpened = function(player, isNew, def, info)
 	FirstDayService.check(player)
 	DailyService.noteEvent(player, "capsule")
+	local rank = (def and RarityConfig[def.Rarity] and RarityConfig[def.Rarity].SortOrder) or 1
+	local beaconWorthy = def
+		and ((isNew and rank >= RevealConfig.BeaconMinSortOrder)
+			or (info and info.variantUpgraded and (info.variantLevel or 0) >= 2))
+	if beaconWorthy then
+		local revealId = CheerService.registerReveal(player)
+		sparkleBeaconEvent:FireAllClients({
+			revealId = revealId,
+			byUserId = player.UserId,
+			byName = player.DisplayName,
+			friendName = def.DisplayName,
+			rarity = def.Rarity,
+			-- honest copy on every client: a Rainbow shine-up is not a discovery
+			kind = isNew and "discovered" or "shined",
+			pos = info and capsulePosByKey[info.capsuleKey] or nil,
+		})
+	end
 	if isNew then
 		DailyService.noteEvent(player, "discover")
-		if def then
+		if def and not beaconWorthy then
 			shoutToOthers(player, "🎉 " .. player.DisplayName .. " discovered " .. def.DisplayName .. "!")
 		end
 	elseif def then
@@ -257,6 +294,39 @@ QuestService.onAllShardsRecovered = function(player)
 	ftue(player, 5, "sparkle_restored")
 end
 
+-- The reveal's "Open another!" chain: same open as walking up and pressing the
+-- prompt, re-validated server-side — rate-limited, range-checked against the
+-- named capsule, and every coin/pool check re-runs inside tryOpen.
+local lastOpenAgain: { [Player]: number } = {}
+Remotes.get(Remotes.OpenCapsuleAgain).OnServerEvent:Connect(function(player, capsuleKey)
+	if type(capsuleKey) ~= "string" then
+		return
+	end
+	local now = os.clock()
+	local last = lastOpenAgain[player]
+	if last and now - last < 1.2 then
+		return -- double-tap guard only; a failed try below doesn't burn the window
+	end
+	for _, z in ipairs(world.zones) do
+		if z.capsuleKey == capsuleKey and z.capsulePrompt then
+			local part = z.capsulePrompt.Parent
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			if part and part:IsA("BasePart") and hrp and (hrp.Position - part.Position).Magnitude <= 24 then
+				lastOpenAgain[player] = now
+				CapsuleService.tryOpen(player, capsuleKey)
+			else
+				-- A kid who wandered off mid-reveal deserves a why, not a dead button.
+				toastEvent:FireClient(player, "Scoot a little closer to the Sparkle Capsule! ✨")
+			end
+			return
+		end
+	end
+end)
+Players.PlayerRemoving:Connect(function(player)
+	lastOpenAgain[player] = nil
+end)
+
 -- Each land's Sparkle Capsule (draws from that land's pack) + guide (gives that
 -- land's shard clue).
 for _, z in ipairs(world.zones) do
@@ -314,6 +384,28 @@ ownerDebug.OnServerEvent:Connect(function(player, action)
 	elseif action == "gardenGrow" then
 		-- jump every planted bed to fully grown so the garden is demoable on cue
 		GardenService.debugGrow(player)
+	elseif type(action) == "string" and action:sub(1, 11) == "demoReveal:" then
+		-- Rehearse the reveal ceremony (LIVE-stream practice + Studio checks):
+		-- plays the real ceremony client-side with a real friend of that rarity
+		-- but GRANTS NOTHING — the card wears a "Practice ✨" ribbon so a
+		-- recorded rehearsal can never pose as a real pull.
+		local rarity = action:sub(12)
+		local defs = SquishyData.getByRarity(rarity)
+		if #defs > 0 then
+			local def = defs[math.random(1, #defs)]
+			Remotes.get(Remotes.CapsuleResult):FireClient(player, {
+				demo = true,
+				defId = def.Id,
+				displayName = def.DisplayName,
+				cardNumber = def.CardNumber,
+				rarity = def.Rarity,
+				imageAssetId = def.ImageAssetId,
+				isNew = true,
+				bonusCoins = 0,
+				variantLevel = 0,
+				variantUpgraded = false,
+			})
+		end
 	elseif action == "treatAsFriend" then
 		BoopService.forceFriendTier = true -- demo/test the FRIEND boop FX solo
 		TravelService.setFriendOverride(player.UserId, "friend")

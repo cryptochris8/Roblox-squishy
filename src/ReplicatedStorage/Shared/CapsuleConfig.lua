@@ -2,7 +2,16 @@
 -- One Sparkle Capsule per land, each drawing from that land's friend pack. Capsules
 -- are opened with EARNED Sparkle Coins (never Robux). pickRarity auto-skips any
 -- rarity a pack doesn't contain and renormalizes, so a shared weight table is fine.
-local RARITY_WEIGHTS = { common = 50, rare = 26, epic = 14, mythic = 7, legendary = 3 }
+-- Weights come from RarityConfig (the one source of truth — unified 2026-08-06);
+-- family stays out of every capsule via its Weight = 0.
+local RarityConfig = require(script.Parent.RarityConfig)
+
+local RARITY_WEIGHTS: { [string]: number } = {}
+for rarity, cfg in pairs(RarityConfig) do
+    if cfg.Weight and cfg.Weight > 0 then
+        RARITY_WEIGHTS[rarity] = cfg.Weight
+    end
+end
 
 return {
     StarterCapsule = {

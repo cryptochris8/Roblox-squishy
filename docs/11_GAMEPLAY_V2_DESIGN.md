@@ -38,6 +38,39 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **✅ Phase D — Monetization — DONE (2026-06-11, built against the LIVE products):** Chris created the 9 products in Creator Hub (guide: doc 13) and the build wired them end to end. Extra Buddy Slot 99 R$ / Coin Boost +25% 149 R$ / Sparkle Club VIP 249 R$ (passes) + 6 premium cosmetics 79–249 R$ (Developer Products), sold from the Boutique's 👑 Premium Sparkles and ✨ Sparkle Passes shelves. **No coin packs** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed.
 
 ### Build log
+- **2026-08-06 (Reveal v2 — "The Wobble Count", doc 15 §5):** The Sparkle
+  Capsule ceremony rebuilt around honest suspense: the capsule now starts PEARL
+  (identical for every tier) and **every extra wobble means a better friend**
+  (1 = cozy → 5 = mythic) with colour bleeding in per wobble and a chime
+  pitch-ladder (one Chime asset, PlaybackSpeed — zero uploads). Per-tier
+  ceremonies from `RevealConfig` (~1.2s common → ~6.4s mythic: rise, ray wheel,
+  slow-mo inflate, star rain, ONE photosensitivity-capped soft flash),
+  variant-stamp + coin count-up beats, gift skin (bow + hearts + warmer chime),
+  a skippable Timeline (tap = fast-forward, never silent), a 1-deep queue (v1
+  silently DROPPED a gift arriving mid-reveal), "Open another! ✨" chain
+  (server re-validates range/rate/coins), the "What's Inside?" hundred-chart
+  odds page generated from the real weights **filtered to rarities the pack
+  actually contains**, and the Sparkle Beacon social beat: epic+ discoveries /
+  Rainbow shine-ups light a beam at the land's capsule + a one-tap Cheer toast
+  (CheerService: 60s window, one cheer per pair per reveal + 30s pair cooldown;
+  names friend-gated, block list respected client-side — love-bombing has no
+  mechanism). Owner ⭐ Reveal rehearsal button cycles real rarities ("Practice
+  ✨" ribbon, grants nothing). Found + fixed along the way: **CapsuleConfig had
+  mythic/legendary weights swapped** (the top tier dropped at 7/100 — now 3/100,
+  weights unified into RarityConfig as the one source), **no legendary-tier
+  friend exists in any pack** (odds page + rehearsal now pack-aware; a legendary
+  ceremony exists for the day one ships), and two v1 phone bugs (the reveal
+  stage scaled toward the TOP-LEFT — UIScale scales about the AnchorPoint — and
+  `ClearAllChildren` destroyed the stage's own AutoFit UIScale on first reveal).
+  9-lens adversarial review + 12 skeptic verifications: all confirmed findings
+  fixed (incl. same-frame Sound landmine → warm templates; stranger-safe cheer
+  names; silent Open-another rejections → gentle toast). 94 files compile.
+  Accepted-as-designed: optimistic "Sent 💖", newest-wins reveal queue. Studio
+  MCP was unregistered this session — **Chris's spot-check: press ⭐ Reveal
+  (cycles tiers), open a real capsule, tap mid-ceremony (skip), check phone
+  layout via ForceCompactHud + a real phone.** Same session: doc 14 §1 Law
+  amended (Chris approved kid-safe spare-copy swaps; negotiated trading banned
+  forever) — the Switcheroo Station (doc 15 §6) is next up.
 - **2026-06-11 (Phase D — monetization, built on the live products):** The
   ethical-monetization design became real code the same day Chris created the
   products. MonetizationConfig carries the live ids; MonetizationService owns

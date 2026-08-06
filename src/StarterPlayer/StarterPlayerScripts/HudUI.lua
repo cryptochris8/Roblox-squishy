@@ -312,6 +312,43 @@ local function ownerDemoButtons(parent, C, onOwnerDebug)
 		demoBtn("🌟 Event", UDim2.new(0.5, -150, 1, -16), UDim2.fromOffset(92, 32), 14, "startEvent")
 		demoBtn("✨ Surge", UDim2.new(0.5, 150, 1, -16), UDim2.fromOffset(92, 32), 14, "startSurge")
 	end
+	-- Reveal-ceremony rehearsal: each press practices the next tier's ceremony
+	-- (grants nothing; the card wears a "Practice ✨" ribbon). LIVE-stream prep +
+	-- the Studio verification path for every tier. The cycle only includes
+	-- rarities that actually exist in the roster (review catch: no legendary
+	-- friends exist today, so a hardcoded list had a silent dead press — this
+	-- derives the cycle, so new tiers join the rehearsal automatically).
+	-- ⭐ is on doc 14 §2's proven-good glyph list; 🎬 is not.
+	local revealCycle = {}
+	for _, r in ipairs({ "common", "rare", "epic", "legendary", "mythic", "family" }) do
+		if #SquishyData.getByRarity(r) > 0 then
+			table.insert(revealCycle, r)
+		end
+	end
+	if #revealCycle == 0 then
+		return
+	end
+	local revealIx = 0
+	local btn = Instance.new("TextButton")
+	btn.Name = "DemoReveal"
+	btn.AnchorPoint = C and Vector2.new(0.5, 0) or Vector2.new(0.5, 1)
+	btn.Position = C and UDim2.new(0.5, 120, 0, 42) or UDim2.new(0.5, 250, 1, -16)
+	btn.Size = C and UDim2.fromOffset(34, 24) or UDim2.fromOffset(92, 32)
+	btn.BackgroundColor3 = Color3.fromRGB(150, 120, 140)
+	btn.BackgroundTransparency = 0.2
+	btn.BorderSizePixel = 0
+	btn.Font = UiTheme.BodyFont
+	btn.TextSize = C and 12 or 14
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Text = C and "⭐" or "⭐ Reveal"
+	btn.Parent = parent
+	UiTheme.corner(C and 10 or 16, btn)
+	btn.Activated:Connect(function()
+		if onOwnerDebug then
+			revealIx = revealIx % #revealCycle + 1
+			onOwnerDebug("demoReveal:" .. revealCycle[revealIx])
+		end
+	end)
 end
 
 -- Count the coin number UP to its new value (a satisfying little tally) and

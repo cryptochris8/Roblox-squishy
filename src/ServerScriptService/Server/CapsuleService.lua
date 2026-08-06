@@ -18,8 +18,9 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local CapsuleService = {}
 
--- optional hook (wired by Main): onOpened(player, isNew, def), called after a
--- capsule successfully opens. Typed `any` so strict mode allows the late binding.
+-- optional hook (wired by Main): onOpened(player, isNew, def, info), called
+-- after a capsule successfully opens. `info` carries what the beacon needs:
+-- { capsuleKey, variantLevel, variantUpgraded }. Typed `any` for late binding.
 CapsuleService.onOpened = (nil :: any)
 
 local capsuleResultEvent: RemoteEvent
@@ -69,7 +70,10 @@ local function pickRarity(weights: { [string]: number }, byRarity: { [string]: {
 end
 
 function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverride: boolean?): boolean
-	local cfg = CapsuleConfig[capsuleKey or "StarterCapsule"] or CapsuleConfig.StarterCapsule
+	-- Resolve the key alongside the config so the client's "Open another!" chain
+	-- and the odds page always name the capsule that actually rolled.
+	local key = if capsuleKey and CapsuleConfig[capsuleKey] then capsuleKey else "StarterCapsule"
+	local cfg = CapsuleConfig[key]
 
 	-- Make sure we can actually give a friend BEFORE charging coins or using the
 	-- free gift, so the player is never left empty-handed.
@@ -126,10 +130,19 @@ function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverrid
 		wasFree = isFree,
 		variantLevel = variantLevel,
 		variantUpgraded = variantUpgraded,
+		-- The ceremony's chain + odds page (client renders "Open another! ✨ cost"
+		-- only when coinsAfter can afford it; the server re-validates anyway).
+		capsuleKey = key,
+		cost = cfg.Cost,
+		coinsAfter = PlayerDataService.getCoins(player),
 	})
 	PlayerDataService.sync(player)
 	if CapsuleService.onOpened then
-		CapsuleService.onOpened(player, isNew, def)
+		CapsuleService.onOpened(player, isNew, def, {
+			capsuleKey = key,
+			variantLevel = variantLevel,
+			variantUpgraded = variantUpgraded,
+		})
 	end
 	return true
 end
