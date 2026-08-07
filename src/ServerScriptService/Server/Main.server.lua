@@ -51,6 +51,7 @@ local PhotoSpotService = require(script.Parent.PhotoSpotService)
 local GardenService = require(script.Parent.GardenService)
 local CheerService = require(script.Parent.CheerService)
 local SwitcherooService = require(script.Parent.SwitcherooService)
+local LandmarkService = require(script.Parent.LandmarkService)
 
 -- 3) Initialize player data + the systems that need remotes ready.
 PlayerDataService.init()
@@ -88,6 +89,7 @@ PlaygroundService.init() -- slides, bounce bog, swings, seesaw, mushroom hops
 FamilyService.init() -- the three daughter guardians, one per land
 PhotoSpotService.init() -- Sparkle Photo Spots need the land's tagged pads in place
 GardenService.init() -- the Sparkle Garden district (self-builds off Pudding Hills spawn)
+LandmarkService.init() -- Sparkle Beacons: a candy balloon over every landmark, so the world announces itself
 
 local zoneGroups = {}
 for _, z in ipairs(world.zones) do

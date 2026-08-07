@@ -1917,10 +1917,11 @@ function WorldService.build()
 	})
 	capsuleDome.Parent = capsuleModel
 	capsuleModel.PrimaryPart = capsuleBase
-	-- 130: the capsule is the first destination a new player must find, 87.7
-	-- studs from spawn and dead ahead — its name used to go dark at 60, so the
-	-- opening sightline named nothing at all.
-	floatingLabel("Sparkle Capsule", Color3.fromRGB(225, 90, 150), capsuleBase, 7.5, 130)
+	-- Default 60: long-range "the capsule is over there" is the Sparkle Beacon's
+	-- job now (LandmarkConfig ph_capsule), and two names for one place is worse
+	-- than none. The `range` override stays available for a landmark that ever
+	-- stands genuinely alone in its bearing.
+	floatingLabel("Sparkle Capsule", Color3.fromRGB(225, 90, 150), capsuleBase, 7.5)
 
 	local capsulePrompt = Instance.new("ProximityPrompt")
 	capsulePrompt.ActionText = "Open Sparkle Capsule"
