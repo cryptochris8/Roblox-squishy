@@ -28,6 +28,7 @@ local compactNow = false
 
 local coinLabel, friendsLabel, bitsLabel, questFrame, questLabel
 local compassLabel -- the Wonder Compass chip (desktop layout only)
+local mountedAt = os.clock() -- session clock for the compass carousel
 local dailyBtn, dailyPulse, dailyBaseSize
 local coinPillScale -- UIScale on the coin pill, for the earn "bounce"
 local prevCoins -- last coin total shown (nil until the first sync)
@@ -623,6 +624,17 @@ function HudUI.update(state)
 	-- rotating gently every few minutes (a suggestion carousel, never a timer).
 	if compassLabel then
 		local wonders = {}
+		-- A brand-new player gets ONE answer, not a carousel: the capsule. (This
+		-- rotated on the SERVER wall clock, so a first-timer had a 3-in-4 chance
+		-- her only ambient hint pointed somewhere she couldn't go yet — measured
+		-- 2026-08-07.) Everything else waits until the first capsule is open.
+		local tut = state.tutorial
+		if tut and tut.firstCapsuleClaimed ~= true then
+			compassLabel.Text = (tut.done == true)
+				and "🎁 Your first Sparkle Capsule is waiting — follow the sparkles!"
+				or "✨ Squish the sleepy friends to wake them up!"
+			return
+		end
 		local garden = state.garden
 		if garden and garden.beds then
 			local bedCount, anyReady = 0, false
@@ -676,7 +688,9 @@ function HudUI.update(state)
 		if #wonders == 0 then
 			table.insert(wonders, "🚂 Ride the Sparkle Express, or find a photo spot!")
 		end
-		compassLabel.Text = wonders[(math.floor(os.time() / 300) % #wonders) + 1]
+		-- Rotate on THIS session's clock, not the server's wall clock, so the
+		-- carousel starts at the top for everyone who joins.
+		compassLabel.Text = wonders[(math.floor((os.clock() - mountedAt) / 45) % #wonders) + 1]
 	end
 end
 

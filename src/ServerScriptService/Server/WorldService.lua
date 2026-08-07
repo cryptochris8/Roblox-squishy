@@ -43,13 +43,21 @@ local function part(props): Part
 	return p
 end
 
-local function floatingLabel(text: string, color: Color3, parent: BasePart, height: number)
+-- `range` (optional) overrides the default near-range cap. Raise it ONLY for a
+-- landmark that stands ALONE in its bearing from a place kids stand — an
+-- offset-sized BillboardGui holds constant screen size at any distance, so two
+-- distant labels on similar bearings really do stack into word soup (the
+-- original reason for the 60 cap). Bearings measured 2026-08-07: the Sparkle
+-- Capsule sits 11° off the spawn's forward axis with nothing else within 25°,
+-- so it is safe; the Boutique and the travel signposts sit ~5° apart and are
+-- NOT (they need the banded banner system before their range can grow).
+local function floatingLabel(text: string, color: Color3, parent: BasePart, height: number, range: number?)
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "Label"
 	gui.Size = UDim2.fromOffset(190, 44)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, height, 0)
 	gui.AlwaysOnTop = true
-	gui.MaxDistance = 60 -- labels announce what's NEAR; distant ones just stack into word soup
+	gui.MaxDistance = range or 60
 	gui.Parent = parent
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
@@ -990,9 +998,14 @@ local function buildGooCoast()
 		local angle = math.rad(15) + (i / 10) * math.pi * 1.15
 		local radius = rng:NextNumber(104, 142)
 		local size = rng:NextNumber(22, 40)
+		-- Sink factor: a ball of Y-size (size*0.8) has half-height size*0.40, so
+		-- the centre must sit ABOVE -0.40*size or the whole dune hides inside the
+		-- 4-stud ground slab. It was -0.42 — every one of these ten was buried,
+		-- which is why Goo Coast reads as the flattest, emptiest land (measured
+		-- 2026-08-07). -0.30 leaves a 2-4 stud crest.
 		local mound = part({
 			Name = "JellyDune" .. i, Shape = Enum.PartType.Ball, Size = Vector3.new(size, size * 0.8, size),
-			Position = center + Vector3.new(math.cos(angle) * radius, -size * 0.42, math.sin(angle) * radius + 24),
+			Position = center + Vector3.new(math.cos(angle) * radius, -size * 0.30, math.sin(angle) * radius + 24),
 			Color = jellyColors[((i - 1) % #jellyColors) + 1], Material = Enum.Material.Glass,
 			Transparency = 0.25, Reflectance = 0.1, CanCollide = false,
 		})
@@ -1904,7 +1917,10 @@ function WorldService.build()
 	})
 	capsuleDome.Parent = capsuleModel
 	capsuleModel.PrimaryPart = capsuleBase
-	floatingLabel("Sparkle Capsule", Color3.fromRGB(225, 90, 150), capsuleBase, 7.5)
+	-- 130: the capsule is the first destination a new player must find, 87.7
+	-- studs from spawn and dead ahead — its name used to go dark at 60, so the
+	-- opening sightline named nothing at all.
+	floatingLabel("Sparkle Capsule", Color3.fromRGB(225, 90, 150), capsuleBase, 7.5, 130)
 
 	local capsulePrompt = Instance.new("ProximityPrompt")
 	capsulePrompt.ActionText = "Open Sparkle Capsule"

@@ -30,6 +30,14 @@ local queue = {} -- array of { text, prio }
 local showing = false
 local currentText = nil
 
+-- Where the banner rests: BELOW the HUD's quest banner, never on top of it.
+-- The quest banner sits at y=16 h=44 (desktop) / y=6 h=32 (compact) — this
+-- toast is 64 tall and used to rest at y=18, so the instruction physically
+-- covered the objective it was instructing about (measured 2026-08-07).
+local function restY(): number
+	return if UiTheme.isCompact() then 46 else 68
+end
+
 function ToastUI.mount(playerGui)
 	local screen = Instance.new("ScreenGui")
 	screen.Name = "Toast"
@@ -90,7 +98,7 @@ local function presentNext()
 	frame.Visible = true
 	frame.Position = UDim2.new(0.5, 0, 0, -80)
 	TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0.5, 0, 0, 18),
+		Position = UDim2.new(0.5, 0, 0, restY()),
 	}):Play()
 
 	local hold = (#queue > 0) and SHOW_SECONDS_BUSY or SHOW_SECONDS

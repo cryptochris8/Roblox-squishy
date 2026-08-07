@@ -169,6 +169,12 @@ SquishService.onHappyPop = function(player, def)
 	DailyService.noteEvent(player, "pop")
 	SurgeService.notePop(player, def)
 	BadgeService.award(player, "FirstHappyPop")
+	-- ...and re-check the First Day list HERE. onSquish fires before
+	-- incHappyPop (SquishService: squish at :168, pop count at :199), so the
+	-- squish-side check always saw the previous count — leaving the game's only
+	-- 300-stud signal (the ✨⬇✨ arrow) pointing at a sleepy friend during the
+	-- whole walk to the capsule. Measured 2026-08-07.
+	FirstDayService.check(player)
 end
 
 -- During a Sparkle Surge every coin award doubles, and Coin Boost pass owners
