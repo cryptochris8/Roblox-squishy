@@ -38,6 +38,41 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **✅ Phase D — Monetization — DONE (2026-06-11, built against the LIVE products):** Chris created the 9 products in Creator Hub (guide: doc 13) and the build wired them end to end. Extra Buddy Slot 99 R$ / Coin Boost +25% 149 R$ / Sparkle Club VIP 249 R$ (passes) + 6 premium cosmetics 79–249 R$ (Developer Products), sold from the Boutique's 👑 Premium Sparkles and ✨ Sparkle Passes shelves. **No coin packs** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed.
 
 ### Build log
+- **2026-08-07 (Sparkle Beacons — "make the big world announce itself"):**
+  Triggered by Chris's read of competitor screenshots ("their world looks
+  spread out, ours doesn't"). Measurement said the opposite of what it felt
+  like: their whole map is ONE flat plaza, ours is 3 plates holding 34
+  destinations — but **from the Pudding spawn, facing forward, a player could
+  read exactly ONE destination name.** WorldService labels default to
+  MaxDistance 60 while destinations sit 50-150 studs apart; hills (1-8 studs)
+  occlude nothing; path density is fine (5.15 props/50 studs, worst empty run
+  33). The world wasn't small — it was invisible, and everything built in the
+  last two WOs sits at +Z, i.e. BEHIND the player at a spawn that has no
+  rotation set. **Built:** LandmarkConfig (25 landmarks × 3 lands, one fixed
+  icon vocabulary), LandmarkService (a tethered candy balloon per landmark —
+  ribbon + neon balloon + bob + light, `ModelStreamingMode.Persistent` so it
+  exists before you're near it, ribbon foot found by build-time raycast or an
+  explicit `footY`), LandmarkBeacons (client: names only between the
+  landmark's own label range and 210 studs, ≤3 names — 1 on phone — nearest
+  first, forward-cone gated, 1.6s dwell vs strobe, screen-space box-overlap
+  demotion). **Also fixed 5 measured bugs:** Goo Coast's 10 jelly dunes were
+  mathematically BURIED (ball half-height 0.4s vs centre at -0.42s — the
+  flattest land was flat by arithmetic error); the toast banner physically
+  covered the quest banner it was instructing about; `FirstDayService.check`
+  never ran on the Happy-Pop hook so the game's only 300-stud arrow pointed at
+  a sleepy friend during the whole walk to the capsule; the Wonder Compass
+  rotated on the SERVER wall clock (a new player had a 3-in-4 chance of a
+  useless hint); the capsule label's stopgap 130 reverted now the beacon owns
+  long range. 16-agent review: 7 confirmed, all fixed — incl. 4 glyphs with
+  zero shipping precedent (one with a crude connotation), ribbons spearing
+  CanQuery=false canopies, and per-label `nearBand` (shards 160 / garden 120 /
+  coaster 110 / playground 90 would have double-named 11 landmarks). 104 files
+  compile. **UNPUBLISHED — Studio check: balloons visible from spawn in all 3
+  lands, names fade in ~200 studs and hand off cleanly to the world label, no
+  ribbon through the Express canopy or the Sparkle Wheel, phone shows ONE
+  name.** NOT built (needs Chris's eye): spawn rotation to face the south
+  districts, the third welcome board's facing, the Sparkle Trail
+  generalization, path connectors + way-markers.
 - **2026-08-06 (THE BIG BUILD — Sparkle Patterns + the Switcheroo Station +
   the D1 funnel, doc 15 §6-7):** The full doc-15 build-out in one session,
   under the freshly amended doc-14 Law (spare-copy swaps allowed; negotiated
