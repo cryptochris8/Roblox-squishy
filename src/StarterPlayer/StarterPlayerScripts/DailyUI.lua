@@ -13,9 +13,11 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local UiTheme = require(script.Parent.UiTheme)
 local ToastUI = require(script.Parent.ToastUI)
 local StreamerMode = require(script.Parent.StreamerMode)
+local SparkleTrail = require(script.Parent.SparkleTrail)
 
 local DailyUI = {}
 
+local localPlayer = Players.LocalPlayer
 local root, panel, streakLabel
 local questRows = {}
 local lastState = nil
@@ -154,13 +156,13 @@ function DailyUI.mount(playerGui)
 	panel = UiTheme.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(480, 456),
+		Size = UDim2.fromOffset(480, 490),
 		BackgroundColor3 = UiTheme.Colors.Cream,
 		radius = 24,
 	})
 	panel.Parent = root
 	UiTheme.stroke(UiTheme.Colors.Accent, 3, panel)
-	UiTheme.autoFit(panel, 480, 456)
+	UiTheme.autoFit(panel, 480, 490)
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
@@ -298,6 +300,37 @@ function DailyUI.mount(playerGui)
 	end)
 	StreamerMode.onChanged(paintStream)
 	paintStream()
+
+	-- Follow the Sparkles: the little footprint trail to whatever you're doing
+	-- next. Default ON (it is how a new player finds the capsule at all), but an
+	-- escape hatch is exactly what separates an invitation from a nag.
+	local trailBtn = Instance.new("TextButton")
+	trailBtn.Name = "FollowSparkles"
+	trailBtn.Position = UDim2.fromOffset(20, 448)
+	trailBtn.Size = UDim2.fromOffset(440, 30)
+	trailBtn.BackgroundColor3 = UiTheme.Colors.Panel
+	trailBtn.BorderSizePixel = 0
+	trailBtn.Font = UiTheme.BodyFont
+	trailBtn.TextSize = 15
+	trailBtn.TextXAlignment = Enum.TextXAlignment.Left
+	trailBtn.Parent = panel
+	UiTheme.corner(12, trailBtn)
+	local tpad = Instance.new("UIPadding")
+	tpad.PaddingLeft = UDim.new(0, 12)
+	tpad.Parent = trailBtn
+	local function paintTrail()
+		local on = localPlayer:GetAttribute("FollowSparkles") ~= false
+		trailBtn.Text = on and "✨ Follow the Sparkles: On (a trail shows the way)"
+			or "✨ Follow the Sparkles: Off (explore on your own)"
+		trailBtn.TextColor3 = on and UiTheme.Colors.AccentDeep or UiTheme.Colors.SoftInk
+	end
+	trailBtn.Activated:Connect(function()
+		local on = localPlayer:GetAttribute("FollowSparkles") ~= false
+		localPlayer:SetAttribute("FollowSparkles", not on)
+		paintTrail()
+		SparkleTrail.refreshPreference()
+	end)
+	paintTrail()
 end
 
 return DailyUI

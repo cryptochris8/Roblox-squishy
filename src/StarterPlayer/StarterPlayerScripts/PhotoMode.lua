@@ -114,6 +114,20 @@ end
 function PhotoMode.toggle()
 	buildExitButton()
 	active = not active
+	-- Sparkle Beacons live on Workspace parts, not in PlayerGui, so setHudHidden
+	-- cannot reach them — ask them to step out of the shot directly.
+	local ok, beacons = pcall(function()
+		return require(script.Parent.LandmarkBeacons)
+	end)
+	if ok and beacons then
+		beacons.setSuppressed(active)
+	end
+	local okT, trail = pcall(function()
+		return require(script.Parent.SparkleTrail)
+	end)
+	if okT and trail then
+		trail.setSuppressed(active)
+	end
 	if active then
 		setHudHidden(true)
 		exitGui.Enabled = true

@@ -148,6 +148,98 @@ local function buildBeacon(lm, parent: Instance)
 	return model
 end
 
+-- The "you are here" post beside the Pudding Hills spawn pad. A new player
+-- faces NORTH by default (the SpawnLocation's LookVector, and correctly so —
+-- the sleepy friends and the capsule are north), which means the garden, the
+-- Plunge, the Express and four friend pads are all behind her head. Rotating
+-- the spawn would fix that by breaking the tutorial; a signpost fixes it by
+-- telling her the world continues in every direction.
+--
+-- Each board physically points AT its landmark (CFrame.lookAt), so the arrow is
+-- never wrong even if a district moves.
+local SIGNPOST_AT = Vector3.new(11, 0, 37)
+local SIGNPOST_IDS = { "ph_capsule", "ph_garden", "ph_coaster", "ph_boutique", "ph_travel", "ph_switcheroo" }
+
+local function buildSignpost(parent: Instance)
+	local model = Instance.new("Model")
+	model.Name = "SpawnSignpost"
+	model.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
+
+	local post = part({
+		Name = "Post",
+		Size = Vector3.new(0.7, 13, 0.7),
+		Position = SIGNPOST_AT + Vector3.new(0, 6.5, 0),
+		Color = Color3.fromRGB(198, 142, 96),
+		Material = Enum.Material.Wood,
+	})
+	post.Parent = model
+	model.PrimaryPart = post
+
+	local cap = part({
+		Name = "Cap",
+		Shape = Enum.PartType.Ball,
+		Size = Vector3.new(1.6, 1.6, 1.6),
+		Position = SIGNPOST_AT + Vector3.new(0, 13.4, 0),
+		Color = Color3.fromRGB(255, 196, 212),
+		Material = Enum.Material.Neon,
+	})
+	cap.Parent = model
+
+	local y = 11.4
+	for _, id in ipairs(SIGNPOST_IDS) do
+		local lm = LandmarkConfig.get(id)
+		if lm then
+			local from = SIGNPOST_AT + Vector3.new(0, y, 0)
+			local facing = CFrame.lookAt(from, Vector3.new(lm.pos.X, from.Y, lm.pos.Z))
+			-- The plank runs ALONG the direction it points. `facing`'s forward is
+			-- its -Z, so the board is pushed forward on -Z (not sideways on +X,
+			-- which left every plank floating beside the post pointing at
+			-- nothing), and rotated 90 degrees about Y so its long local-X axis
+			-- lies on that forward line. Centre sits at half the plank's length.
+			local LEN = 7.6
+			local board = part({
+				Name = "Sign_" .. id,
+				Size = Vector3.new(LEN, 1.7, 0.25),
+				CFrame = facing * CFrame.new(0, 0, -(LEN / 2 + 0.4)) * CFrame.Angles(0, math.rad(90), 0),
+				Color = lm.color,
+			})
+			board.Parent = model
+			-- a bright bead on the far end: unambiguous "this way", and no wedge
+			-- orientation to get wrong
+			local tip = part({
+				Name = "Tip_" .. id,
+				Shape = Enum.PartType.Ball,
+				Size = Vector3.new(1.5, 1.5, 1.5),
+				CFrame = facing * CFrame.new(0, 0, -(LEN + 0.9)),
+				Color = lm.color,
+				Material = Enum.Material.Neon,
+			})
+			tip.Parent = model
+
+			for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back }) do
+				local sg = Instance.new("SurfaceGui")
+				sg.Face = face
+				sg.CanvasSize = Vector2.new(380, 85)
+				sg.LightInfluence = 0
+				sg.Parent = board
+				local txt = Instance.new("TextLabel")
+				txt.BackgroundTransparency = 1
+				txt.Size = UDim2.fromScale(1, 1)
+				txt.Font = Enum.Font.FredokaOne
+				txt.TextScaled = true
+				txt.TextColor3 = Color3.fromRGB(255, 255, 255)
+				txt.TextStrokeColor3 = Color3.fromRGB(90, 60, 70)
+				txt.TextStrokeTransparency = 0.35
+				txt.Text = lm.icon .. " " .. lm.name
+				txt.Parent = sg
+			end
+			y -= 1.95
+		end
+	end
+
+	model.Parent = parent
+end
+
 function LandmarkService.init()
 	task.spawn(function()
 		-- Let the async self-building districts (Garden, Boutique, Switcheroo,
@@ -162,6 +254,10 @@ function LandmarkService.init()
 			if not ok then
 				warn("[LandmarkService] beacon " .. lm.id .. " failed: " .. tostring(err))
 			end
+		end
+		local ok, err = pcall(buildSignpost, folder)
+		if not ok then
+			warn("[LandmarkService] signpost failed: " .. tostring(err))
 		end
 	end)
 end

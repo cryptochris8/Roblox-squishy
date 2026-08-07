@@ -2593,6 +2593,42 @@ function WorldService.build()
 		cloudBush(folder, at, Color3.fromRGB(255, 252, 248), bushFlowers[1]) -- low hedge along the garden's south fence
 	end
 
+	-- ── Trail connectors (2026-08-07) ──────────────────────────────────────────
+	-- Measured: the trail network was NINE DISCONNECTED SPURS. Density ALONG a
+	-- path is fine (worst empty run 33 studs), but path corridors covered only
+	-- 16% of the plate and the spurs never met — so a kid walking one trail hit
+	-- bare grass and had to guess. These join them into one network and give the
+	-- orphaned landmarks a trail to arrive on.
+	--
+	-- SPREAD TRAP (cost a whole review round): the five main caramel paths above
+	-- are SPL'd, so their real ends are the authored literals ×1.45 — e.g. the
+	-- picnic path ends at (87, 42), NOT the (60, 29) in its waypoint list. These
+	-- connectors are RAW/final and must therefore be written against the SPREAD
+	-- values. Ends used below: village (-101.5, 60.9) · orchard/shard
+	-- (65.3, -55.1) · picnic (87, 42) · orchard start (8.7, 11.6).
+	local connectors = {
+		-- spawn pad -> the orchard trail's real start (it began 24 studs out on
+		-- bare ground). Runs east of the syrup bridge deck, which spans x ±6.
+		{ Vector3.new(9, 0, 28), Vector3.new(9, 0, 19), Vector3.new(8.7, 0, 11.6) },
+		-- village END -> past the Visiting Friend tent -> the south spine
+		{ Vector3.new(-101.5, 0, 60.9), Vector3.new(-72, 0, 68), Vector3.new(-49, 0, 71),
+		  Vector3.new(-22, 0, 62), Vector3.new(0, 0, 58) },
+		-- orchard/shard END -> the Travel Plaza -> on to the Switcheroo depot
+		{ Vector3.new(65.3, 0, -55.1), Vector3.new(85, 0, -50), Vector3.new(104, 0, -38),
+		  Vector3.new(112, 0, -28), Vector3.new(112, 0, -48) },
+		-- picnic END -> the Sparkle Wheel (the tallest thing in the game, and it
+		-- had no trail at all). Swings wide east of the Boutique at (78, 20).
+		{ Vector3.new(87, 0, 42), Vector3.new(88, 0, 26), Vector3.new(80, 0, 10), Vector3.new(72, 0, 8) },
+		-- east garden pads -> Pudding Plunge, stopping clear of the tower base
+		{ Vector3.new(40, 0, 100), Vector3.new(58, 0, 102), Vector3.new(68, 0, 104) },
+		-- garden's east side -> the Sparkle Express station, routed around the
+		-- cloud hedge (x ±16, z 116-119) rather than through it
+		{ Vector3.new(24, 0, 100), Vector3.new(24, 0, 122), Vector3.new(16, 0, 128) },
+	}
+	for _, pts in ipairs(connectors) do
+		ribbonPath(folder, pts, 2.6, pathColor)
+	end
+
 	-- Travel Plaza: the hub lives out on the eastern rise (the road toward the
 	-- old Goo Coast gate), its own destination instead of spawn furniture.
 	local travelPads = buildTravelHub(folder, Vector3.new(116, 0, -23), "Pudding Hills")

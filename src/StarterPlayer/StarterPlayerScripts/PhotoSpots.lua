@@ -36,6 +36,37 @@ local function withHudHidden(seconds: number)
 	if not pg then
 		return
 	end
+	-- Sparkle Beacons hang on Workspace parts, so the ScreenGui sweep below
+	-- cannot reach them — a group photo would otherwise come out full of
+	-- balloons. Ask them out of the shot for the same window.
+	local okB, beacons = pcall(function()
+		return require(script.Parent.LandmarkBeacons)
+	end)
+	local okT, trail = pcall(function()
+		return require(script.Parent.SparkleTrail)
+	end)
+	if okB and beacons then
+		beacons.setSuppressed(true)
+	end
+	if okT and trail then
+		trail.setSuppressed(true)
+	end
+	task.delay(seconds, function()
+		-- Don't un-suppress out from under Photo Mode: it has its own window and
+		-- both can be open at once (a kid opening Photo Mode inside a Photo Spot).
+		local okP, photo = pcall(function()
+			return require(script.Parent.PhotoMode)
+		end)
+		if okP and photo and photo.isActive() then
+			return
+		end
+		if okB and beacons then
+			beacons.setSuppressed(false)
+		end
+		if okT and trail then
+			trail.setSuppressed(false)
+		end
+	end)
 	-- We only restore GUIs we hid AND still "own": if anything else toggles a
 	-- GUI's Enabled during the window (PhotoMode's own exit button, or a kid
 	-- closing a panel), we relinquish it so our restore can't resurrect a stale

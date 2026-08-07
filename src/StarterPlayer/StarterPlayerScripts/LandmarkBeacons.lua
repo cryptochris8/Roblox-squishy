@@ -28,6 +28,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UiTheme = require(script.Parent.UiTheme)
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local LandmarkConfig = require(Shared:WaitForChild("LandmarkConfig"))
+local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
 
 local LandmarkBeacons = {}
 
@@ -40,6 +41,8 @@ local NAME_DWELL = 1.6 -- once a name is up, hold it this long (anti-strobe)
 local entries = {} -- [landmarkId] = { lm, balloon, gui, icon, name }
 local accum = 0
 local running = false
+local suppressed = false -- Photo Mode / a photo spot: get out of the shot
+local shardsVisible = {} -- [land] = true once that land's shard has appeared
 
 local function makeBanner(lm, balloon: BasePart)
 	local gui = Instance.new("BillboardGui")
@@ -150,7 +153,14 @@ local function update()
 	local candidates = {}
 	for _, e in pairs(entries) do
 		local lm = e.lm
-		if lm.land ~= land then
+		-- A gated landmark doesn't exist until the game says it does: a
+		-- permanent ⭐ over the shard spot would hand a kid the end of the hunt
+		-- before her guide has even given her the clue.
+		if lm.gate == "shard" and not shardsVisible[lm.land] then
+			e.gui.Enabled = false
+			e.name.Visible = false
+			setPhysicalHidden(e, true)
+		elseif lm.land ~= land then
 			-- never draw another land's sky over this one, balloon included
 			e.gui.Enabled = false
 			e.name.Visible = false
@@ -226,6 +236,39 @@ local function update()
 	end
 end
 
+-- Photo Mode hides ScreenGuis in PlayerGui, but beacon banners live on parts in
+-- the Workspace — so without this every photo (and every Photo Spot moment, the
+-- most shareable thing in the game) came out full of balloons and labels.
+-- StateSync: a shard beacon exists only while that land's shard is actually
+-- standing on its pedestal (wake goal met, not yet recovered).
+function LandmarkBeacons.update(state)
+	if not state or not state.shards then
+		return
+	end
+	for _, zoneName in ipairs(ZoneConfig.Order) do
+		local s = state.shards[zoneName]
+		local cfg = ZoneConfig.get(zoneName)
+		shardsVisible[zoneName] = (s ~= nil and cfg ~= nil)
+			and not s.collected
+			and (s.progress or 0) >= cfg.shardWakeGoal
+			or false
+	end
+end
+
+function LandmarkBeacons.setSuppressed(on: boolean)
+	suppressed = on
+	for _, e in pairs(entries) do
+		e.gui.Enabled = false
+		e.name.Visible = false
+		if on then
+			setPhysicalHidden(e, true)
+		end
+	end
+	-- On un-suppress, do NOT blanket-reveal: another land's balloons and a
+	-- not-yet-earned shard must stay hidden. Let the next update() pass decide
+	-- each one on its own merits (it runs within 0.2s).
+end
+
 function LandmarkBeacons.init()
 	if running then
 		return
@@ -249,6 +292,9 @@ function LandmarkBeacons.init()
 			return
 		end
 		accum = 0
+		if suppressed then
+			return
+		end
 		local ok, err = pcall(update)
 		if not ok then
 			warn("[LandmarkBeacons] " .. tostring(err))

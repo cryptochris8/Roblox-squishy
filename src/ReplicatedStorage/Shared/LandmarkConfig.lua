@@ -48,6 +48,11 @@ export type Landmark = {
 	-- This landmark's OWN world label range. Below it the banner stays silent so
 	-- the place is never named twice. Defaults to NearBand.
 	nearBand: number?,
+	-- "shard": only exists once that land's Sparkle Shard has actually appeared
+	-- (wake goal met, not yet recovered). A permanent beacon over the shard spot
+	-- would hand a kid the end of the hunt before the guide has given her the
+	-- clue — the quest IS the discovery.
+	gate: string?,
 }
 
 local C = Color3.fromRGB
@@ -67,7 +72,7 @@ LandmarkConfig.Landmarks = {
 	{ id = "ph_travel", land = "Pudding Hills", pos = Vector3.new(116, 0, 31),
 	  icon = "🌈", name = "Travel Pads", color = C(170, 190, 255) },
 	{ id = "ph_shard", land = "Pudding Hills", pos = Vector3.new(68, 0, -58),
-	  icon = "⭐", name = "Sparkle Shard", color = C(255, 215, 120), nearBand = 152 },
+	  icon = "⭐", name = "Sparkle Shard", color = C(255, 215, 120), nearBand = 152, gate = "shard" },
 	-- footY: start the ribbon ABOVE a structure the build-time raycast cannot
 	-- see. CoasterService/PlaygroundService parts are CanQuery = false, so the
 	-- ray passes straight through their canopies and towers (review catch) —
@@ -89,7 +94,7 @@ LandmarkConfig.Landmarks = {
 	{ id = "gc_guide", land = "Goo Coast", pos = Vector3.new(615, 2.5, 20),
 	  icon = "🧸", name = "Bloop the Guide", color = C(150, 226, 234), height = 22 },
 	{ id = "gc_shard", land = "Goo Coast", pos = Vector3.new(668, 0, -58),
-	  icon = "⭐", name = "Sparkle Shard", color = C(255, 215, 120), nearBand = 152 },
+	  icon = "⭐", name = "Sparkle Shard", color = C(255, 215, 120), nearBand = 152, gate = "shard" },
 	{ id = "gc_travel", land = "Goo Coast", pos = Vector3.new(675, 0, 10),
 	  icon = "🌈", name = "Travel Pads", color = C(170, 190, 255) },
 	{ id = "gc_bog", land = "Goo Coast", pos = Vector3.new(630, 0, 80),
@@ -107,7 +112,7 @@ LandmarkConfig.Landmarks = {
 	{ id = "mh_guide", land = "Moonlit Hollow", pos = Vector3.new(1180, 2.5, 23),
 	  icon = "🧸", name = "Nox the Guide", color = C(176, 152, 224), height = 22 },
 	{ id = "mh_shard", land = "Moonlit Hollow", pos = Vector3.new(1268, 0, -58),
-	  icon = "⭐", name = "Sparkle Shard", color = C(255, 215, 120), nearBand = 152 },
+	  icon = "⭐", name = "Sparkle Shard", color = C(255, 215, 120), nearBand = 152, gate = "shard" },
 	{ id = "mh_travel", land = "Moonlit Hollow", pos = Vector3.new(1252, 0, -88),
 	  icon = "🌈", name = "Travel Pads", color = C(170, 190, 255) },
 	{ id = "mh_hops", land = "Moonlit Hollow", pos = Vector3.new(1224, 0, -42),

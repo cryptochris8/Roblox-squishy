@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local FirstDayConfig = require(Shared:WaitForChild("FirstDayConfig"))
 local UiTheme = require(script.Parent.UiTheme)
+local SparkleTrail = require(script.Parent.SparkleTrail)
 
 local FirstDayUI = {}
 
@@ -259,6 +260,7 @@ local function markerLoop()
 			if marker then
 				marker.Enabled = false
 			end
+			SparkleTrail.clear() -- the tutorial's over; stop leading her by the hand
 			break
 		end
 		local step = currentStep()
@@ -270,6 +272,10 @@ local function markerLoop()
 		if target then
 			marker.Adornee = target
 			marker.Enabled = true
+			-- ...and lay the footprint trail to the same place. `sticky` keeps it
+			-- running for the whole First Day — this IS the tutorial, and a
+			-- six-year-old follows sparkles, not toasts.
+			SparkleTrail.setTarget("firstday:" .. step.id, target, nil, { sticky = true })
 		else
 			marker.Enabled = false
 		end

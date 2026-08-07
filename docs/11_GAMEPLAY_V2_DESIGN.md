@@ -70,9 +70,35 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
   compile. **UNPUBLISHED — Studio check: balloons visible from spawn in all 3
   lands, names fade in ~200 studs and hand off cleanly to the world label, no
   ribbon through the Express canopy or the Sparkle Wheel, phone shows ONE
-  name.** NOT built (needs Chris's eye): spawn rotation to face the south
-  districts, the third welcome board's facing, the Sparkle Trail
-  generalization, path connectors + way-markers.
+  name.**
+- **2026-08-07b (Follow the Sparkles + the spawn signpost):** Chris: "fix
+  everything." **SparkleTrail** (replaces CapsuleTrail): glowing footprint
+  PARTS from the player to her current objective + a wide calling beam and
+  pulsing ground halos over it, waves overlapping so the line never blanks,
+  reaching the target (the old one stopped 14% short), stopping within 25
+  studs. Continuous through the First Day list (FirstDayUI drives it), then
+  ONE 60s flash per genuinely-new objective, plus a **✨ Follow the Sparkles**
+  toggle in Today's Quests. **Spawn signpost**: a 13-stud post beside the
+  Pudding pad with 6 arrow boards, each `CFrame.lookAt`-ed at its landmark.
+  **DELIBERATELY NOT DONE — spawn rotation.** The measurement made it look
+  obvious (all the new districts are at +Z, behind the player), but the
+  SpawnLocation's default facing is -Z, which is exactly where the starter
+  cluster and the capsule are: rotating would break the D1 funnel to fix a
+  secondary problem. The signpost + beacons solve south-discovery instead.
+  Also: shard beacons are now quest-gated (a permanent ⭐ would hand a kid the
+  end of the hunt before her clue), beacons + trail step out of Photo Mode and
+  Photo Spot shots, and 6 trail connectors join what were NINE DISCONNECTED
+  SPURS. 16-agent review, 10 confirmed, all fixed — the two that mattered:
+  (1) the "flash once per objective" rule NEVER HELD — the guard required
+  `active`, which the flash timeout clears, so the next of ~44 sync sites
+  re-armed it: the trail relayed forever in 60s segments, the exact nag the
+  Law forbids; (2) **five connectors used PRE-SPREAD literals** as endpoints
+  while the real paths are SPL'd ×1.45 (the picnic trail ends at (87,42), not
+  the (60,29) in its waypoint list) — they landed inside the garden slab, the
+  syrup bridge deck, the cottage and the Plunge tower. Recomputed against the
+  spread finals. Also dropped the daily-capsule trail entirely: the daily gift
+  is claimed from a HUD button, so walking a kid to the physical capsule led
+  her somewhere that couldn't complete it and would charge her 100 coins.
 - **2026-08-06 (THE BIG BUILD — Sparkle Patterns + the Switcheroo Station +
   the D1 funnel, doc 15 §6-7):** The full doc-15 build-out in one session,
   under the freshly amended doc-14 Law (spare-copy swaps allowed; negotiated
@@ -105,7 +131,7 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
   saveNow after every swap (the pool committed durably), "adventure" daily
   quest that capsules ALSO tick (no kid gated). **D1 funnel + substrate:**
   CapsuleTrail (post-tutorial calling beam + sparkle breadcrumbs until the
-  first open), TimeToFirstReveal telemetry, Wonder Compass HUD chip (desktop
+  first open; superseded 2026-08-07 by SparkleTrail), TimeToFirstReveal telemetry, Wonder Compass HUD chip (desktop
   only per Addy's phone-declutter rule; launch-only capsule math;
   adventuresLeft-gated), ethical like-ask (2/lifetime, slot spent only when
   the toast renders), InviteNudge (tappable chip → the platform's consented

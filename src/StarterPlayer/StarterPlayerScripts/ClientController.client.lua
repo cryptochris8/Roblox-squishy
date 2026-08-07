@@ -9,9 +9,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 local Debris = game:GetService("Debris")
 
+local Workspace = game:GetService("Workspace")
+
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local SoundConfig = require(Shared:WaitForChild("SoundConfig"))
+local ZoneConfig = require(Shared:WaitForChild("ZoneConfig"))
+local FirstDayConfig = require(Shared:WaitForChild("FirstDayConfig"))
 
 local here = script.Parent
 local UiTheme = require(here:WaitForChild("UiTheme"))
@@ -41,7 +45,7 @@ local StreamerMode = require(here:WaitForChild("StreamerMode"))
 local OddsUI = require(here:WaitForChild("OddsUI"))
 local BeaconFx = require(here:WaitForChild("BeaconFx"))
 local SwitcherooUI = require(here:WaitForChild("SwitcherooUI"))
-local CapsuleTrail = require(here:WaitForChild("CapsuleTrail"))
+local SparkleTrail = require(here:WaitForChild("SparkleTrail"))
 local InviteNudge = require(here:WaitForChild("InviteNudge"))
 local LandmarkBeacons = require(here:WaitForChild("LandmarkBeacons"))
 
@@ -149,6 +153,52 @@ local function playUiSound(id, volume)
 	Debris:AddItem(s, 5)
 end
 
+-- The post-tutorial objective trail. FirstDayUI drives it continuously while
+-- the First Day list is unfinished (that IS the tutorial); after that the trail
+-- only FLASHES when the objective genuinely changes, so it stays an invitation
+-- rather than a nag. Priority: today's free capsule, then a shard that's ready
+-- to recover. Anything else: silence, which is a feature.
+local function updateObjectiveTrail(state)
+	local firstDayDone = true
+	if state.firstDay then
+		for _, step in ipairs(FirstDayConfig.Steps) do
+			if state.firstDay[step.id] ~= true then
+				firstDayDone = false
+				break
+			end
+		end
+	end
+	if not firstDayDone then
+		return -- FirstDayUI owns the trail during the tutorial
+	end
+
+	-- NOT the daily capsule: it is claimed from a HUD button, so walking a kid
+	-- to the physical capsule would lead her somewhere that cannot complete the
+	-- objective — and charge her 100 coins if she used it (review catch).
+	--
+	-- The one post-tutorial objective worth a trail is a Sparkle Shard that has
+	-- actually appeared: it is a THING, in a PLACE, that you reach by walking.
+	local key, pos = nil, nil
+	if state.shards then
+		for _, zoneName in ipairs(ZoneConfig.Order) do
+			local s = state.shards[zoneName]
+			local cfg = ZoneConfig.get(zoneName)
+			if s and cfg and not s.collected then
+				if (s.progress or 0) >= cfg.shardWakeGoal then
+					key, pos = "shard:" .. zoneName, cfg.shardSpot
+				end
+				break -- only ever the CURRENT land's shard
+			end
+		end
+	end
+
+	if key then
+		SparkleTrail.setTarget(key, nil, pos, { color = Color3.fromRGB(255, 215, 120) })
+	else
+		SparkleTrail.clear() -- objective gone (recovered): stop pointing at it
+	end
+end
+
 -- Server -> client routing
 local prevShards = nil
 Remotes.get(Remotes.StateSync).OnClientEvent:Connect(function(state)
@@ -162,7 +212,8 @@ Remotes.get(Remotes.StateSync).OnClientEvent:Connect(function(state)
 	GiftUI.update(state)
 	SparkleBits.syncCollected(state.sparkleBits)
 	StoryPagesUI.syncCollected(state.storyPages)
-	CapsuleTrail.update(state)
+	LandmarkBeacons.update(state)
+	updateObjectiveTrail(state)
 	-- Ring the shard chime the moment a land's Sparkle shard is newly recovered
 	-- (skipped on the first sync so already-recovered shards stay silent).
 	if state.shards then
@@ -184,7 +235,6 @@ Remotes.get(Remotes.SquishResult).OnClientEvent:Connect(function(result)
 end)
 
 Remotes.get(Remotes.CapsuleResult).OnClientEvent:Connect(function(result)
-	CapsuleTrail.onCapsuleOpened() -- the calling beam's job is done
 	CapsuleRevealUI.play(result)
 end)
 
