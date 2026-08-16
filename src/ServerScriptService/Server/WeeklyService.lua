@@ -198,6 +198,11 @@ function WeeklyService.tryBefriend(player: Player)
 		toastEvent:FireClient(player, "Befriending " .. def.DisplayName .. " takes " .. WeeklyConfig.Cost .. " Sparkle Coins — keep squishing, you'll get there!")
 		return
 	end
+	-- The copy banks BEFORE discovery, exactly as the capsule, gift and
+	-- Switcheroo paths do (doc 15 §6 2.2). This was the one grant path that
+	-- skipped it, which left Copies = 0 against Discovered = true — an invariant
+	-- break the login floor only repairs while the friend is still owned.
+	PlayerDataService.addCopy(player, def.Id)
 	PlayerDataService.discoverCard(player, def.Id)
 	DailyService.noteEvent(player, "discover")
 

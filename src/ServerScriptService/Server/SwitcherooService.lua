@@ -492,6 +492,27 @@ local function doDeposit(player: Player, defId: string)
 		return
 	end
 
+	-- Provenance is resolved HERE, before the debit, because areFriends yields
+	-- too (GetFriendsAsync): doing it later would put a yield in the middle of
+	-- the grant, where a leave-save could snapshot a half-applied swap.
+	local travels = math.max(1, tonumber(entry.t) or 1)
+	local fromIsFriend = type(entry.u) == "number" and entry.u > 0 and areFriends(player, entry.u)
+	local fromName = if fromIsFriend then entry.n else nil
+
+	-- The pool draw above YIELDS (UpdateAsync, and longer under throttling), so
+	-- everything from here down can be running for a player who has already left
+	-- — mid-flight her leave-save is snapshotting the very profile we are about
+	-- to debit. Bail before touching anything, and hand a pool-drawn traveler
+	-- back verbatim so another child's friend is never destroyed by a dropped
+	-- connection. `player.Parent`, not just isReady: PlayerRemoving clears the
+	-- ready flag only AFTER its own save yields.
+	if player.Parent == nil or not PlayerDataService.isReady(player) then
+		if not entry.pouch then
+			restoreToPool(def.Rarity, entry)
+		end
+		return
+	end
+
 	-- 2) Traveler in hand: NOW debit the spare (re-checked atomically here).
 	-- If the spare vanished (only reachable through profile edge cases — the
 	-- in-flight flag serializes this player), a POOL-drawn entry goes back
@@ -525,10 +546,7 @@ local function doDeposit(player: Player, defId: string)
 		end
 	end
 
-	-- 4) Provenance + counters + the outbound push.
-	local travels = math.max(1, tonumber(entry.t) or 1)
-	local fromIsFriend = type(entry.u) == "number" and entry.u > 0 and areFriends(player, entry.u)
-	local fromName = if fromIsFriend then entry.n else nil
+	-- 4) Provenance (resolved above the debit) + counters + the outbound push.
 	PlayerDataService.addTravelStamp(player, incoming.Id, travels, fromName, fromIsFriend)
 	PlayerDataService.noteSwitcheroo(player)
 	PlayerDataService.pushSwapStory(player, { defId = defId, dir = "sent", t = os.time() })

@@ -183,7 +183,7 @@ local function onSendGift(sender: Player, recipientUserId: any, kind: any, value
 		-- a shared friend can complete the recipient's set (Main wires this to
 		-- MilestoneService.check so the celebration fires on gifts too)
 		if GiftService.onFriendShared then
-			GiftService.onFriendShared(recipient)
+			GiftService.onFriendShared(recipient, def)
 		end
 	else
 		return

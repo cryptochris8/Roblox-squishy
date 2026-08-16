@@ -99,7 +99,21 @@ function DailyUI.update(state)
 	-- no "keep it going" pressure copy (falls back to the old field on old servers).
 	local sparkleDays = math.max(daily.sparkleDays or daily.streak or 0, 1)
 	streakLabel.Text = "⭐ You've played " .. sparkleDays .. (sparkleDays == 1 and " sparkle day!" or " sparkle days!")
-	local active = DailyQuestConfig.forDay(daily.day or 0)
+	-- The server PINS the day's three quests, so read those; deriving from `day`
+	-- is only the fallback for a profile saved before pinning existed (and for
+	-- an older server that doesn't send `ids` yet).
+	local active
+	if type(daily.ids) == "table" and #daily.ids > 0 then
+		active = {}
+		for _, id in ipairs(daily.ids) do
+			local q = DailyQuestConfig.byId(id)
+			if q then
+				active[#active + 1] = q
+			end
+		end
+	else
+		active = DailyQuestConfig.forDay(daily.day or 0)
+	end
 	for i, row in ipairs(questRows) do
 		local q = active[i]
 		if q then

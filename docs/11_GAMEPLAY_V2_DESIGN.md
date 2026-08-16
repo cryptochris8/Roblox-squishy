@@ -38,6 +38,50 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **✅ Phase D — Monetization — DONE (2026-06-11, built against the LIVE products):** Chris created the 9 products in Creator Hub (guide: doc 13) and the build wired them end to end. Extra Buddy Slot 99 R$ / Coin Boost +25% 149 R$ / Sparkle Club VIP 249 R$ (passes) + 6 premium cosmetics 79–249 R$ (Developer Products), sold from the Boutique's 👑 Premium Sparkles and ✨ Sparkle Passes shelves. **No coin packs** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed.
 
 ### Build log
+- **2026-08-16 (review pass — 7 fixes from a full audit of the last 7 commits):**
+  No new features; a review of everything shipped 2026-08-06/07 (Reveal v2, the
+  Big Build, Beacons, SparkleTrail) plus the persistent memory notes. Health:
+  104/104 compile, `rojo build` clean, master == origin. 8-lens adversarial
+  review, 25 findings survived of 42; a second 4-lens pass reviewed the fixes
+  themselves and found 5 more, all folded in. **Fixed:** (1) **the trail was
+  invisible wherever it mattered** — crumbs were a flat y=0.12 disc (spanning
+  0.06-0.18) and halos a flat 0.2, so both sat INSIDE the caramel/boardwalk
+  ribbons (top 0.255), Moonlit's stepping stones (0.265), the syrup river
+  (0.36), the bridge deck (0.8) and the spawn pad (1.0); now a downward ray
+  finds the solid surface and a `PATH_SKIN_TOP` floor covers the CanQuery=false
+  skins a ray *cannot see* — with characters and `Workspace.Squishies` excluded
+  (friends stay clickable, so the ray was landing on their heads) and the
+  destination excluded from the halo ray (it wore the rings as a hat). (2) the
+  First Day trail inherited the previous step's target on the marker-less
+  `buddy` step, walking a kid back to a capsule whose free open she had spent
+  (100 coins); it now clears, and the `capsule` step falls back to the
+  LandmarkConfig position so a not-yet-streamed capsule still gets a trail.
+  (3) the free Daily Gift always reported `capsuleKey = "StarterCapsule"`, so
+  in Goo or Moonlit the chain button range-checked a capsule 1200 studs away,
+  the odds page named the wrong pack and the Sparkle Beacon rose over Pudding —
+  `tryOpen` gained `atCapsule`, and a HUD claim now suppresses the chain and
+  beams over the player. (4) `afterFriendGranted` factored out of the capsule
+  path and wired to the gift and Switcheroo paths too: a traveler that shines
+  up an equipped buddy refreshes it, and Friends48/FirstSparkly/FirstRainbow
+  are awarded when earned rather than on the next capsule. (5) **a stray
+  session lock could lock a child out of her own save for 240s** — a
+  non-releasing save resumed after the leave-save re-stamped the lock it had
+  just freed (and overwrote its scalars); `saveData` now refuses once the
+  player has gone, checked at entry, per retry, AND inside the UpdateAsync
+  transform, against a `departed` flag set as PlayerRemoving's first act
+  (weak-keyed). The Switcheroo also re-checks liveness after its pool-draw
+  yield (restoring a drawn traveler verbatim) and resolves the yielding
+  `areFriends` above the debit so the grant block runs yield-free.
+  `ProcessReceipt` is unaffected: a refused save returns NotProcessedYet and
+  the receipt replays idempotently. (6) `WeeklyService.tryBefriend` was the one
+  grant path that never banked a copy. (7) the day's 3 daily quests are now
+  PINNED into the profile (`DailyQuests.ids`, persisted + synced + resolved
+  client-side with a fallback): `dayIndex % #Quests` meant growing the roster
+  6 -> 7 re-rolled the CURRENT day for everyone mid-session while `claimed`
+  carried over, handing out a second full set of rewards. 146 lune assertions
+  cover the pure logic (roster-shift demonstrated, pinned ids immune, every
+  crumb/halo clearance measured). **NOT Studio-verified — see the check list in
+  the commit; UNPUBLISHED.**
 - **2026-08-07 (Sparkle Beacons — "make the big world announce itself"):**
   Triggered by Chris's read of competitor screenshots ("their world looks
   spread out, ours doesn't"). Measurement said the opposite of what it felt

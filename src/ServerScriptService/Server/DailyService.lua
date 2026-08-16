@@ -21,13 +21,46 @@ local function todayIndex(): number
 	return math.floor(os.time() / 86400)
 end
 
--- Reset a player's daily quest progress when the UTC day rolls over.
-local function ensureToday(profile)
-	if profile.DailyQuests.day ~= todayIndex() then
-		profile.DailyQuests.day = todayIndex()
-		profile.DailyQuests.progress = {}
-		profile.DailyQuests.claimed = {}
+local function pinnedIdsFor(dayIndex: number): { string }
+	local ids = {}
+	for _, q in ipairs(DailyQuestConfig.forDay(dayIndex)) do
+		ids[#ids + 1] = q.id
 	end
+	return ids
+end
+
+-- Reset a player's daily quest progress when the UTC day rolls over, and PIN
+-- the day's three quests into the profile.
+--
+-- Pinning matters because forDay() derives the set from `dayIndex % #Quests`:
+-- the moment the roster grows (it went 6 -> 7 when the Switcheroo shipped) the
+-- CURRENT day silently re-rolls to a different three for everyone mid-session,
+-- while `claimed` — keyed by quest id — carries over. Every live player could
+-- then claim a second full set of the day's rewards. Pinned, the set is a
+-- property of the day she actually played, and adding quest #8 later is safe.
+local function ensureToday(profile)
+	local dq = profile.DailyQuests
+	if dq.day ~= todayIndex() then
+		dq.day = todayIndex()
+		dq.progress = {}
+		dq.claimed = {}
+		dq.ids = pinnedIdsFor(dq.day)
+	elseif type(dq.ids) ~= "table" or #dq.ids == 0 then
+		-- saved before pinning existed: adopt today's set as-is
+		dq.ids = pinnedIdsFor(dq.day)
+	end
+end
+
+-- The quests actually active for this profile today (pinned ids, resolved).
+local function activeQuests(profile)
+	local out = {}
+	for _, id in ipairs(profile.DailyQuests.ids) do
+		local q = DailyQuestConfig.byId(id)
+		if q then
+			out[#out + 1] = q
+		end
+	end
+	return out
 end
 
 -- Advances any matching daily quest when a tracked thing happens (pop, bit,
@@ -40,7 +73,7 @@ function DailyService.noteEvent(player: Player, eventType: string)
 	ensureToday(profile)
 	local dq = profile.DailyQuests
 	local changed = false
-	for _, q in ipairs(DailyQuestConfig.forDay(dq.day)) do
+	for _, q in ipairs(activeQuests(profile)) do
 		if q.type == eventType and not dq.claimed[q.id] then
 			local cur = (dq.progress[q.id] or 0) + 1
 			dq.progress[q.id] = cur
@@ -98,7 +131,8 @@ function DailyService.claimDailyCapsule(player: Player)
 		return
 	end
 	-- Open a FREE capsule; only spend the day's claim if it actually opened.
-	if CapsuleService.tryOpen(player, "StarterCapsule", true) then
+	-- atCapsule = false: this is the HUD 🎁 button, claimable from any land.
+	if CapsuleService.tryOpen(player, "StarterCapsule", true, false) then
 		PlayerDataService.markDailyCapsuleClaimed(player)
 		PlayerDataService.sync(player)
 	end

@@ -86,7 +86,9 @@ export type Profile = {
 	StreakDays: number,
 	LastPlayDay: number,
 	SparkleDays: number, -- lifetime distinct play days; display-only, ONLY ever counts up
-	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean } },
+	-- `ids` pins the three quests chosen for `day`, so growing the roster never
+	-- re-rolls a day someone is already playing (see DailyService.ensureToday).
+	DailyQuests: { day: number, progress: { [string]: number }, claimed: { [string]: boolean }, ids: { string } },
 	SparkleRestored: boolean,
 	Cosmetics: { Owned: { [string]: boolean }, Equipped: { [string]: string } },
 	RedeemedCodes: { [string]: boolean },
@@ -135,6 +137,14 @@ local rawData: { [Player]: any } = {}
 -- we must NOT save over what might be good saved data. nil/true means safe to save.
 local loadedOk: { [Player]: boolean } = {}
 local ready: { [Player]: boolean } = {}
+-- Set the instant PlayerRemoving fires, BEFORE the releasing save yields: any
+-- coroutine still in flight (the autosave loop, a service that yielded on a
+-- DataStore call) must not write after the leave-save has freed the session
+-- lock. It stays set for the life of that Player instance — during the removal
+-- handler `player.Parent` is still Players, so this is the only reliable
+-- signal, and afterwards saveData's `player.Parent == nil` test takes over.
+-- Weak keys so a departed Player instance is still collectable.
+local departed: { [Player]: boolean } = (setmetatable({}, { __mode = "k" }) :: any)
 local stateSyncEvent: RemoteEvent
 
 -- Fresh per-zone shard quest state, built from the zone chain.
@@ -164,7 +174,7 @@ local function newProfile(): Profile
 		StreakDays = 0,
 		LastPlayDay = 0,
 		SparkleDays = 0,
-		DailyQuests = { day = 0, progress = {}, claimed = {} },
+		DailyQuests = { day = 0, progress = {}, claimed = {}, ids = {} },
 		SparkleRestored = false,
 		Cosmetics = { Owned = {}, Equipped = {} },
 		RedeemedCodes = {},
@@ -506,7 +516,16 @@ local function deserialize(data: any): Profile
 		p.PremiumReceipts = receipts
 	end
 	if type(data.DailyQuests) == "table" then
-		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {} }
+		local dq = { day = tonumber(data.DailyQuests.day) or 0, progress = {}, claimed = {}, ids = {} }
+		-- The day's pinned quest set (absent on saves from before pinning —
+		-- DailyService.ensureToday adopts today's set in that case).
+		if type(data.DailyQuests.ids) == "table" then
+			for _, id in ipairs(data.DailyQuests.ids) do
+				if type(id) == "string" then
+					dq.ids[#dq.ids + 1] = id
+				end
+			end
+		end
 		if type(data.DailyQuests.progress) == "table" then
 			for k, v in pairs(data.DailyQuests.progress) do
 				local n = tonumber(v)
@@ -617,6 +636,20 @@ local function saveData(player: Player, releasing: boolean?): boolean
 	if not p then
 		return false
 	end
+	-- A non-releasing save RE-STAMPS our session lock (see the UpdateAsync
+	-- transform below). If the player has already left, doing that resurrects a
+	-- lock the leave-save just freed, and their next server sees a live foreign
+	-- lock: they lose LOCK_TTL (240s) of retries and then play a whole session
+	-- on a temp profile that never saves. Any coroutine still running past their
+	-- departure can reach here — the autosave loop's task.spawn, or a service
+	-- that yielded on a DataStore call mid-action (SwitcherooService.doDeposit)
+	-- — so the guard belongs HERE, not at each call site.
+	-- `departed` is set as the FIRST thing PlayerRemoving does, before its own
+	-- save yields, so it is true for the whole teardown window — `player.Parent`
+	-- alone is checked too, but a Player instance can linger.
+	if not releasing and (departed[player] or player.Parent == nil) then
+		return false
+	end
 	local store = playerStore
 	if not (dataStoreEnabled and store) then
 		return false -- in-memory session: nothing to persist
@@ -627,10 +660,27 @@ local function saveData(player: Player, releasing: boolean?): boolean
 	end
 	local key = keyFor(player)
 	local payload = serialize(p, rawData[player])
+	-- The entry check above is not enough on its own: a failed attempt sleeps
+	-- for up to 1.5+3+4.5s below, and the player can leave (and their releasing
+	-- save can complete) inside that window. A retry that woke up afterwards
+	-- would re-stamp the lock we just freed AND overwrite the leave-save with
+	-- this payload's older scalars. So the same test guards every attempt and
+	-- the transform itself, where the write actually happens.
+	local function abandoned(): boolean
+		return not releasing and (departed[player] or player.Parent == nil)
+	end
 	for attempt = 1, MAX_RETRIES do
+		if abandoned() then
+			return false
+		end
 		local lostLock = false
+		local gaveUp = false
 		local ok, err = pcall(function()
 			store:UpdateAsync(key, function(old)
+				if abandoned() then
+					gaveUp = true
+					return nil -- they left while we were queued: write nothing
+				end
 				local lock = type(old) == "table" and old._lock
 				if type(lock) == "table" and lock.id ~= SESSION_ID
 					and os.time() - (tonumber(lock.ts) or 0) < LOCK_TTL then
@@ -643,6 +693,9 @@ local function saveData(player: Player, releasing: boolean?): boolean
 			end)
 		end)
 		if ok then
+			if gaveUp then
+				return false
+			end
 			if lostLock then
 				-- We were superseded (e.g. our lock went stale during an outage and
 				-- another server stole it). Never write again this session.
@@ -750,11 +803,14 @@ function PlayerDataService.snapshot(player: Player)
 		variants = p.Variants,
 		-- whether today's free Sparkle Capsule is available to claim
 		dailyCapsuleReady = todayIndex() > p.LastDailyCapsuleDay,
-		-- daily quests + gentle streak (the client derives the active set from `day`)
+		-- daily quests + gentle streak. `ids` is the day's PINNED set; the client
+		-- falls back to deriving it from `day` only for a profile saved before
+		-- pinning existed (see DailyService.ensureToday).
 		daily = {
 			streak = p.StreakDays,
 			sparkleDays = p.SparkleDays,
 			day = p.DailyQuests.day,
+			ids = p.DailyQuests.ids,
 			progress = p.DailyQuests.progress,
 			claimed = p.DailyQuests.claimed,
 		},
@@ -1308,6 +1364,9 @@ function PlayerDataService.init()
 	end
 
 	Players.PlayerRemoving:Connect(function(player)
+		-- FIRST, before the save below yields: from this moment no non-releasing
+		-- save may write, or it would resurrect the lock this one is freeing.
+		departed[player] = true
 		saveData(player, true) -- final save releases the session lock
 		profiles[player] = nil
 		rawData[player] = nil

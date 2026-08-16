@@ -822,6 +822,7 @@ function CapsuleRevealUI.play(result, onClose)
 			-- it, and it isn't a rehearsal. Absent — never greyed, never teased.
 			local canChain = not tier.isGift
 				and not result.demo
+				and result.noChain ~= true -- Daily Gift: no capsule to stand at
 				and type(result.capsuleKey) == "string"
 				and type(result.cost) == "number"
 				and type(result.coinsAfter) == "number"

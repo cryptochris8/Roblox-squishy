@@ -70,11 +70,18 @@ local function pickRarity(weights: { [string]: number }, byRarity: { [string]: {
 	return entries[#entries].rarity
 end
 
-function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverride: boolean?): boolean
+-- `atCapsule` is false for an open that did NOT happen at a physical capsule —
+-- today that means the free Daily Gift, which is claimed from a HUD button and
+-- so can be tapped standing anywhere in any of the three lands. It still rolls
+-- the StarterCapsule pack, but the ceremony must not offer to chain another
+-- open (the server range-checks that against a capsule that may be 1200 studs
+-- away) and the Sparkle Beacon must rise where the PLAYER is, not over Pudding.
+function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverride: boolean?, atCapsule: boolean?): boolean
 	-- Resolve the key alongside the config so the client's "Open another!" chain
 	-- and the odds page always name the capsule that actually rolled.
 	local key = if capsuleKey and CapsuleConfig[capsuleKey] then capsuleKey else "StarterCapsule"
 	local cfg = CapsuleConfig[key]
+	local atThisCapsule = atCapsule ~= false
 
 	-- Make sure we can actually give a friend BEFORE charging coins or using the
 	-- free gift, so the player is never left empty-handed.
@@ -169,6 +176,8 @@ function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverrid
 		capsuleKey = key,
 		cost = cfg.Cost,
 		coinsAfter = PlayerDataService.getCoins(player),
+		-- Claimed away from the capsule: no chain button (see tryOpen's header).
+		noChain = not atThisCapsule,
 		-- Sparkle Patterns: set only when a NEW pattern landed on this friend —
 		-- the reveal plays its shimmer beat off these.
 		patternId = patternId,
@@ -181,6 +190,7 @@ function CapsuleService.tryOpen(player: Player, capsuleKey: string?, freeOverrid
 			capsuleKey = key,
 			variantLevel = variantLevel,
 			variantUpgraded = variantUpgraded,
+			atCapsule = atThisCapsule,
 		})
 	end
 	return true

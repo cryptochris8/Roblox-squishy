@@ -26,6 +26,11 @@ DailyQuestConfig.Quests = {
 
 -- The PerDay quests active on a given UTC day index — a rotating window, so the
 -- set changes daily but is deterministic and identical for all players.
+--
+-- NOTE: this is a function of `#Quests`, so GROWING the roster re-rolls the
+-- CURRENT day for everybody already playing it. That is why DailyService pins
+-- the resolved ids into the profile the first time it sees a day, and only
+-- calls this to choose them — see DailyService.ensureToday.
 function DailyQuestConfig.forDay(dayIndex: number)
 	local list = {}
 	local n = #DailyQuestConfig.Quests
@@ -33,6 +38,17 @@ function DailyQuestConfig.forDay(dayIndex: number)
 		list[#list + 1] = DailyQuestConfig.Quests[((dayIndex + i) % n) + 1]
 	end
 	return list
+end
+
+-- Resolve a pinned id back to its quest. Returns nil if the quest was retired
+-- from the roster, in which case it simply drops out of that player's day.
+function DailyQuestConfig.byId(id: string)
+	for _, q in ipairs(DailyQuestConfig.Quests) do
+		if q.id == id then
+			return q
+		end
+	end
+	return nil
 end
 
 return DailyQuestConfig

@@ -68,6 +68,55 @@ local function clearBeacon()
 	end
 end
 
+-- Crumbs and halos have to sit ON TOP of whatever she is walking on, or they
+-- are simply inside it and invisible. Two classes of surface, and they need
+-- different handling:
+--   * decorative ground skins are CanQuery = false, so a raycast cannot see
+--     them AT ALL (the same landmine that made the Landmark ribbons spear the
+--     Express canopy): the caramel/boardwalk ribbons fill y 0.005-0.255,
+--     Moonlit's stepping stones 0.015-0.265, and the widest of them, Pudding's
+--     syrup river, -0.04 to 0.36 — she wades through that one, so it counts;
+--   * real walkable props ARE queryable: the syrup bridge deck tops out at 0.8
+--     and the spawn pad at 1.0.
+-- So: ray for the solid surface, then never sit below the ground-skin ceiling.
+-- The first version drew every crumb at a flat y = 0.12 (spanning 0.06-0.18),
+-- which put it inside all of them — the trail vanished exactly where the path
+-- network is densest, which is precisely where a six-year-old walks.
+local PATH_SKIN_TOP = 0.4 -- clears the tallest CanQuery=false skin (the river)
+local SURFACE_LIFT = 0.09 -- and ride this far proud of it
+local surfaceParams = RaycastParams.new()
+surfaceParams.FilterType = Enum.RaycastFilterType.Exclude
+surfaceParams.IgnoreWater = true
+
+-- Refresh the ray's exclude list. Characters and the sleepy friends are
+-- CanQuery = ON (a friend has to stay clickable — SquishyModelFactory), so
+-- without this the ray lands on a friend's head or a sibling's shoulder and the
+-- footprint pops several studs into the air and back down again. Buddies and
+-- the trail's own parts are already CanQuery = false. Called once per wave
+-- rather than once per crumb.
+local function setSurfaceFilter(alsoIgnore: Instance?)
+	local filter = {}
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr.Character then
+			filter[#filter + 1] = plr.Character
+		end
+	end
+	local squishies = Workspace:FindFirstChild("Squishies")
+	if squishies then
+		filter[#filter + 1] = squishies
+	end
+	if alsoIgnore then
+		filter[#filter + 1] = alsoIgnore
+	end
+	surfaceParams.FilterDescendantsInstances = filter
+end
+
+local function surfaceY(x: number, z: number, nearY: number): number
+	local hit = Workspace:Raycast(Vector3.new(x, nearY + 4, z), Vector3.new(0, -30, 0), surfaceParams)
+	local solid = if hit then hit.Position.Y else 0
+	return math.max(solid, PATH_SKIN_TOP) + SURFACE_LIFT
+end
+
 -- The calling beam + ground halo over the destination. The vertical beam is
 -- badly foreshortened from a kid's ground-level camera, so the halo is what she
 -- actually reads when she is standing near it.
@@ -95,6 +144,11 @@ local function buildBeacon(pos: Vector3)
 	-- its own axis of symmetry is visually identical every frame (the first
 	-- version span invisibly), and a ripple reads better from a kid's low camera
 	-- anyway — it's the part of the beacon she actually sees when standing near.
+	-- The destination itself is excluded from the ray: this is a GROUND halo, and
+	-- an objective that sits up off the floor (a capsule Base, a shard pedestal)
+	-- would otherwise catch the ray and wear the rings like a hat.
+	setSurfaceFilter(if target then (target:FindFirstAncestorOfClass("Model") or target) else nil)
+	local haloY = surfaceY(pos.X, pos.Z, pos.Y)
 	for i = 1, 3 do
 		local ring = Instance.new("Part")
 		ring.Name = "Halo" .. i
@@ -108,7 +162,9 @@ local function buildBeacon(pos: Vector3)
 		ring.Transparency = 0.55
 		ring.Shape = Enum.PartType.Cylinder
 		ring.Size = Vector3.new(0.2, 4, 4)
-		ring.CFrame = CFrame.new(pos.X, 0.2 + i * 0.02, pos.Z) * CFrame.Angles(0, 0, math.rad(90))
+		-- same surface rule as the crumbs: a halo at a flat 0.2 is swallowed by
+		-- the very path that leads to the destination it is marking.
+		ring.CFrame = CFrame.new(pos.X, haloY + i * 0.02, pos.Z) * CFrame.Angles(0, 0, math.rad(90))
 		ring.Parent = model
 		local info = TweenInfo.new(2.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, -1, false, (i - 1) * 0.8)
 		TweenService:Create(ring, info, { Size = Vector3.new(0.2, 22, 22) }):Play()
@@ -149,6 +205,7 @@ local function dropWave(from: Vector3, to: Vector3)
 		return
 	end
 	local steps = math.clamp(math.floor(dist / STEP_STUDS), 3, MAX_STEPS)
+	setSurfaceFilter(nil)
 	for i = 1, steps do
 		-- i/steps, not i/(steps+1): the old trail stopped ~14% short of where
 		-- it was pointing, which is exactly where a kid stops looking.
@@ -165,7 +222,7 @@ local function dropWave(from: Vector3, to: Vector3)
 		print_.Transparency = 0.35
 		print_.Shape = Enum.PartType.Cylinder
 		print_.Size = Vector3.new(0.12, 1.8, 1.8)
-		print_.CFrame = CFrame.new(at.X, 0.12, at.Z) * CFrame.Angles(0, 0, math.rad(90))
+		print_.CFrame = CFrame.new(at.X, surfaceY(at.X, at.Z, from.Y), at.Z) * CFrame.Angles(0, 0, math.rad(90))
 		print_.Parent = Workspace
 		Debris:AddItem(print_, CRUMB_LIFE)
 		-- a staggered little hop, so the line reads as footsteps walking AWAY
@@ -209,11 +266,21 @@ local function start()
 			local char = localPlayer.Character
 			local hrp = char and char:FindFirstChild("HumanoidRootPart")
 			if pos and hrp then
-				if not lastBeaconAt or (lastBeaconAt - pos).Magnitude > 2 then
-					buildBeacon(pos)
-					lastBeaconAt = pos
+				local here = (hrp :: BasePart).Position
+				-- The same 260-stud cross-land guard dropWave already applies:
+				-- the lands sit 600 apart on X, and an objective in another one
+				-- (Pudding is always open, so she can walk away from a ready
+				-- shard) hangs a neon pillar over the far land's sky.
+				if math.abs(pos.X - here.X) <= 260 then
+					if not lastBeaconAt or (lastBeaconAt - pos).Magnitude > 2 then
+						buildBeacon(pos)
+						lastBeaconAt = pos
+					end
+				elseif beacon then
+					clearBeacon()
+					lastBeaconAt = nil
 				end
-				dropWave((hrp :: BasePart).Position, pos)
+				dropWave(here, pos)
 			end
 			task.wait(REFRESH)
 		end

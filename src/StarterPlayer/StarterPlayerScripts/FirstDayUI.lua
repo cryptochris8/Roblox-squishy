@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local FirstDayConfig = require(Shared:WaitForChild("FirstDayConfig"))
+local LandmarkConfig = require(Shared:WaitForChild("LandmarkConfig"))
 local UiTheme = require(script.Parent.UiTheme)
 local SparkleTrail = require(script.Parent.SparkleTrail)
 
@@ -190,6 +191,23 @@ local function markerTarget(step): BasePart?
 	return nil
 end
 
+-- A known world position for a step whose target PART may not have replicated
+-- yet. The capsule is an ordinary model (not Persistent like the landmarks), so
+-- a kid who woke her third friend out at a far pad can advance to "open your
+-- free Sparkle Capsule" while the capsule is still streaming in — and the
+-- trail must not go dark on the tutorial's most important step. setTarget
+-- accepts a bare Vector3 (that is how ClientController aims at a shard spot).
+local function markerFallbackPos(step): Vector3?
+	if step and step.marker == "capsule" then
+		for _, lm in ipairs(LandmarkConfig.Landmarks) do
+			if lm.id == "ph_capsule" then
+				return lm.pos
+			end
+		end
+	end
+	return nil
+end
+
 local function setBookPulse(on: boolean)
 	local hud = localPlayer:FindFirstChild("PlayerGui")
 	hud = hud and hud:FindFirstChild("SquishyHUD")
@@ -278,6 +296,20 @@ local function markerLoop()
 			SparkleTrail.setTarget("firstday:" .. step.id, target, nil, { sticky = true })
 		else
 			marker.Enabled = false
+			-- No adornee for the ✨⬇ arrow. Either the step genuinely has no
+			-- world marker (`buddy` — its objective is the Book button, which
+			-- has its own pulse), or the target simply has not streamed in yet.
+			-- Aim the trail at the known position when we have one; otherwise
+			-- DROP it, because a sticky trail keeps pointing at the PREVIOUS
+			-- step's target — after the capsule step that means laying
+			-- footprints back to the Sparkle Capsule, whose free open she has
+			-- already spent, so following her own tutorial costs her 100 coins.
+			local fallback = markerFallbackPos(step)
+			if fallback then
+				SparkleTrail.setTarget("firstday:" .. step.id, nil, fallback, { sticky = true })
+			else
+				SparkleTrail.clear()
+			end
 		end
 		-- gentle stuck-helper: brand-new player, no squish for 45s -> outline
 		-- the marked friend so it visibly calls out

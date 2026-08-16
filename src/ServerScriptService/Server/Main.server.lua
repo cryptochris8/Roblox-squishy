@@ -224,6 +224,46 @@ end
 -- Cheer. It REPLACES the plain text shout for those pulls (no double-toast);
 -- commons/rares keep the friendly text shout-out.
 local sparkleBeaconEvent = Remotes.get(Remotes.SparkleBeacon)
+
+-- Where a player is standing right now (nil while respawning).
+local function playerPos(player: Player): Vector3?
+	local char = player.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	return if hrp then (hrp :: BasePart).Position else nil
+end
+
+-- The tail EVERY friend grant shares, whichever door the friend came through:
+-- a capsule open, a shared gift, or a Switcheroo traveler. Factored out because
+-- only the capsule path ran it — a Rainbow shine-up that arrived off the Sparkle
+-- Express left the walking buddy wearing its old ✨ badge until the player
+-- re-equipped, and Friends48 / FirstSparkly / FirstRainbow were not awarded at
+-- the moment they were actually earned (they landed on her next capsule open).
+local function afterFriendGranted(player: Player, def)
+	if def then
+		-- a duplicate may have shined up a friend she has equipped — respawn the
+		-- buddies so the ✨/🌈 badge and aura update right away
+		local profile = PlayerDataService.get(player)
+		if profile and (profile.EquippedBuddyId == def.Id or profile.EquippedBuddyId2 == def.Id) then
+			BuddyService.refresh(player)
+		end
+	end
+	-- any grant can complete a set (new discovery OR a dup's variant shine-up)
+	MilestoneService.check(player)
+	local prof = PlayerDataService.get(player)
+	if prof then
+		BadgeService.discoveryCount(player, prof.DiscoveredCount)
+	end
+	if def then
+		local lvl = PlayerDataService.getVariant(player, def.Id)
+		if lvl >= 1 then
+			BadgeService.award(player, "FirstSparkly")
+		end
+		if lvl >= 2 then
+			BadgeService.award(player, "FirstRainbow")
+		end
+	end
+end
+
 local capsulePosByKey: { [string]: Vector3 } = {}
 for _, z in ipairs(world.zones) do
 	if z.capsuleKey and z.capsulePrompt then
@@ -256,7 +296,12 @@ CapsuleService.onOpened = function(player, isNew, def, info)
 			rarity = def.Rarity,
 			-- honest copy on every client: a Rainbow shine-up is not a discovery
 			kind = isNew and "discovered" or "shined",
-			pos = info and capsulePosByKey[info.capsuleKey] or nil,
+			-- Where the celebration beam rises. A Daily Gift is claimed from the
+			-- HUD, so it belongs over HER, wherever she is — pinning it to the
+			-- Pudding capsule put the beam in another land entirely.
+			pos = if info and info.atCapsule == false
+				then playerPos(player)
+				else (info and capsulePosByKey[info.capsuleKey] or nil),
 		})
 	end
 	if isNew then
@@ -264,33 +309,12 @@ CapsuleService.onOpened = function(player, isNew, def, info)
 		if def and not beaconWorthy then
 			shoutToOthers(player, "🎉 " .. player.DisplayName .. " discovered " .. def.DisplayName .. "!")
 		end
-	elseif def then
-		-- A duplicate may have shined up a friend they have equipped — respawn
-		-- the buddies so the ✨/🌈 badge and aura update right away.
-		local profile = PlayerDataService.get(player)
-		if profile and (profile.EquippedBuddyId == def.Id or profile.EquippedBuddyId2 == def.Id) then
-			BuddyService.refresh(player)
-		end
 	end
-	-- Any open can complete a set (new discovery OR a dup's variant shine-up).
-	MilestoneService.check(player)
+	afterFriendGranted(player, def)
 	ftue(player, 2, "first_capsule")
 	BadgeService.award(player, "FirstCapsule")
-	local prof = PlayerDataService.get(player)
-	if prof then
-		BadgeService.discoveryCount(player, prof.DiscoveredCount)
-	end
-	if def then
-		local lvl = PlayerDataService.getVariant(player, def.Id)
-		if lvl >= 1 then
-			BadgeService.award(player, "FirstSparkly")
-		end
-		if lvl >= 2 then
-			BadgeService.award(player, "FirstRainbow")
-			if info and info.variantUpgraded then
-				maybeLikeAsk(player) -- a first 🌈 is a real joy peak
-			end
-		end
+	if def and info and info.variantUpgraded and PlayerDataService.getVariant(player, def.Id) >= 2 then
+		maybeLikeAsk(player) -- a first 🌈 is a real joy peak
 	end
 	-- time-to-first-reveal, once per session (the D1 funnel's yardstick)
 	if not firstRevealLogged[player] then
@@ -304,14 +328,14 @@ end
 
 -- A gifted friend can complete the recipient's set too; a granted crown
 -- should appear on the buddy right away.
-GiftService.onFriendShared = function(recipient)
-	MilestoneService.check(recipient)
+GiftService.onFriendShared = function(recipient, def)
+	afterFriendGranted(recipient, def)
 end
 
 -- A Switcheroo traveler can complete a set too, and a NEW discovery via the
 -- Express is server news just like a capsule discovery.
 SwitcherooService.onSwap = function(player, isNew, def)
-	MilestoneService.check(player)
+	afterFriendGranted(player, def)
 	if isNew and def then
 		DailyService.noteEvent(player, "discover")
 		shoutToOthers(player, "🚂 " .. player.DisplayName .. " welcomed " .. def.DisplayName .. " off the Sparkle Express!")
