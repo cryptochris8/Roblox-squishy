@@ -38,6 +38,16 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
 - **✅ Phase D — Monetization — DONE (2026-06-11, built against the LIVE products):** Chris created the 9 products in Creator Hub (guide: doc 13) and the build wired them end to end. Extra Buddy Slot 99 R$ / Coin Boost +25% 149 R$ / Sparkle Club VIP 249 R$ (passes) + 6 premium cosmetics 79–249 R$ (Developer Products), sold from the Boutique's 👑 Premium Sparkles and ✨ Sparkle Passes shelves. **No coin packs** (economy integrity + pressure-mechanic optics). Capsules stay FREE; every friend stays earnable; coin paths never removed.
 
 ### Build log
+
+> **🚀 PUBLISHED LIVE 2026-08-16 (Chris, Alt+P): everything through `9b6125a`.**
+> That single publish carried five commits that had been sitting dark since
+> 2026-08-06/07 — Reveal v2 + the Big Build (Sparkle Patterns, the Switcheroo
+> Station, the D1 funnel), the 5 legibility fixes, Sparkle Beacons, Follow the
+> Sparkles, and the 2026-08-16 review-pass fixes. Chris ran the Studio pass
+> first and reported everything looking right. **The `UNPUBLISHED` notes inside
+> the individual entries below are historical — they describe the state at the
+> time each was written, not now.** Nothing in the repo is awaiting Alt+P.
+
 - **2026-08-16 (review pass — 7 fixes from a full audit of the last 7 commits):**
   No new features; a review of everything shipped 2026-08-06/07 (Reveal v2, the
   Big Build, Beacons, SparkleTrail) plus the persistent memory notes. Health:
@@ -81,7 +91,7 @@ Three shards recovered → **"Everybody Squish!"** → the Sparkle shines bright
   carried over, handing out a second full set of rewards. 146 lune assertions
   cover the pure logic (roster-shift demonstrated, pinned ids immune, every
   crumb/halo clearance measured). **NOT Studio-verified — see the check list in
-  the commit; UNPUBLISHED.**
+  the commit. **🚀 Studio-passed + PUBLISHED LIVE by Chris 2026-08-16.**
 - **2026-08-07 (Sparkle Beacons — "make the big world announce itself"):**
   Triggered by Chris's read of competitor screenshots ("their world looks
   spread out, ours doesn't"). Measurement said the opposite of what it felt
